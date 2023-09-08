@@ -69,16 +69,26 @@ const searchMessages = async (value) => {
 
 const getStatistic = async () => {
     const totalRs = await pool.query('SELECT count(*) FROM messages')
-    // const assetsRs = await pool.query(`select asset as name, sum(CAST(value as decimal)) as value
-    //     from messages
-    //     where asset is not null and asset != ''
-    //     group by asset`)
+    const feeIconRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'icon'`)
+    const feeHavahRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'havah'`)
+    const feeBscRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'bsc'`)
+    const feeEth2Rs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'eth2'`)
 
     return {
         data: {
             messages: Number(totalRs.rows[0].count),
-            // assets: assetsRs.rows
-            assets: []
+            fees: {
+                icon: feeIconRs.rows[0].sum.toString(),
+                havah: feeHavahRs.rows[0].sum.toString(),
+                bsc: feeBscRs.rows[0].sum.toString(),
+                eth2: feeEth2Rs.rows[0].sum.toString()
+            }
+            // fees: [
+            //     { network: 'icon', total: feeIconRs.rows[0].sum.toString() },
+            //     { network: 'havah', total: feeHavahRs.rows[0].sum.toString() },
+            //     { network: 'bsc', total: feeBscRs.rows[0].sum.toString() },
+            //     { network: 'eth2', total: feeEth2Rs.rows[0].sum.toString() }
+            // ]
         },
         meta: {
             urls: metaUrls
