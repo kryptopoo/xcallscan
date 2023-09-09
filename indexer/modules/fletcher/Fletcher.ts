@@ -4,11 +4,24 @@ import { EVENT, NETWORK } from '../../common/constants'
 import { IFletcher } from '../../interfaces/IFletcher'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
+import { IconScan } from '../scan/IconScan'
+import { HavahScan } from '../scan/HavahScan'
+import { EvmScan } from '../scan/EvmScan'
 
 export class Fletcher implements IFletcher {
     private _db = new Db()
 
-    constructor(public scan: IScan) {}
+    scan: IScan
+
+    constructor(network: string) {
+        this.scan = new IconScan()
+        if (network == NETWORK.HAVAH) {
+            this.scan = new HavahScan()
+        }
+        if (network == NETWORK.BSC || network == NETWORK.ETH2) {
+            this.scan = new EvmScan(network)
+        }
+    }
 
     private async storeDb(eventLog: EventLog) {
         let eventModel: EventModel = {

@@ -10,7 +10,7 @@ function renderMessageStatus(status, rollbacked) {
     if (status == 'delivered') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-blue-300 text-center">{status}</span>
 }
 
-function renderHashLink(metaUrls, network, hash, isFull = false) {
+function renderHashLink(scanUrl, network, hash, isFull = false) {
     let networkImg
     let linkClass = isFull ? 'hover:underline inline-block w-[37rem]' : 'hover:underline inline-block text-ellipsis overflow-hidden w-64'
     let link = <div>-</div>
@@ -21,40 +21,12 @@ function renderHashLink(metaUrls, network, hash, isFull = false) {
         <div className={linkClass}>{hash}</div>
     ) : (
         <div className="flex">
-            <Link className={linkClass} href={metaUrls.tx[network] + hash} target="_blank">
+            <Link className={linkClass} href={scanUrl + hash} target="_blank">
                 {hash}
             </Link>
             {copyButton}
         </div>
     )
-
-    // if (network == 'bsc') {
-    //     networkImg = <Image alt="bsc" src="/images/network-bsc.png" width={24} height={24} />
-    //     link = !isFull ? (
-    //         <div className={linkClass}>{hash}</div>
-    //     ) : (
-    //         <div className="flex">
-    //             <Link className={linkClass} href={metaUrls.tx[network] + hash} target="_blank">
-    //                 {hash}
-    //             </Link>
-    //             {copyButton}
-    //         </div>
-    //     )
-    // }
-    // if (network == 'icon') {
-    //     networkImg = <Image alt="icon" src="/images/network-icon.png" width={24} height={24} />
-    //     link = !isFull ? (
-    //         <div className={linkClass}>{hash}</div>
-    //     ) : (
-    //         <div className="flex">
-    //             <Link className={linkClass} href={metaUrls.tx[network] + hash} target="_blank">
-    //                 {hash}
-    //             </Link>
-    //             {copyButton}
-    //         </div>
-    //         // <TxHashLink href={metaUrls.tx.icon + hash} />
-    //     )
-    // }
 
     return (
         <div className="flex items-center gap-2">

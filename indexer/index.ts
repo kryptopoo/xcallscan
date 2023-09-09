@@ -1,34 +1,29 @@
 import cron from 'node-cron'
-import logger from './modules/logger/logger'
-import { CONTRACT, EVENT, NETWORK } from './common/constants'
+import { EVENT, NETWORK } from './common/constants'
 import { Fletcher } from './modules/fletcher/Fletcher'
-import { SourceSyncer } from './modules/syncer/SourceSyncer'
-import { IconScan } from './modules/scan/IconScan'
-import { HavahScan } from './modules/scan/HavahScan'
-import { EvmScan } from './modules/scan/EvmScan'
-import { IFletcher } from './interfaces/IFletcher'
+import { Syncer } from './modules/syncer/Syncer'
 
 async function run() {
     // fletch data all networks
-    cron.schedule('* * * * *', async () => {
+    cron.schedule('0 * * * * *', async () => {
         await Promise.all([fletch(NETWORK.ICON), fletch(NETWORK.HAVAH), fletch(NETWORK.BSC), fletch(NETWORK.ETH2)])
     })
 
-    // TODO: sync messages
+    // sync new messages
+    cron.schedule('45 * * * * *', async () => {
+        const syncer = new Syncer()
+        await syncer.syncNewMessages()
+    })
+
+    // sync pending messages
+    cron.schedule('15 */10 * * * *', async () => {
+        const syncer = new Syncer()
+        await syncer.syncPendingMessages()
+    })
 }
 
 const fletch = async (network: string) => {
-    let fletcher = new Fletcher(new IconScan())
-    if (network == NETWORK.ICON) {
-        fletcher = new Fletcher(new IconScan())
-    }
-    if (network == NETWORK.HAVAH) {
-        fletcher = new Fletcher(new HavahScan())
-    }
-    if (network == NETWORK.BSC || network == NETWORK.ETH2) {
-        fletcher = new Fletcher(new EvmScan(network))
-    }
-
+    let fletcher = new Fletcher(network)
     let fletched = false
     while (!fletched) {
         fletched = await fletcher.fletchEvents([

@@ -128,14 +128,6 @@ export class SourceSyncer implements ISourceSyncer {
 
                         // msg response failed, it would emit RollbackMessage
                     } else {
-                        // const updateCount = await this._db.updateMessageStatus(
-                        //     msg.sn,
-                        //     msg.src_network as string,
-                        //     msg.dest_network as string,
-                        //     msg.src_app as string,
-                        //     MSG_STATUS.Delivered
-                        // )
-
                         const updateCount = await this._db.updateMessageSent(
                             msg.sn,
                             msg.src_network as string,
@@ -270,15 +262,5 @@ export class SourceSyncer implements ISourceSyncer {
                 }
             }
         }
-    }
-
-    async getNotSyncedMessages(): Promise<number[]> {
-        const rs = await this._db.getNotSyncedMessageSns(this.network)
-        return rs
-    }
-
-    async getPendingMessageSns(destNetwork: string): Promise<any[]> {
-        const rs = await this._db.getPendingMessageSns(this.network, destNetwork)
-        return rs
     }
 }

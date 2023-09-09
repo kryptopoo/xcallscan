@@ -18,12 +18,14 @@ export default function Header({ showSearchBar, assets }) {
                 <div className="xl:flex items-center gap-4 px-2 text-sm hidden">
                     {Array.isArray(assets)
                         ? assets.map((asset) => (
-                            <div key={asset.name} className="flex gap-1">
-                                <Image src={asset.image} width={20} height={20} />
-                                <span>${asset.current_price.toFixed(2)}</span>
-                                <span className={asset.price_change_percentage_24h > 0 ? 'text-green-500' : 'text-red-500'}>({asset.price_change_percentage_24h.toFixed(2)}%)</span>
-                            </div>
-                        ))
+                              <div key={asset.name} className="flex gap-1">
+                                  <Image src={asset.image} width={20} height={20} className="rounded-full" />
+                                  <span>${asset.current_price.toFixed(2)}</span>
+                                  <span className={asset.price_change_percentage_24h > 0 ? 'text-green-500' : 'text-red-500'}>
+                                      ({asset.price_change_percentage_24h.toFixed(2)}%)
+                                  </span>
+                              </div>
+                          ))
                         : null}
                 </div>
 

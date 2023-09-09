@@ -40,8 +40,8 @@ export default async function MessageDetail({ msgData, meta }) {
                             <div className="table-cell xl:w-96 px-3 py-2 xl:px-6 xl:py-4 font-medium whitespace-normal xl:whitespace-nowrap">Destination transaction hash:</div>
                             <div className="table-cell px-3 py-2 xl:px-6 xl:py-4">
                                 {msgData.rollbacked
-                                    ? Render.renderHashLink(meta.urls, msgData.src_network, msgData.dest_tx_hash, true)
-                                    : Render.renderHashLink(meta.urls, msgData.dest_network, msgData.dest_tx_hash, true)}
+                                    ? Render.renderHashLink(meta.urls.tx[msgData.src_network], msgData.dest_network, msgData.dest_tx_hash, true)
+                                    : Render.renderHashLink(meta.urls.tx[msgData.dest_network], msgData.dest_network, msgData.dest_tx_hash, true)}
                             </div>
                         </div>
                         <div className="table-row bg-white border-b">

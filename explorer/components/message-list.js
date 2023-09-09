@@ -23,11 +23,11 @@ export default async function MessageList({ data, meta, showPagination }) {
                             <Link key={item.id} className="table-row bg-white hover:bg-gray-50 border-b h-14" href={`/messages/${item.id}`}>
                                 <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">{Render.renderMessageStatus(item.status, item.rollbacked)}</div>
                                 <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">{item.sn}</div>
-                                <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">{Render.renderHashLink(meta.urls, item.src_network, item.src_tx_hash)}</div>
+                                <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">{Render.renderHashLink(meta.urls.tx[item.src_network], item.src_network, item.src_tx_hash)}</div>
                                 <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">
                                     {item.rollbacked
-                                        ? Render.renderHashLink(meta.urls, item.src_network, item.dest_tx_hash)
-                                        : Render.renderHashLink(meta.urls, item.dest_network, item.dest_tx_hash)}
+                                        ? Render.renderHashLink(meta.urls.tx[item.src_network], item.dest_network, item.dest_tx_hash)
+                                        : Render.renderHashLink(meta.urls.tx[item.dest_network], item.dest_network, item.dest_tx_hash)}
                                 </div>
                                 <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3 text-right">{timeAgo(item.src_block_timestamp * 1000)} ago</div>
                             </Link>

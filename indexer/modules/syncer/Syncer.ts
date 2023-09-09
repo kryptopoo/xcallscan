@@ -1,57 +1,70 @@
 import { NETWORK } from '../../common/constants'
 import { Db } from '../../data/Db'
+import logger from '../logger/logger'
 import { SourceSyncer } from './SourceSyncer'
 
 export class Syncer {
     protected _db = new Db()
 
-    sourceSyncers: SourceSyncer[]
+    sourceSyncers: { [network: string]: SourceSyncer } = {}
+    networks: string[] = []
 
     constructor() {
-        const iconSyncer = new SourceSyncer(NETWORK.ICON)
-        const eth2Syncer = new SourceSyncer(NETWORK.ETH2)
-        const bscSyncer = new SourceSyncer(NETWORK.BSC)
-        const havahSyncer = new SourceSyncer(NETWORK.HAVAH)
-        this.sourceSyncers = [iconSyncer, eth2Syncer, bscSyncer, havahSyncer]
+        this.networks = Object.values(NETWORK)
+        for (let i = 0; i < this.networks.length; i++) {
+            const network = this.networks[i]
+            const sourceSyncer = new SourceSyncer(network)
+            this.sourceSyncers[network] = sourceSyncer
+        }
     }
 
     async syncMessage(sn: number) {
         // sync sent messages
-        for (let i = 0; i < this.sourceSyncers.length; i++) {
-            const sourceSyncer = this.sourceSyncers[i]
+        for (let i = 0; i < this.networks.length; i++) {
+            const network = this.networks[i]
+            const sourceSyncer = this.sourceSyncers[network]
             await sourceSyncer.syncSentMessages(sn)
         }
 
         // sync received messages
-        for (let i = 0; i < this.sourceSyncers.length; i++) {
-            const sourceSyncer = this.sourceSyncers[i]
+        for (let i = 0; i < this.networks.length; i++) {
+            const network = this.networks[i]
+            const sourceSyncer = this.sourceSyncers[network]
             await sourceSyncer.syncReceivedMessages(sn)
         }
     }
 
     async syncNewMessages() {
-        const maxSnIcon = await this._db.getMaxEventSn(NETWORK.ICON)
-        const maxSnHavah = await this._db.getMaxEventSn(NETWORK.HAVAH)
-        const maxSnEth2 = await this._db.getMaxEventSn(NETWORK.ETH2)
-        const maxSnBsc = await this._db.getMaxEventSn(NETWORK.BSC)
+        for (let i = 0; i < this.networks.length; i++) {
+            const network = this.networks[i]
+            const sourceSyncer = this.sourceSyncers[network]
 
-        const maxSnMsg = await this._db.getMaxMessageSn()
-        const maxSnEvent = Math.max(...[maxSnIcon, maxSnHavah, maxSnEth2, maxSnBsc])
-        console.log('maxSnMsg', maxSnMsg)
-        console.log('maxSnEvent', maxSnEvent)
+            const maxMsgSn = await this._db.getMaxMessageSn(network)
+            const maxEventSn = await this._db.getMaxEventSn(network)
+            logger.info(`${network} syncing ${Math.abs(maxEventSn - maxMsgSn)} new messages fromSn:${maxMsgSn} toSn:${maxEventSn}`)
 
-        // sync sent messages
-        for (let i = 0; i < this.sourceSyncers.length; i++) {
-            const sourceSyncer = this.sourceSyncers[i]
-            for (let sn = maxSnMsg; sn <= maxSnEvent; sn++) {
+            // sync sent messages
+            for (let sn = maxMsgSn; sn <= maxEventSn; sn++) {
                 await sourceSyncer.syncSentMessages(sn)
             }
+            // sync received messages
+            for (let sn = maxMsgSn; sn <= maxEventSn; sn++) {
+                await sourceSyncer.syncReceivedMessages(sn)
+            }
         }
+    }
 
-        // sync received messages
-        for (let i = 0; i < this.sourceSyncers.length; i++) {
-            const sourceSyncer = this.sourceSyncers[i]
-            for (let sn = maxSnMsg; sn <= maxSnEvent; sn++) {
+    async syncPendingMessages() {
+        for (let i = 0; i < this.networks.length; i++) {
+            const network = this.networks[i]
+            const sourceSyncer = this.sourceSyncers[network]
+
+            const pendingMsgs = await this._db.getPendingMessages(network, '')
+            logger.info(`${network} syncing ${pendingMsgs.length} pending messages ${pendingMsgs.map((m) => m.sn).join(', ')}`)
+
+            // sync received messages
+            for (let i = 0; i < pendingMsgs.length; i++) {
+                const sn = pendingMsgs[i].sn
                 await sourceSyncer.syncReceivedMessages(sn)
             }
         }

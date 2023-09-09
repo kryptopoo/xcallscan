@@ -16,16 +16,14 @@ const runCmd = async () => {
     const network = args[1]
 
     let scan: IScan = new IconScan()
-    let fletcher: IFletcher = new Fletcher(scan)
-
     if (network == NETWORK.HAVAH) {
         scan = new HavahScan()
-        fletcher = new Fletcher(scan)
     }
     if (network == NETWORK.BSC || network == NETWORK.ETH2) {
         scan = new EvmScan(network)
-        fletcher = new Fletcher(scan)
     }
+
+    let fletcher: IFletcher = new Fletcher(network)
 
     // command
     if (cmd == 'initdb') {

@@ -44,3 +44,9 @@ export type MessageModel = {
 
     synced: boolean
 }
+
+export type BaseMessageModel = {
+    sn: number
+    src_network: string
+    dest_network: string
+}

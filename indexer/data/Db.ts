@@ -6,7 +6,7 @@ import pg from 'pg'
 const Pool = pg.Pool
 import { MSG_STATUS } from '../common/constants'
 import logger from '../modules/logger/logger'
-import { EventModel, MessageModel } from '../types/DataModels'
+import { BaseMessageModel, EventModel, MessageModel } from '../types/DataModels'
 
 class Db {
     pool = new Pool({
@@ -127,34 +127,12 @@ class Db {
         return eventsRs.rows as EventModel[]
     }
 
-    async getNotSyncedMessageSns(network: string) {
-        const snsRs = await this.pool.query(`SELECT distinct sn 
-        FROM ${network}_events 
-        WHERE sn not in (SELECT distinct sn FROM messages WHERE synced = true)
-        ORDER BY sn`)
-        return snsRs.rows.map((p) => p.sn as number)
-    }
-
-    async getPendingMessageSns(src_network: string, dest_network: string) {
-        if (dest_network) {
-            let snsRs = await this.pool.query(
-                `SELECT sn, src_network, dest_network FROM messages WHERE src_network = $1 AND dest_network = $2 AND status = $3 ORDER BY sn`,
-                [src_network, dest_network, MSG_STATUS.Delivered]
-            )
-
-            return snsRs.rows
-        } else {
-            let snsRs = await this.pool.query(
-                `SELECT sn, src_network, dest_network FROM messages WHERE src_network = $1 AND status = $2 ORDER BY sn`,
-                [src_network, MSG_STATUS.Pending]
-            )
-
-            return snsRs.rows
-        }
+    async getMaxEventSn(network: string) {
+        const maxSnRs = await this.pool.query(`SELECT max(sn) FROM ${network}_events`)
+        return maxSnRs.rows.length > 0 ? Number(maxSnRs.rows[0].max) : 0
     }
 
     // MESSAGE
-
     async insertMessage(message: MessageModel) {
         const tableName = `messages`
         const nowTimestamp = Math.floor(Date.now() / 1000)
@@ -369,13 +347,44 @@ class Db {
         return dappAddressesRs.rows.map((p) => p.from_decoded as string)
     }
 
-    async getMaxEventSn(network: string) {
-        const maxSnRs = await this.pool.query(`SELECT max(sn) FROM ${network}_events`)
-        return maxSnRs.rows.length > 0 ? Number(maxSnRs.rows[0].max) : 0
+    async getNotSyncedMessages(network: string) {
+        const snsRs = await this.pool.query(
+            `SELECT distinct sn 
+            FROM ${network}_events 
+            WHERE sn not in (SELECT distinct sn FROM messages WHERE synced = true)
+            ORDER BY sn`
+        )
+        return snsRs.rows.map((p) => p.sn as number)
     }
 
-    async getMaxMessageSn() {
-        const maxSnRs = await this.pool.query(`SELECT max(sn) FROM messages`)
+    async getPendingMessages(src_network: string, dest_network: string) {
+        if (dest_network) {
+            let snsRs = await this.pool.query(
+                `SELECT sn, src_network, dest_network 
+                FROM messages 
+                WHERE src_network = $1 AND dest_network = $2 AND status = $3 
+                GROUP BY sn, src_network, dest_network
+                ORDER BY sn desc`,
+                [src_network, dest_network, MSG_STATUS.Delivered]
+            )
+
+            return snsRs.rows as BaseMessageModel[]
+        } else {
+            let snsRs = await this.pool.query(
+                `SELECT sn, src_network, dest_network 
+                FROM messages 
+                WHERE src_network = $1 AND status = $2 
+                GROUP BY sn, src_network, dest_network
+                ORDER BY sn desc`,
+                [src_network, MSG_STATUS.Pending]
+            )
+
+            return snsRs.rows as BaseMessageModel[]
+        }
+    }
+
+    async getMaxMessageSn(src_network: string) {
+        const maxSnRs = await this.pool.query(`SELECT max(sn) FROM messages where src_network = $1 or dest_network = $1`, [src_network])
         return maxSnRs.rows.length > 0 ? Number(maxSnRs.rows[0].max) : 0
     }
 }

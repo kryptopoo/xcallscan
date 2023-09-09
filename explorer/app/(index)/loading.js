@@ -14,10 +14,6 @@ export default function Loading() {
                         <div className="text-sm opacity-75">Total Messages</div>
                         <div className="text-3xl font-medium fade-in">0</div>
                     </div>
-                    <div className="px-4 text-white rounded-md text-right">
-                        <div className="text-sm opacity-75">Total Transfered</div>
-                        <div className="text-3xl font-medium fade-in">0</div>
-                    </div>
                 </div>
             </div>
 
