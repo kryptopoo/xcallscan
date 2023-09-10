@@ -1,5 +1,5 @@
 import logger from '../logger/logger'
-import { Db, EventModel } from '../../data/Db'
+import { Db } from '../../data/Db'
 import { EVENT, NETWORK } from '../../common/constants'
 import { IFletcher } from '../../interfaces/IFletcher'
 import { IScan } from '../../interfaces/IScan'
@@ -7,6 +7,7 @@ import { EventLog } from '../../types/EventLog'
 import { IconScan } from '../scan/IconScan'
 import { HavahScan } from '../scan/HavahScan'
 import { EvmScan } from '../scan/EvmScan'
+import { EventModel } from '../../types/DataModels'
 
 export class Fletcher implements IFletcher {
     private _db = new Db()
@@ -77,56 +78,43 @@ export class Fletcher implements IFletcher {
     }
 
     async fletchEvents(eventNames: string[], blockNumber: number = 0) {
-        // fetch data
-        logger.info(`${this.scan.network} fetching events [${eventNames.join(', ')}]...`)
-        let finished = true
-        for (let j = 0; j < eventNames.length; j++) {
-            let eventName = eventNames[j]
-
-            let counterName = `${this.scan.network}_${eventName}_${this.scan.network == NETWORK.HAVAH ? 'CountNumber' : 'BlockNumber'}`
-            let counter = await this._db.getCounterByName(counterName)
-            let fromBlockNumber = blockNumber > 0 ? blockNumber : counter.value
-
-            logger.info(`${this.scan.network} fetching events ${counterName} ${fromBlockNumber}`)
-
-            let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromBlockNumber, eventName)
-
-            for (let i = 0; i < eventLogs.length; i++) {
-                let eventLog = eventLogs[i]
-
-                if (eventLog.eventData) {
-                    // source events
-                    if (eventLog.eventName == EVENT.CallMessageSent) {
-                        await this.storeDb(eventLog)
-                    } else if (eventLog.eventName == EVENT.ResponseMessage) {
-                        await this.storeDb(eventLog)
-                    } else if (eventLog.eventName == EVENT.RollbackMessage) {
-                        await this.storeDb(eventLog)
-                    } else if (eventLog.eventName == EVENT.RollbackExecuted) {
-                        await this.storeDb(eventLog)
-                    }
-
-                    // destination only
-                    if (eventLog.eventName == EVENT.CallMessage) {
-                        await this.storeDb(eventLog)
-                    } else if (eventLog.eventName == EVENT.CallExecuted) {
-                        await this.storeDb(eventLog)
-                    }
-
-                    logger.info(
-                        `${this.scan.network} fetched block:${eventLog.blockNumber} event:${eventName} sn:${eventLog.eventData._sn ?? ''} nsn:${
-                            eventLog.eventData._nsn ?? ''
-                        } reqId:${eventLog.eventData._reqId ?? ''}`
-                    )
-                }
-            }
-
-            // stop fletching when finished
-            finished = finished && lastFlagNumber == counter.value
-            if (!finished) await this._db.updateCounter(counterName, lastFlagNumber)
+        let promiseTasks = []
+        for (let i = 0; i < eventNames.length; i++) {
+            promiseTasks.push(this.fletchEvent(eventNames[i], blockNumber))
         }
+        const results = await Promise.all(promiseTasks)
+        const finished = results.every((r) => r == true)
 
         if (finished) logger.info(`${this.scan.network} has no new events`)
+
+        return finished
+    }
+
+    async fletchEvent(eventName: string, blockNumber: number = 0) {
+        let counterName = `${this.scan.network}_${eventName}_${this.scan.network == NETWORK.HAVAH ? 'CountNumber' : 'BlockNumber'}`
+        let counter = await this._db.getCounterByName(counterName)
+        let fromBlockNumber = blockNumber > 0 ? blockNumber : counter.value
+
+        logger.info(`${this.scan.network} fetching events ${counterName} ${fromBlockNumber}`)
+
+        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromBlockNumber, eventName)
+
+        for (let i = 0; i < eventLogs.length; i++) {
+            let eventLog = eventLogs[i]
+
+            if (eventLog.eventData) {
+                await this.storeDb(eventLog)
+
+                logger.info(
+                    `${this.scan.network} fetched block:${eventLog.blockNumber} event:${eventName} sn:${eventLog.eventData._sn ?? ''} nsn:${
+                        eventLog.eventData._nsn ?? ''
+                    } reqId:${eventLog.eventData._reqId ?? ''}`
+                )
+            }
+        }
+
+        const finished = lastFlagNumber == counter.value
+        if (!finished) await this._db.updateCounter(counterName, lastFlagNumber)
 
         return finished
     }

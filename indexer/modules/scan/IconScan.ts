@@ -46,7 +46,9 @@ export class IconScan implements IScan {
 
             blockStart = blockStartRes.data[blockStartRes.data.length - 1].block_number
         }
-        let blockEnd = blockStart + limit
+
+        // assume 5 blocks = 1 msg
+        let blockEnd = blockStart + limit * 5
 
         const eventLogsRes = await this.callApi(`${API_URL[this.network]}/logs`, {
             address: CONTRACT[this.network].xcall,

@@ -1,11 +1,13 @@
 
 import '../../globals.css'
+import Favicon from '../../favicon.ico';
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 
 export const metadata = {
-    title: 'xCallScan',
-    description: 'xCallScan app'
+    title: 'xCall Scan - xCall Service Explorer',
+    description: 'xCallScan is an explorer that allows users to look up relay messages and transactions being sent through xCall Service.',
+    icons: [{ rel: 'icon', url: Favicon.src }],
 }
 
 export default function MessageLayout({ children }) {

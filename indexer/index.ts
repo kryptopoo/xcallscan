@@ -15,10 +15,10 @@ async function run() {
         await syncer.syncNewMessages()
     })
 
-    // sync pending messages
+    // sync pending/unfinished messages
     cron.schedule('15 */10 * * * *', async () => {
         const syncer = new Syncer()
-        await syncer.syncPendingMessages()
+        await syncer.syncUnfinishedMessages()
     })
 }
 
