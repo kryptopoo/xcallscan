@@ -30,14 +30,12 @@ export type MessageModel = {
     src_block_timestamp?: number
     src_tx_hash?: string
     src_app?: string
-    src_error?: string
 
     dest_network?: string
     dest_block_number?: number
     dest_block_timestamp?: number
     dest_tx_hash?: string
     dest_app?: string
-    dest_error?: string
 
     value?: string
     fee?: string

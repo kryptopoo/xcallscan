@@ -1,8 +1,9 @@
 import { ethers } from 'ethers'
 import logger from '../logger/logger'
 import { BTP_NETWORK_ID, EVENT, MSG_STATUS, NETWORK } from '../../common/constants'
-import { Db, EventModel, MessageModel } from '../../data/Db'
+import { Db } from '../../data/Db'
 import { ISourceSyncer } from '../../interfaces/ISourceSyncer'
+import { EventModel, MessageModel } from '../../types/DataModels'
 
 export class SourceSyncer implements ISourceSyncer {
     protected _db = new Db()
@@ -117,44 +118,27 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
-                    if (event.code == -1) {
-                        await this._db.updateMessageSourceError(
-                            msg.sn,
-                            msg.src_network as string,
-                            msg.dest_network as string,
-                            msg.src_app as string,
-                            event.msg as string
-                        )
+                    const updateCount = await this._db.updateResponseMessage(
+                        msg.sn,
+                        msg.src_network as string,
+                        msg.dest_network as string,
+                        msg.src_app as string,
+                        event.block_number,
+                        event.block_timestamp,
+                        event.tx_hash,
+                        event.msg,
+                        MSG_STATUS.Delivered
+                    )
 
-                        // msg response failed, it would emit RollbackMessage
-                    } else {
-                        const updateCount = await this._db.updateMessageSent(
-                            msg.sn,
-                            msg.src_network as string,
-                            msg.dest_network as string,
-                            msg.src_app as string,
-                            event.block_number,
-                            event.block_timestamp,
-                            event.tx_hash,
-                            MSG_STATUS.Delivered
-                        )
+                    // event.code == -1
+                    // msg response failed, it would emit RollbackMessage
+                    // msg response succeeded, it wouldn't emit RollbackMessage
 
-                        if (updateCount > 0) {
-                            // stop sync
-                            await this._db.updateMessageSynced(
-                                msg.sn,
-                                msg.src_network as string,
-                                msg.dest_network as string,
-                                msg.src_app as string,
-                                true
-                            )
+                    if (updateCount > 0 && event.code == 0) {
+                        // stop sync
+                        await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
-                            logger.info(
-                                `synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`
-                            )
-                        }
-
-                        // msg response succeeded, it wouldn't emit RollbackMessage
+                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`)
                     }
                 }
             }
@@ -164,7 +148,7 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
-                    const updateCount = await this._db.updateMessageRollbacked(
+                    const updateCount = await this._db.updateRollbackMessage(
                         msg.sn,
                         msg.src_network as string,
                         msg.dest_network as string,
@@ -172,6 +156,7 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_number,
                         event.block_timestamp,
                         event.tx_hash,
+                        event.msg,
                         MSG_STATUS.Delivered
                     )
 
@@ -186,7 +171,7 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
-                    const updateCount = await this._db.updateMessageRollbacked(
+                    const updateCount = await this._db.updateRollbackMessage(
                         msg.sn,
                         msg.src_network as string,
                         msg.dest_network as string,
@@ -194,23 +179,14 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_number,
                         event.block_timestamp,
                         event.tx_hash,
-                        MSG_STATUS.Delivered
+                        event.msg,
+                        MSG_STATUS.Executed
                     )
                     if (updateCount > 0) {
                         // stop sync
                         await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
                         logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Executed}`)
-                    }
-
-                    if (event.code == -1) {
-                        await this._db.updateMessageSourceError(
-                            msg.sn,
-                            msg.src_network as string,
-                            msg.dest_network as string,
-                            msg.src_app as string,
-                            event.msg as string
-                        )
                     }
                 }
             }
@@ -229,7 +205,7 @@ export class SourceSyncer implements ISourceSyncer {
                 const { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
                     // update status Delivered for the source network
-                    const updateCount = await this._db.updateMessageSent(
+                    const updateCount = await this._db.updateSentMessage(
                         event.sn,
                         srcNetwork,
                         this.network,
@@ -248,16 +224,20 @@ export class SourceSyncer implements ISourceSyncer {
                 // find the source network of message
                 const { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
-                    const updateCount = await this._db.updateMessageStatus(event.sn, srcNetwork, this.network, srcDapp, MSG_STATUS.Executed)
+                    const updateCount = await this._db.updateExecutedMessage(
+                        event.sn,
+                        srcNetwork,
+                        this.network,
+                        srcDapp,
+                        undefined,
+                        event.msg,
+                        MSG_STATUS.Executed
+                    )
                     if (updateCount > 0) {
                         // stop sync
                         await this._db.updateMessageSynced(event.sn, srcNetwork, this.network, srcDapp, true)
 
                         logger.info(`synced ${this.network}<-${srcNetwork} event:${event.event} sn:${event.sn} status:${MSG_STATUS.Executed}`)
-                    }
-
-                    if (event.code == -1) {
-                        this._db.updateMessageDestError(event.sn, srcNetwork, this.network, srcDapp, event.msg as string)
                     }
                 }
             }

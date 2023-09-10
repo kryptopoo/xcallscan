@@ -21,8 +21,15 @@ CREATE TABLE IF NOT EXISTS public.messages
     dest_app varchar(50),
     dest_error varchar(100),
 
-    rollbacked boolean DEFAULT false,
+    response_block_number bigint,
+    response_block_timestamp bigint,
+    response_tx_hash varchar(100),
+    response_error varchar(100),
 
+    rollback_block_number bigint,
+    rollback_block_timestamp bigint,
+    rollback_tx_hash varchar(100),
+    rollback_error varchar(100),
 
     "value" varchar(50),
     "fee" varchar(50),

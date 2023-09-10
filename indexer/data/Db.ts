@@ -7,6 +7,7 @@ const Pool = pg.Pool
 import { MSG_STATUS } from '../common/constants'
 import logger from '../modules/logger/logger'
 import { BaseMessageModel, EventModel, MessageModel } from '../types/DataModels'
+import { nowTimestamp } from '../common/helper'
 
 class Db {
     pool = new Pool({
@@ -52,9 +53,8 @@ class Db {
 
     async insertEvent(network: string, event: EventModel) {
         const tableName = `${network}_events`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
 
-        const existedTxs = await this.pool.query(`SELECT * FROM ${tableName} where event = $1 and sn = $2 and tx_hash = $3`, [
+        const existedTxs = await this.pool.query(`SELECT 1 FROM ${tableName} where event = $1 and sn = $2 and tx_hash = $3`, [
             event.event,
             event.sn,
             event.tx_hash
@@ -85,7 +85,7 @@ class Db {
                         event.tx_to,
                         event.tx_value,
                         event.tx_fee,
-                        nowTimestamp
+                        nowTimestamp()
                     ]
                 )
                 return rs.rowCount
@@ -99,7 +99,6 @@ class Db {
 
     async updateEventById(network: string, id: number, sn: number, from_raw: string, to_raw: string, from_decoded: string, to_decoded: string) {
         const tableName = `${network}_events`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
 
         const updateQuery = `
             UPDATE ${tableName} 
@@ -107,7 +106,7 @@ class Db {
             WHERE id = $1  
             `
 
-        const rs = await this.pool.query(updateQuery, [id, sn, from_raw, to_raw, from_decoded, to_decoded, nowTimestamp])
+        const rs = await this.pool.query(updateQuery, [id, sn, from_raw, to_raw, from_decoded, to_decoded, nowTimestamp()])
         return rs
     }
 
@@ -134,10 +133,7 @@ class Db {
 
     // MESSAGE
     async insertMessage(message: MessageModel) {
-        const tableName = `messages`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
-        const existedTxs = await this.pool.query(`SELECT * FROM ${tableName} where sn = $1 and src_network = $2 and dest_network = $3`, [
+        const existedTxs = await this.pool.query(`SELECT 1 FROM messages where sn = $1 and src_network = $2 and dest_network = $3`, [
             message.sn,
             message.src_network,
             message.dest_network
@@ -147,9 +143,9 @@ class Db {
         if (!isExisted) {
             try {
                 const rs = await this.pool.query(
-                    `INSERT INTO ${tableName} (sn, status, src_network, src_block_number, src_block_timestamp, src_tx_hash, src_app, src_error, 
-                        dest_network, dest_block_number,  dest_block_timestamp,  dest_tx_hash, dest_app, dest_error, value, fee, created_at)  
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+                    `INSERT INTO messages (sn, status, src_network, src_block_number, src_block_timestamp, src_tx_hash, src_app,  
+                        dest_network, dest_block_number,  dest_block_timestamp,  dest_tx_hash, dest_app, value, fee, created_at)  
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
                     [
                         message.sn,
                         message.status,
@@ -158,16 +154,14 @@ class Db {
                         message.src_block_timestamp,
                         message.src_tx_hash,
                         message.src_app,
-                        message.src_error,
                         message.dest_network,
                         message.dest_block_number,
                         message.dest_block_timestamp,
                         message.dest_tx_hash,
                         message.dest_app,
-                        message.dest_error,
                         message.value,
                         message.fee,
-                        nowTimestamp
+                        nowTimestamp()
                     ]
                 )
                 return rs.rowCount
@@ -179,56 +173,13 @@ class Db {
         return 0
     }
 
-    async needUpdateMessageStatus(sn: number, src_network: string, dest_network: string, src_app: string, status: string) {
-        const needUpdateRs = await this.pool.query(
-            `SELECT * FROM messages WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4`,
-            [sn, src_network, dest_network, src_app]
-        )
-        // console.log('needUpdateRs', needUpdateRs)
-        if (needUpdateRs && needUpdateRs.rows.length > 0) {
-            if (needUpdateRs.rows[0].status == MSG_STATUS.Executed) return false
-            else if (needUpdateRs.rows[0].status == MSG_STATUS.Pending) return true
-            else if (needUpdateRs.rows[0].status == MSG_STATUS.Delivered && status == MSG_STATUS.Executed) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    async updateMessageStatus(sn: number, src_network: string, dest_network: string, src_app: string, status: string) {
-        const tableName = `messages`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
-        try {
-            const needUpdate = await this.needUpdateMessageStatus(sn, src_network, dest_network, src_app, status)
-
-            if (needUpdate) {
-                const rs = await this.pool.query(
-                    `UPDATE ${tableName}   
-                    SET status = $5, updated_at = $6
-                    WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
-                    [sn, src_network, dest_network, src_app, status, nowTimestamp]
-                )
-                return rs.rowCount
-            }
-        } catch (error: any) {
-            logger.error(`db: error ${error.message}`)
-        }
-
-        return 0
-    }
-
     async updateMessageSynced(sn: number, src_network: string, dest_network: string, src_app: string, synced: boolean) {
-        const tableName = `messages`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
         try {
             const rs = await this.pool.query(
-                `UPDATE ${tableName}   
+                `UPDATE messages   
                 SET synced = $5, updated_at = $6
                 WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
-                [sn, src_network, dest_network, src_app, synced, nowTimestamp]
+                [sn, src_network, dest_network, src_app, synced, nowTimestamp()]
             )
             return rs.rowCount
         } catch (error: any) {
@@ -238,17 +189,24 @@ class Db {
         return 0
     }
 
-    async updateMessageSourceError(sn: number, src_network: string, dest_network: string, src_app: string, errMsg: string) {
-        const tableName = `messages`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
+    async updateSentMessage(
+        sn: number,
+        src_network: string,
+        dest_network: string,
+        src_app: string,
+        dest_block_number: number,
+        dest_block_timestamp: number,
+        dest_tx_hash: string,
+        status: string
+    ) {
         try {
             const rs = await this.pool.query(
-                `UPDATE ${tableName}   
-                SET src_error = $5, updated_at = $6
+                `UPDATE messages   
+                SET dest_block_number = $5, dest_block_timestamp = $6, dest_tx_hash = $7, status = $8, updated_at = $9
                 WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
-                [sn, src_network, dest_network, src_app, errMsg, nowTimestamp]
+                [sn, src_network, dest_network, src_app, dest_block_number, dest_block_timestamp, dest_tx_hash, status, nowTimestamp()]
             )
+
             return rs.rowCount
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
@@ -257,17 +215,36 @@ class Db {
         return 0
     }
 
-    async updateMessageDestError(sn: number, src_network: string, dest_network: string, src_app: string, errMsg: string) {
-        const tableName = `messages`
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
+    async updateRollbackMessage(
+        sn: number,
+        src_network: string,
+        dest_network: string,
+        src_app: string,
+        rollback_block_number: number,
+        rollback_block_timestamp: number,
+        rollback_tx_hash: string,
+        rollback_error: string | undefined,
+        status: string
+    ) {
         try {
             const rs = await this.pool.query(
-                `UPDATE ${tableName}   
-                SET dest_error = $5, updated_at = $6
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND dest_error is not null`,
-                [sn, src_network, dest_network, src_app, errMsg, nowTimestamp]
+                `UPDATE messages   
+                SET rollback_block_number = $5, rollback_block_timestamp = $6, rollback_tx_hash = $7, rollback_error = $8, status = $9, updated_at = $10
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                [
+                    sn,
+                    src_network,
+                    dest_network,
+                    src_app,
+                    rollback_block_number,
+                    rollback_block_timestamp,
+                    rollback_tx_hash,
+                    rollback_error,
+                    status,
+                    nowTimestamp()
+                ]
             )
+
             return rs.rowCount
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
@@ -276,31 +253,37 @@ class Db {
         return 0
     }
 
-    async updateMessageSent(
+    async updateResponseMessage(
         sn: number,
         src_network: string,
         dest_network: string,
         src_app: string,
-        dest_block_number: number,
-        dest_block_timestamp: number,
-        dest_tx_hash: string,
+        response_block_number: number,
+        response_block_timestamp: number,
+        response_tx_hash: string,
+        rollback_error: string | undefined,
         status: string
     ) {
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
         try {
-            const needUpdate = await this.needUpdateMessageStatus(sn, src_network, dest_network, src_app, status)
+            const rs = await this.pool.query(
+                `UPDATE messages   
+                SET response_block_number = $5, response_block_timestamp = $6, response_tx_hash = $7, rollback_error =$8, status = $9, updated_at =$10
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                [
+                    sn,
+                    src_network,
+                    dest_network,
+                    src_app,
+                    response_block_number,
+                    response_block_timestamp,
+                    response_tx_hash,
+                    rollback_error,
+                    status,
+                    nowTimestamp()
+                ]
+            )
 
-            if (needUpdate) {
-                const rs = await this.pool.query(
-                    `UPDATE messages   
-                    SET dest_block_number = $5, dest_block_timestamp = $6, dest_tx_hash = $7, status = $8, updated_at = $9
-                    WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
-                    [sn, src_network, dest_network, src_app, dest_block_number, dest_block_timestamp, dest_tx_hash, status, nowTimestamp]
-                )
-
-                return rs.rowCount
-            }
+            return rs.rowCount
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
@@ -308,31 +291,23 @@ class Db {
         return 0
     }
 
-    async updateMessageRollbacked(
+    async updateExecutedMessage(
         sn: number,
         src_network: string,
         dest_network: string,
         src_app: string,
-        dest_block_number: number,
-        dest_block_timestamp: number,
-        dest_tx_hash: string,
+        src_error: string | undefined,
+        dest_error: string | undefined,
         status: string
     ) {
-        const nowTimestamp = Math.floor(Date.now() / 1000)
-
         try {
-            const needUpdate = await this.needUpdateMessageStatus(sn, src_network, dest_network, src_app, status)
-
-            if (needUpdate) {
-                const rs = await this.pool.query(
-                    `UPDATE messages   
-                    SET dest_block_number = $5, dest_block_timestamp = $6, dest_tx_hash = $7, status = $8, rollbacked = $9, updated_at = $10
-                    WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
-                    [sn, src_network, dest_network, src_app, dest_block_number, dest_block_timestamp, dest_tx_hash, status, true, nowTimestamp]
-                )
-
-                return rs.rowCount
-            }
+            const rs = await this.pool.query(
+                `UPDATE messages   
+                SET status = $5, src_error = $6, dest_error = $7, updated_at = $8
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                [sn, src_network, dest_network, src_app, status, src_error, dest_error, nowTimestamp()]
+            )
+            return rs.rowCount
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
@@ -347,40 +322,30 @@ class Db {
         return dappAddressesRs.rows.map((p) => p.from_decoded as string)
     }
 
-    async getNotSyncedMessages(network: string) {
-        const snsRs = await this.pool.query(
-            `SELECT distinct sn 
-            FROM ${network}_events 
-            WHERE sn not in (SELECT distinct sn FROM messages WHERE synced = true)
-            ORDER BY sn`
+    async getNotSyncedMessages(src_network: string) {
+        let snsRs = await this.pool.query(
+            `SELECT sn, src_network, dest_network 
+            FROM messages 
+            WHERE src_network = $1 AND synced = $2 
+            GROUP BY sn, src_network, dest_network
+            ORDER BY sn desc`,
+            [src_network, false]
         )
-        return snsRs.rows.map((p) => p.sn as number)
+
+        return snsRs.rows as BaseMessageModel[]
     }
 
-    async getPendingMessages(src_network: string, dest_network: string) {
-        if (dest_network) {
-            let snsRs = await this.pool.query(
-                `SELECT sn, src_network, dest_network 
-                FROM messages 
-                WHERE src_network = $1 AND dest_network = $2 AND status = $3 
-                GROUP BY sn, src_network, dest_network
-                ORDER BY sn desc`,
-                [src_network, dest_network, MSG_STATUS.Delivered]
-            )
+    async getPendingMessages(src_network: string) {
+        let snsRs = await this.pool.query(
+            `SELECT sn, src_network, dest_network 
+            FROM messages 
+            WHERE src_network = $1 AND status = $2 
+            GROUP BY sn, src_network, dest_network
+            ORDER BY sn desc`,
+            [src_network, MSG_STATUS.Pending]
+        )
 
-            return snsRs.rows as BaseMessageModel[]
-        } else {
-            let snsRs = await this.pool.query(
-                `SELECT sn, src_network, dest_network 
-                FROM messages 
-                WHERE src_network = $1 AND status = $2 
-                GROUP BY sn, src_network, dest_network
-                ORDER BY sn desc`,
-                [src_network, MSG_STATUS.Pending]
-            )
-
-            return snsRs.rows as BaseMessageModel[]
-        }
+        return snsRs.rows as BaseMessageModel[]
     }
 
     async getMaxMessageSn(src_network: string) {
@@ -389,4 +354,4 @@ class Db {
     }
 }
 
-export { Db, EventModel, MessageModel }
+export { Db }

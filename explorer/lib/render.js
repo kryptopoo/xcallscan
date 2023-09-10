@@ -3,14 +3,16 @@ import Image from 'next/image'
 import { ClipboardDocumentIcon } from '@heroicons/react/24/solid'
 import TxHashLink from '@/components/tx-hash-link'
 
-function renderMessageStatus(status, rollbacked) {
-    if (rollbacked) return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-red-300 text-center">Rollbacked</span>
-    if (status == 'pending') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-gray-300 text-center">{status}</span>
-    if (status == 'executed') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-green-300 text-center">{status}</span>
-    if (status == 'delivered') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-blue-300 text-center">{status}</span>
+function renderMessageStatus(msgData) {
+    if (msgData.rollback_tx_hash) return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-red-300 text-center">Rollbacked</span>
+    if (msgData.status == 'pending') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-gray-300 text-center">{msgData.status}</span>
+    if (msgData.status == 'executed') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-green-300 text-center">{msgData.status}</span>
+    if (msgData.status == 'delivered') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-blue-300 text-center">{msgData.status}</span>
 }
 
 function renderHashLink(scanUrl, network, hash, isFull = false) {
+    if (!hash) return (<div>-</div>)
+
     let networkImg
     let linkClass = isFull ? 'hover:underline inline-block w-[37rem]' : 'hover:underline inline-block text-ellipsis overflow-hidden w-64'
     let link = <div>-</div>
