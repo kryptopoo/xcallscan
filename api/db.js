@@ -55,10 +55,12 @@ const searchMessages = async (value) => {
     // console.log(value.startsWith('0x'), Number.isInteger(Number(value)))
     // const sn =  Number.isInteger(Number(value)) ? parseInt(value) : 0
     // console.log(value, Number.isInteger(Number(value)), parseInt(value) ,  sn)
-    const messagesRs = await pool.query('SELECT * FROM messages WHERE src_tx_hash = $1 OR dest_tx_hash = $1 OR sn = $2', [
-        value,
-        value.startsWith('0x') || !Number.isInteger(Number(value)) ? '0' : value
-    ])
+    const messagesRs = await pool.query(
+        `SELECT * FROM messages 
+        WHERE src_tx_hash = $1 OR dest_tx_hash = $1 OR response_tx_hash = $1 OR rollback_tx_hash = $1 OR sn = $2 
+        ORDER BY src_block_timestamp DESC`,
+        [value, value.startsWith('0x') || !Number.isInteger(Number(value)) ? '0' : value]
+    )
     return {
         data: messagesRs.rows,
         meta: {
