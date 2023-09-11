@@ -11,7 +11,7 @@ function renderMessageStatus(msgData) {
 }
 
 function renderHashLink(scanUrl, network, hash, isFull = false) {
-    if (!hash) return (<div>-</div>)
+    if (!hash) return <div>-</div>
 
     let networkImg
     let linkClass = isFull ? 'hover:underline inline-block w-[37rem]' : 'hover:underline inline-block text-ellipsis overflow-hidden w-64'
