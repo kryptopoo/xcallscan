@@ -83,6 +83,7 @@ export class Syncer {
             // sync received messages
             for (let i = 0; i < pendingMsgs.length; i++) {
                 const sn = pendingMsgs[i].sn
+                await sourceSyncer.syncSentMessages(sn)
                 await sourceSyncer.syncReceivedMessages(sn)
             }
         }
