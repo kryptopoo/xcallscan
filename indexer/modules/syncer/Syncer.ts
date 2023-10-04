@@ -41,15 +41,18 @@ export class Syncer {
 
             const maxMsgSn = await this._db.getMaxMessageSn(network)
             const maxEventSn = await this._db.getMaxEventSn(network)
-            logger.info(`${network} syncing ${Math.abs(maxEventSn - maxMsgSn)} new messages fromSn:${maxMsgSn} toSn:${maxEventSn}`)
+            const syncFrom = maxMsgSn < maxEventSn ? maxMsgSn : maxEventSn
+            const syncTo = maxMsgSn > maxEventSn ? maxMsgSn : maxEventSn
+            const newMsgCount = maxEventSn - maxMsgSn
+            logger.info(`${network} syncing ${newMsgCount > 0 ? newMsgCount : 0} new messages fromSn:${syncFrom} toSn:${syncTo}`)
 
-            if (maxEventSn > maxMsgSn) {
+            if (newMsgCount > 0) {
                 // sync sent messages
-                for (let sn = maxMsgSn; sn <= maxEventSn; sn++) {
+                for (let sn = syncFrom; sn <= syncTo; sn++) {
                     await sourceSyncer.syncSentMessages(sn)
                 }
                 // sync received messages
-                for (let sn = maxMsgSn; sn <= maxEventSn; sn++) {
+                for (let sn = syncFrom; sn <= syncTo; sn++) {
                     await sourceSyncer.syncReceivedMessages(sn)
                 }
             }
