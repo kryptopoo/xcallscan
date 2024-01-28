@@ -7,37 +7,50 @@ import { HavahScan } from './modules/scan/HavahScan'
 import { IconScan } from './modules/scan/IconScan'
 import { Fletcher } from './modules/fletcher/Fletcher'
 import { Syncer } from './modules/syncer/Syncer'
+import { CosmosScan } from './modules/scan/CosmosScan'
 
 const runCmd = async () => {
     // handle arguments
     const args = require('minimist')(process.argv.slice(2))?._
     console.log('args', args)
     const cmd = args[0]
-    const network = args[1]
-
-    let scan: IScan = new IconScan()
-    if (network == NETWORK.HAVAH) {
-        scan = new HavahScan()
-    }
-    if (network == NETWORK.BSC || network == NETWORK.ETH2) {
-        scan = new EvmScan(network)
-    }
-
-    let fletcher: IFletcher = new Fletcher(network)
 
     // command
-    if (cmd == 'initdb') {
+    if (cmd == 'db') {
+        const act = args[1]
+        const filename = args[2]
         const db = new Db()
-        const rs = await db.init()
-        if (rs.rowCount > 0) console.log('init database successfully')
+        if (act == 'init') {
+            const rs = await db.init()
+            if (rs) console.log('init database successfully')
+        }
+        if (act == 'migrate') {
+            const rs = await db.migrate(filename)
+            if (rs) console.log('migrate database successfully')
+        }
     }
+
     if (cmd == 'scan') {
+        const network = args[1]
+
+        let scan: IScan = new IconScan(network)
+        if (network == NETWORK.HAVAH) {
+            scan = new HavahScan()
+        }
+        if (network == NETWORK.BSC || network == NETWORK.ETH2) {
+            scan = new EvmScan(network)
+        }
+        if (network == NETWORK.IBC_ARCHWAY) {
+            scan = new CosmosScan(network)
+        }
+
         const event = args[2]
         const { lastFlagNumber, eventLogs } = await scan.getEventLogs(0, event)
-        console.log('eventLogs', eventLogs)
     }
     if (cmd == 'fletch') {
+        const network = args[1]
         const event = args[2]
+        let fletcher: IFletcher = new Fletcher(network)
 
         if (event) {
             let fletched = false
@@ -64,7 +77,9 @@ const runCmd = async () => {
     if (cmd == 'sync') {
         const snFrom = args[1]
         const snTo = args[2] ?? snFrom
-        const syncer = new Syncer()
+        const networks = args[3] ? args[3].split(',') : []
+
+        const syncer = new Syncer(networks)
 
         for (let sn = snFrom; sn <= snTo; sn++) {
             await syncer.syncMessage(sn)

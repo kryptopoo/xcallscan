@@ -7,4 +7,14 @@ const lastWeekTimestamp = () => {
     return now - 7 * 24 * 60 * 60
 }
 
-export { nowTimestamp, lastWeekTimestamp }
+const toDateString = (timestamp: number) => {
+    const dateString = new Date(timestamp * 1000).toISOString()
+    return dateString
+}
+
+const toTimestamp = (date: Date) => {
+    const timestamp = Math.floor(date.getTime() / 1000)
+    return timestamp
+}
+
+export { nowTimestamp, lastWeekTimestamp, toDateString, toTimestamp }

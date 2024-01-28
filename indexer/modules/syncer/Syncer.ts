@@ -9,8 +9,8 @@ export class Syncer {
     sourceSyncers: { [network: string]: SourceSyncer } = {}
     networks: string[] = []
 
-    constructor() {
-        this.networks = Object.values(NETWORK)
+    constructor(networks: string[] = []) {
+        this.networks = networks.length == 0 ? Object.values(NETWORK) : networks
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
             const sourceSyncer = new SourceSyncer(network)

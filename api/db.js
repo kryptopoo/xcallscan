@@ -10,18 +10,25 @@ const pool = new Pool({
     port: process.env.PGPORT
 })
 
-const SCAN_TX_URL_ICON =
-    process.env.USE_MAINNET == 'true' ? 'https://tracker.icon.community/transaction/' : 'https://tracker.berlin.icon.community/transaction/'
-const SCAN_TX_URL_BSC = process.env.USE_MAINNET == 'true' ? 'https://bscscan.com/tx/' : 'https://testnet.bscscan.com/tx/'
-const SCAN_TX_URL_ETH2 = process.env.USE_MAINNET == 'true' ? 'https://etherscan.io/tx/' : 'https://sepolia.etherscan.io/tx/'
-const SCAN_TX_URL_HAVAH = process.env.USE_MAINNET == 'true' ? 'https://scan.havah.io/txn/' : 'https://scan.altair.havah.io/txn/'
+const useMainnet = process.env.USE_MAINNET == 'true'
+
+const NETWORK = {
+    ICON: 'icon',
+    BSC: 'bsc',
+    ETH2: 'eth2',
+    HAVAH: 'havah',
+    IBC_ICON: 'ibc_icon',
+    IBC_ARCHWAY: 'ibc_archway'
+}
 
 const metaUrls = {
     tx: {
-        bsc: SCAN_TX_URL_BSC,
-        icon: SCAN_TX_URL_ICON,
-        eth2: SCAN_TX_URL_ETH2,
-        havah: SCAN_TX_URL_HAVAH
+        [NETWORK.BSC]: useMainnet ? 'https://bscscan.com/tx/' : 'https://testnet.bscscan.com/tx/',
+        [NETWORK.ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.berlin.icon.community/transaction/',
+        [NETWORK.ETH2]: useMainnet ? 'https://etherscan.io/tx/' : 'https://sepolia.etherscan.io/tx/',
+        [NETWORK.HAVAH]: useMainnet ? 'https://scan.havah.io/txn/' : 'https://scan.altair.havah.io/txn/',
+        [NETWORK.IBC_ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.berlin.icon.community/transaction/',
+        [NETWORK.IBC_ARCHWAY]: useMainnet ? 'https://mintscan.io/archway-testnet/txs/' : 'https://testnet.mintscan.io/archway-testnet/txs/'
     }
 }
 
@@ -71,26 +78,20 @@ const searchMessages = async (value) => {
 
 const getStatistic = async () => {
     const totalRs = await pool.query('SELECT count(*) FROM messages')
-    const feeIconRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'icon'`)
-    const feeHavahRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'havah'`)
-    const feeBscRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'bsc'`)
-    const feeEth2Rs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = 'eth2'`)
+    const messages = Number(totalRs.rows[0].count)
+
+    const fees = {}
+    const networks = Object.values(NETWORK)
+    for (let index = 0; index < networks.length; index++) {
+        const network = networks[index]
+        const feeRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = '${network}'`)
+        fees[network] = feeRs.rows[0].sum ? feeRs.rows[0].sum.toString() : '0'
+    }
 
     return {
         data: {
-            messages: Number(totalRs.rows[0].count),
-            fees: {
-                icon: feeIconRs.rows[0].sum.toString(),
-                havah: feeHavahRs.rows[0].sum.toString(),
-                bsc: feeBscRs.rows[0].sum.toString(),
-                eth2: feeEth2Rs.rows[0].sum.toString()
-            }
-            // fees: [
-            //     { network: 'icon', total: feeIconRs.rows[0].sum.toString() },
-            //     { network: 'havah', total: feeHavahRs.rows[0].sum.toString() },
-            //     { network: 'bsc', total: feeBscRs.rows[0].sum.toString() },
-            //     { network: 'eth2', total: feeEth2Rs.rows[0].sum.toString() }
-            // ]
+            messages,
+            fees
         },
         meta: {
             urls: metaUrls

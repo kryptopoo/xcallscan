@@ -8,6 +8,7 @@ import { IconScan } from '../scan/IconScan'
 import { HavahScan } from '../scan/HavahScan'
 import { EvmScan } from '../scan/EvmScan'
 import { EventModel } from '../../types/DataModels'
+import { CosmosScan } from '../scan/CosmosScan'
 
 export class Fletcher implements IFletcher {
     private _db = new Db()
@@ -15,12 +16,15 @@ export class Fletcher implements IFletcher {
     scan: IScan
 
     constructor(network: string) {
-        this.scan = new IconScan()
+        this.scan = new IconScan(network)
         if (network == NETWORK.HAVAH) {
             this.scan = new HavahScan()
         }
         if (network == NETWORK.BSC || network == NETWORK.ETH2) {
             this.scan = new EvmScan(network)
+        }
+        if (network == NETWORK.IBC_ARCHWAY) {
+            this.scan = new CosmosScan(network)
         }
     }
 
@@ -77,27 +81,40 @@ export class Fletcher implements IFletcher {
         await this._db.insertEvent(this.scan.network, eventModel)
     }
 
-    async fletchEvents(eventNames: string[], blockNumber: number = 0) {
-        let promiseTasks = []
-        for (let i = 0; i < eventNames.length; i++) {
-            promiseTasks.push(this.fletchEvent(eventNames[i], blockNumber))
+    async fletchEvents(eventNames: string[], flagNumber: number = 0) {
+        // work arround to prevent api block
+        if (this.scan.network == NETWORK.IBC_ARCHWAY) {
+            // let finished = true
+            // for (let i = 0; i < eventNames.length; i++) {
+            //     finished &&= await this.fletchEvent(eventNames[i], flagNumber)
+            //     await new Promise((f) => setTimeout(f, 1000 * 10))
+            // }
+            // return finished
+
+            let finished = true
+            finished &&= await this.fletchEvent('', flagNumber)
+            return finished
+        } else {
+            let promiseTasks = []
+            for (let i = 0; i < eventNames.length; i++) {
+                promiseTasks.push(this.fletchEvent(eventNames[i], flagNumber))
+            }
+            const results = await Promise.all(promiseTasks)
+            const finished = results.every((r) => r == true)
+
+            if (finished) logger.info(`${this.scan.network} has no new events`)
+
+            return finished
         }
-        const results = await Promise.all(promiseTasks)
-        const finished = results.every((r) => r == true)
-
-        if (finished) logger.info(`${this.scan.network} has no new events`)
-
-        return finished
     }
 
-    async fletchEvent(eventName: string, blockNumber: number = 0) {
-        let counterName = `${this.scan.network}_${eventName}_${this.scan.network == NETWORK.HAVAH ? 'CountNumber' : 'BlockNumber'}`
-        let counter = await this._db.getCounterByName(counterName)
-        let fromBlockNumber = blockNumber > 0 ? blockNumber : counter.value
+    async fletchEvent(eventName: string, flagNumber: number = 0) {
+        const counter = await this.getCounter(eventName)
+        let fromFlagNumber = flagNumber > 0 ? flagNumber : counter.value
 
-        logger.info(`${this.scan.network} fetching events ${counterName} ${fromBlockNumber}`)
+        logger.info(`${this.scan.network} fetching events ${counter.name} ${fromFlagNumber}`)
 
-        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromBlockNumber, eventName)
+        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName)
 
         for (let i = 0; i < eventLogs.length; i++) {
             let eventLog = eventLogs[i]
@@ -106,7 +123,7 @@ export class Fletcher implements IFletcher {
                 await this.storeDb(eventLog)
 
                 logger.info(
-                    `${this.scan.network} fetched block:${eventLog.blockNumber} event:${eventName} sn:${eventLog.eventData._sn ?? ''} nsn:${
+                    `${this.scan.network} fetched block:${eventLog.blockNumber} event:${eventLog.eventName} sn:${eventLog.eventData._sn ?? ''} nsn:${
                         eventLog.eventData._nsn ?? ''
                     } reqId:${eventLog.eventData._reqId ?? ''}`
                 )
@@ -114,8 +131,16 @@ export class Fletcher implements IFletcher {
         }
 
         const finished = lastFlagNumber == counter.value
-        if (!finished) await this._db.updateCounter(counterName, lastFlagNumber)
+        if (!finished) await this._db.updateCounter(counter.name, lastFlagNumber)
 
         return finished
+    }
+
+    private async getCounter(eventName: string) {
+        let counterName = `${this.scan.network}_${eventName}_${
+            this.scan.network == NETWORK.HAVAH ? 'CountNumber' : this.scan.network == NETWORK.IBC_ARCHWAY ? 'BlockTimestamp' : 'BlockNumber'
+        }`
+        let counter = await this._db.getCounterByName(counterName)
+        return counter
     }
 }

@@ -56,6 +56,11 @@ export class SourceSyncer implements ISourceSyncer {
             synced: false
         }
 
+        // correct ibc icon network
+        if (msg.dest_network == NETWORK.ICON && msg.src_network?.startsWith('ibc')) {
+            msg.dest_network = NETWORK.IBC_ICON
+        }
+
         return msg
     }
 
@@ -99,6 +104,7 @@ export class SourceSyncer implements ISourceSyncer {
 
     async syncSentMessages(sn: number): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
+        // console.log(this.network, 'syncSentMessages events', events)
         for (let i = 0; i < events.length; i++) {
             const event = events[i]
 
@@ -195,7 +201,7 @@ export class SourceSyncer implements ISourceSyncer {
 
     async syncReceivedMessages(sn: number): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
-
+        // console.log(this.network, 'syncReceivedMessages events', events)
         for (let i = 0; i < events.length; i++) {
             const event = events[i]
 
