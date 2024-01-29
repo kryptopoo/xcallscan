@@ -6,7 +6,11 @@ import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 
 export class IconScan implements IScan {
-    network: string = NETWORK.ICON
+    network: string
+
+    constructor(network: string = NETWORK.ICON) {
+        this.network = network
+    }
 
     async callApi(apiUrl: string, params: any): Promise<any> {
         try {

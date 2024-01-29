@@ -23,35 +23,34 @@
             "network_id": "0x111.icon",
             "btp_network_id": "0x111.icon",
             "block_height": 9443
+        },
+        "ibc_icon": {
+            "uri": "https://berlin.net.solidwallet.io/api/v3/icon_dex",
+            "network_id": "0x7",
+            "btp_network_id": "0x7.icon",
+            "block_height": 6229345
+        },
+        "ibc_archway": {
+            "uri": "",
+            "network_id": "archway",
+            "btp_network_id": "archway",
+            "block_height": 0
         }
     },
     "contracts": {
         "icon": {
             "bmc": "cxf1b0808f09138fffdb890772315aeabb37072a8a",
-            "bsc_bmv": "cxf91622bde00947354a65876829931f92c0ba329b",
-            "eth2_bmv": "cxdd91f194673553097745f33dd464a39740075735",
-            "havah_bmv": "cx90b6dca89aa45388b24a6c158eb9d21d51263037",
             "xcall": "cxf4958b242a264fc11d7d8d95f79035e35b21c1bb",
             "dapp": "cx92283a47a95164bd3d604da08128886125593545"
         },
         "bsc": {
             "bmc": "0x9Fd9e050682A8795dEa6eE70870A82a513d390Ac",
-            "bmc_impl": "0x1709FB3Cd401cB86Fd30Dd3Ef0d1A0c76858C8b5",
-            "bmcm": "0x41CD95F16f9bbF2bEB5479C00CF249A8b0A076bF",
-            "bmcs": "0xCC98F0736ec2ef32B8A64251BB89aF14E27043b6",
-            "bmv": "0x0a42d5c21EF16aec1c31c4511EdCaA9648a9538C",
             "xcall": "0x5Ebb7aCB7bCaf7C1ADeFcF9660D39AC07d432904",
-            "xcall_impl": "0x3CFBbB1c3a83b1c5a8E94eC3e2229Ba7a03f3EAd",
             "dapp": "0x4EaC1CDBE8131de10FE1AE969397d02d47D21082"
         },
         "eth2": {
             "bmc": "0xE602326106f5E1d436a3CCEB2A408759925f81ff",
-            "bmc_impl": "0x63ca9B73De32F1ECBF285b710D4371a2aE1aC1ED",
-            "bmcm": "0x9fb595461023f9A920B276A4b289972c4aFF114F",
-            "bmcs": "0xEe94cBA4C4d138fb4de1F4bcfA1CEeF062eE8251",
-            "bmv": "0x1592F432Dde573341BaFe14d5FAbe4A299b2E721",
             "xcall": "0x694C1f5Fb4b81e730428490a1cE3dE6e32428637",
-            "xcall_impl": "0x7Fc0f3807ECAD54eFCCb6ED686a788955fe0958f",
             "dapp": "0x597F73bfb3124B6145151E7a8A30b781C41FF2B0"
         },
         "havah": {
@@ -59,6 +58,12 @@
             "bmv": "cx90f9d84e0b757ba02599fabcbda30e46105cb89c",
             "xcall": "cxce3a72cc1defaf07b23e05b595840c00d5a80b0c",
             "dapp": "cxc9f0ba03c4a39a43c5dc0a5ae5d2d1327a065d62"
+        },
+        "ibc_icon": {
+            "xcall": "cx5b0bd4bb62e2b511aa29586c1e8a21749425d474"
+        },
+        "ibc_archway": {
+            "xcall": "archway1kenxz0wuczr04mc9q3gwjuyzd6ft4zqm5wach846gghfjupvlncshvchs2"
         }
     }
 }

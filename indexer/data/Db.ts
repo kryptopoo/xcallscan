@@ -25,6 +25,13 @@ class Db {
         return rs
     }
 
+    async migrate(filename: string) {
+        const sqlFilePath = path.join(__dirname, 'migrations', filename)
+        const sql = fs.readFileSync(sqlFilePath, 'utf8')
+        const rs = await this.pool.query(sql)
+        return rs
+    }
+
     async getCounterByName(name: string) {
         let result = { name: name, value: 0 }
         const counterRs = await this.pool.query('SELECT * FROM counter where name = $1', [name])
@@ -164,7 +171,7 @@ class Db {
                         nowTimestamp()
                     ]
                 )
-                return rs.rowCount
+                return rs.rowCount ?? 0
             } catch (error: any) {
                 logger.error(`db: error ${error.message}`)
             }
@@ -181,7 +188,7 @@ class Db {
                 WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
                 [sn, src_network, dest_network, src_app, synced, nowTimestamp()]
             )
-            return rs.rowCount
+            return rs.rowCount ?? 0
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
@@ -207,7 +214,7 @@ class Db {
                 [sn, src_network, dest_network, src_app, dest_block_number, dest_block_timestamp, dest_tx_hash, status, nowTimestamp()]
             )
 
-            return rs.rowCount
+            return rs.rowCount ?? 0
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
@@ -245,7 +252,7 @@ class Db {
                 ]
             )
 
-            return rs.rowCount
+            return rs.rowCount ?? 0
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
@@ -283,7 +290,7 @@ class Db {
                 ]
             )
 
-            return rs.rowCount
+            return rs.rowCount ?? 0
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
@@ -307,7 +314,7 @@ class Db {
                 WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
                 [sn, src_network, dest_network, src_app, status, src_error, dest_error, nowTimestamp()]
             )
-            return rs.rowCount
+            return rs.rowCount ?? 0
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }

@@ -9,7 +9,9 @@ const NETWORK = {
     ICON: 'icon',
     BSC: 'bsc',
     ETH2: 'eth2',
-    HAVAH: 'havah'
+    HAVAH: 'havah',
+    IBC_ICON: 'ibc_icon',
+    IBC_ARCHWAY: 'ibc_archway'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -23,21 +25,34 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: USE_MAINNET ? 'https://tracker.icon.community/api/v1' : 'https://tracker.berlin.icon.community/api/v1',
     [NETWORK.BSC]: USE_MAINNET ? 'https://api.bscscan.com/api' : 'https://api-testnet.bscscan.com/api',
     [NETWORK.ETH2]: USE_MAINNET ? 'https://api.etherscan.io/api' : 'https://api-sepolia.etherscan.io/api',
-    [NETWORK.HAVAH]: USE_MAINNET ? 'https://scan.havah.io/v3' : 'https://scan.altair.havah.io/v3'
+    [NETWORK.HAVAH]: USE_MAINNET ? 'https://scan.havah.io/v3' : 'https://scan.altair.havah.io/v3',
+
+    [NETWORK.IBC_ICON]: USE_MAINNET ? 'https://tracker.icon.community/api/v1' : 'https://tracker.berlin.icon.community/api/v1',
+    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://front.api.mintscan.io/v1/archway' : 'https://front.api.mintscan.io/v1/archway-testnet'
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.ICON]: USE_MAINNET ? MainnetDeployment.networks.icon.btp_network_id : TestnetDeployment.networks.icon.btp_network_id,
     [NETWORK.BSC]: USE_MAINNET ? MainnetDeployment.networks.bsc.btp_network_id : TestnetDeployment.networks.bsc.btp_network_id,
     [NETWORK.ETH2]: USE_MAINNET ? MainnetDeployment.networks.eth2.btp_network_id : TestnetDeployment.networks.eth2.btp_network_id,
-    [NETWORK.HAVAH]: USE_MAINNET ? MainnetDeployment.networks.havah.btp_network_id : TestnetDeployment.networks.havah.btp_network_id
+    [NETWORK.HAVAH]: USE_MAINNET ? MainnetDeployment.networks.havah.btp_network_id : TestnetDeployment.networks.havah.btp_network_id,
+
+    [NETWORK.IBC_ICON]: USE_MAINNET ? MainnetDeployment.networks.ibc_icon.btp_network_id : TestnetDeployment.networks.ibc_icon.btp_network_id,
+    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? MainnetDeployment.networks.ibc_archway.btp_network_id : TestnetDeployment.networks.ibc_archway.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
     [NETWORK.ICON]: '',
-    [NETWORK.BSC]: process.env.SCAN_BSC_API ?? '',
-    [NETWORK.ETH2]: process.env.SCAN_ETH_API ?? '',
-    [NETWORK.HAVAH]: ''
+    [NETWORK.BSC]: process.env.SCAN_BSC_API_KEY ?? '',
+    [NETWORK.ETH2]: process.env.SCAN_ETH_API_KEY ?? '',
+    [NETWORK.HAVAH]: '',
+
+    [NETWORK.IBC_ICON]: '',
+    [NETWORK.IBC_ARCHWAY]: ''
+}
+
+const SERVICE_API_KEY = {
+    SCRAPING_ANT: process.env.SCRAPING_ANT_API_KEY ?? ''
 }
 
 const CONTRACT: { [network: string]: { xcall: string; dapp: string; bmc: string } } = {
@@ -60,6 +75,18 @@ const CONTRACT: { [network: string]: { xcall: string; dapp: string; bmc: string 
         xcall: USE_MAINNET ? MainnetDeployment.contracts.havah.xcall : TestnetDeployment.contracts.havah.xcall,
         dapp: USE_MAINNET ? MainnetDeployment.contracts.havah.dapp : TestnetDeployment.contracts.havah.dapp,
         bmc: USE_MAINNET ? MainnetDeployment.contracts.havah.bmc : TestnetDeployment.contracts.havah.bmc
+    },
+
+    // IBC
+    [NETWORK.IBC_ICON]: {
+        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_icon.xcall : TestnetDeployment.contracts.ibc_icon.xcall,
+        dapp: '',
+        bmc: ''
+    },
+    [NETWORK.IBC_ARCHWAY]: {
+        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_archway.xcall : TestnetDeployment.contracts.ibc_archway.xcall,
+        dapp: '',
+        bmc: ''
     }
 }
 
@@ -84,4 +111,4 @@ const MSG_STATUS = {
     Executed: 'executed'
 }
 
-export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID }
+export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY }
