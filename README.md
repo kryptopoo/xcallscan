@@ -33,7 +33,12 @@ xCallScan is typically made of:
 - Change `.env.example` to `.env` and configure environment settings
 - Initialize database 
     ```bash
-    ts-node cmd initdb
+    ts-node cmd db init
+    ```
+    
+- Migrate database 
+    ```bash
+    ts-node cmd db migrate <filename.sql>
     ```
 
 - Start indexer

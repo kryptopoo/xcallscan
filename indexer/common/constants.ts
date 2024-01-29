@@ -43,12 +43,16 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
 
 const API_KEY: { [network: string]: string } = {
     [NETWORK.ICON]: '',
-    [NETWORK.BSC]: process.env.SCAN_BSC_API ?? '',
-    [NETWORK.ETH2]: process.env.SCAN_ETH_API ?? '',
+    [NETWORK.BSC]: process.env.SCAN_BSC_API_KEY ?? '',
+    [NETWORK.ETH2]: process.env.SCAN_ETH_API_KEY ?? '',
     [NETWORK.HAVAH]: '',
 
     [NETWORK.IBC_ICON]: '',
     [NETWORK.IBC_ARCHWAY]: ''
+}
+
+const SERVICE_API_KEY = {
+    SCRAPING_ANT: process.env.SCRAPING_ANT_API_KEY ?? ''
 }
 
 const CONTRACT: { [network: string]: { xcall: string; dapp: string; bmc: string } } = {
@@ -72,6 +76,7 @@ const CONTRACT: { [network: string]: { xcall: string; dapp: string; bmc: string 
         dapp: USE_MAINNET ? MainnetDeployment.contracts.havah.dapp : TestnetDeployment.contracts.havah.dapp,
         bmc: USE_MAINNET ? MainnetDeployment.contracts.havah.bmc : TestnetDeployment.contracts.havah.bmc
     },
+
     // IBC
     [NETWORK.IBC_ICON]: {
         xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_icon.xcall : TestnetDeployment.contracts.ibc_icon.xcall,
@@ -106,4 +111,4 @@ const MSG_STATUS = {
     Executed: 'executed'
 }
 
-export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID }
+export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY }
