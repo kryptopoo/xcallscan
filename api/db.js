@@ -18,7 +18,8 @@ const NETWORK = {
     ETH2: 'eth2',
     HAVAH: 'havah',
     IBC_ICON: 'ibc_icon',
-    IBC_ARCHWAY: 'ibc_archway'
+    IBC_ARCHWAY: 'ibc_archway',
+    IBC_NEUTRON: 'ibc_neutron'
 }
 
 const metaUrls = {
@@ -28,7 +29,8 @@ const metaUrls = {
         [NETWORK.ETH2]: useMainnet ? 'https://etherscan.io/tx/' : 'https://sepolia.etherscan.io/tx/',
         [NETWORK.HAVAH]: useMainnet ? 'https://scan.havah.io/txn/' : 'https://scan.altair.havah.io/txn/',
         [NETWORK.IBC_ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.berlin.icon.community/transaction/',
-        [NETWORK.IBC_ARCHWAY]: useMainnet ? 'https://mintscan.io/archway-testnet/txs/' : 'https://testnet.mintscan.io/archway-testnet/txs/'
+        [NETWORK.IBC_ARCHWAY]: useMainnet ? 'https://mintscan.io/archway/txs/' : 'https://testnet.mintscan.io/archway-testnet/txs/',
+        [NETWORK.IBC_NEUTRON]: useMainnet ? 'https://neutron.celat.one/neutron-1/txs/' : 'https://neutron.celat.one/pion-1/txs/'
     }
 }
 

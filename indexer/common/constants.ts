@@ -11,7 +11,8 @@ const NETWORK = {
     ETH2: 'eth2',
     HAVAH: 'havah',
     IBC_ICON: 'ibc_icon',
-    IBC_ARCHWAY: 'ibc_archway'
+    IBC_ARCHWAY: 'ibc_archway',
+    IBC_NEUTRON: 'ibc_neutron'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -28,7 +29,8 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.HAVAH]: USE_MAINNET ? 'https://scan.havah.io/v3' : 'https://scan.altair.havah.io/v3',
 
     [NETWORK.IBC_ICON]: USE_MAINNET ? 'https://tracker.icon.community/api/v1' : 'https://tracker.berlin.icon.community/api/v1',
-    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://front.api.mintscan.io/v1/archway' : 'https://front.api.mintscan.io/v1/archway-testnet'
+    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://front.api.mintscan.io/v1/archway' : 'https://front.api.mintscan.io/v1/archway-testnet',
+    [NETWORK.IBC_NEUTRON]: USE_MAINNET ? 'https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1' : 'https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1'
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -38,7 +40,10 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.HAVAH]: USE_MAINNET ? MainnetDeployment.networks.havah.btp_network_id : TestnetDeployment.networks.havah.btp_network_id,
 
     [NETWORK.IBC_ICON]: USE_MAINNET ? MainnetDeployment.networks.ibc_icon.btp_network_id : TestnetDeployment.networks.ibc_icon.btp_network_id,
-    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? MainnetDeployment.networks.ibc_archway.btp_network_id : TestnetDeployment.networks.ibc_archway.btp_network_id
+    [NETWORK.IBC_ARCHWAY]: USE_MAINNET
+        ? MainnetDeployment.networks.ibc_archway.btp_network_id
+        : TestnetDeployment.networks.ibc_archway.btp_network_id,
+    [NETWORK.IBC_NEUTRON]: USE_MAINNET ? MainnetDeployment.networks.ibc_neutron.btp_network_id : TestnetDeployment.networks.ibc_neutron.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -48,7 +53,8 @@ const API_KEY: { [network: string]: string } = {
     [NETWORK.HAVAH]: '',
 
     [NETWORK.IBC_ICON]: '',
-    [NETWORK.IBC_ARCHWAY]: ''
+    [NETWORK.IBC_ARCHWAY]: '',
+    [NETWORK.IBC_NEUTRON]: ''
 }
 
 const SERVICE_API_KEY = {
@@ -87,7 +93,27 @@ const CONTRACT: { [network: string]: { xcall: string; dapp: string; bmc: string 
         xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_archway.xcall : TestnetDeployment.contracts.ibc_archway.xcall,
         dapp: '',
         bmc: ''
+    },
+    [NETWORK.IBC_NEUTRON]: {
+        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_neutron.xcall : TestnetDeployment.contracts.ibc_neutron.xcall,
+        dapp: '',
+        bmc: ''
     }
+}
+
+const SCAN_FROM_FLAG_NUMBER: { [network: string]: number } = {
+    [NETWORK.ICON]: 0,
+    [NETWORK.BSC]: 0,
+    [NETWORK.ETH2]: 0,
+    [NETWORK.HAVAH]: 0,
+
+    [NETWORK.IBC_ICON]: 0,
+    [NETWORK.IBC_ARCHWAY]: USE_MAINNET
+        ? MainnetDeployment.networks.ibc_archway.block_timestamp
+        : TestnetDeployment.networks.ibc_archway.block_timestamp,
+    [NETWORK.IBC_NEUTRON]: USE_MAINNET
+        ? MainnetDeployment.networks.ibc_neutron.block_timestamp
+        : TestnetDeployment.networks.ibc_neutron.block_timestamp
 }
 
 const EVENT = {
@@ -111,4 +137,4 @@ const MSG_STATUS = {
     Executed: 'executed'
 }
 
-export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY }
+export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMBER }

@@ -2,13 +2,13 @@ import logger from '../logger/logger'
 import axios from 'axios'
 import { ethers } from 'ethers'
 
-import { API_URL, EVENT, CONTRACT, API_KEY, SERVICE_API_KEY } from '../../common/constants'
+import { API_URL, EVENT, CONTRACT, API_KEY, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMBER } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { nowTimestamp, toDateString, toTimestamp } from '../../common/helper'
 // import { Crawler } from './Crawler'
 
-export class CosmosScan implements IScan {
+export class MintScan implements IScan {
     // private _crawler: Crawler | undefined
 
     constructor(public network: string) {
@@ -21,11 +21,12 @@ export class CosmosScan implements IScan {
             // const textRs = await this._crawler?.run(apiUrl)
             // if (textRs) return JSON.parse(textRs)
 
-            // Using proxy
+            // Using proxy to prevent block
             const proxyUrl = `https://api.scrapingant.com/v2/extended?url=${encodeURIComponent(apiUrl)}&browser=false&x-api-key=${
                 SERVICE_API_KEY.SCRAPING_ANT
             }`
             const res = await axios.get(proxyUrl)
+            logger.info(`${this.network} calling api ${proxyUrl}`)
             if (res.data.status_code == 200) {
                 const resJson = JSON.parse(res.data.text)
                 return resJson
@@ -33,7 +34,6 @@ export class CosmosScan implements IScan {
                 logger.error(`${this.network} called api failed ${res.data.status_code}`)
             }
         } catch (error: any) {
-            console.log('call api err', error)
             logger.error(`${this.network} called api failed ${error.code}`)
         }
 
@@ -41,26 +41,24 @@ export class CosmosScan implements IScan {
     }
 
     async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
-        const defaultStartTimestamp = toTimestamp(new Date('2023-09-12'))
-        const currentTimestamp = nowTimestamp()
+        let result: EventLog[] = []
+
         const offsetTimestamp = 86400
         const limit = 50
-        let lastBlockTimestamp = flagNumber == 0 ? defaultStartTimestamp : flagNumber
-        let result: EventLog[] = []
         const executeContractType = 47
+        let lastBlockTimestamp = flagNumber == 0 ? SCAN_FROM_FLAG_NUMBER[this.network] : flagNumber
         const startTimestamp = toDateString(lastBlockTimestamp + 1)
         const endTimestamp = toDateString(lastBlockTimestamp + offsetTimestamp)
         const baseUrl = `${API_URL[this.network]}/account/${CONTRACT[this.network].xcall}/txs`
         let url = `${baseUrl}?searchType=${executeContractType}&limit=${limit}&startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`
-        console.log('url', url)
 
         let txs: any[] = []
 
         let res = await this.callApi(url, {})
         txs = txs.concat(res)
 
-        // try fletching if remaining pages
-        while (res.length == 50) {
+        // try fetching if remaining pages
+        while (res.length == limit) {
             url = `${baseUrl}?searchType=${executeContractType}&limit=${limit}&startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}&from=${
                 res[res.length - 1].header.id
             }`
@@ -84,8 +82,6 @@ export class CosmosScan implements IScan {
 
                 const decodeEventLog = this.decodeEventLog(eventLogs, eventName)
                 if (decodeEventLog) {
-                    // const headerId = tx.header.id
-                    // console.log('messages[0]', tx.data.tx.body.messages[0])
                     let log: EventLog = {
                         txRaw: tx.data.raw_log,
                         blockNumber: Number(tx.data.height),
@@ -94,7 +90,7 @@ export class CosmosScan implements IScan {
                         txFrom: tx.data.tx.body.messages[0].sender,
                         txTo: tx.data.tx.body.messages[0].contract ?? '',
                         txFee: tx.data.tx.auth_info.fee.amount[0].amount,
-                        txValue: tx.data.tx.body.messages[0].msg?.cross_transfer?.amount || tx.data.tx.body.messages[0].msg?.deposit?.amount || '',
+                        txValue: tx.data.tx.body.messages[0].msg?.cross_transfer?.amount || tx.data.tx.body.messages[0].msg?.deposit?.amount || '0',
 
                         eventName: eventName,
                         eventData: decodeEventLog
@@ -105,7 +101,7 @@ export class CosmosScan implements IScan {
             }
         }
 
-        lastBlockTimestamp = lastBlockTimestamp > currentTimestamp ? lastBlockTimestamp : lastBlockTimestamp + offsetTimestamp
+        if (lastBlockTimestamp + offsetTimestamp < nowTimestamp()) lastBlockTimestamp += offsetTimestamp
 
         return { lastFlagNumber: lastBlockTimestamp, eventLogs: result }
     }

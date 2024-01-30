@@ -1,13 +1,10 @@
 import { EVENT, NETWORK } from './common/constants'
 import { Db } from './data/Db'
-import { IFletcher } from './interfaces/IFletcher'
+import { IFetcher } from './interfaces/IFetcher'
 import { IScan } from './interfaces/IScan'
-import { EvmScan } from './modules/scan/EvmScan'
-import { HavahScan } from './modules/scan/HavahScan'
-import { IconScan } from './modules/scan/IconScan'
-import { Fletcher } from './modules/fletcher/Fletcher'
+import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
-import { CosmosScan } from './modules/scan/CosmosScan'
+import { ScanFactory } from './modules/scan/ScanFactory'
 
 const runCmd = async () => {
     // handle arguments
@@ -33,34 +30,25 @@ const runCmd = async () => {
     if (cmd == 'scan') {
         const network = args[1]
 
-        let scan: IScan = new IconScan(network)
-        if (network == NETWORK.HAVAH) {
-            scan = new HavahScan()
-        }
-        if (network == NETWORK.BSC || network == NETWORK.ETH2) {
-            scan = new EvmScan(network)
-        }
-        if (network == NETWORK.IBC_ARCHWAY) {
-            scan = new CosmosScan(network)
-        }
+        let scan: IScan = ScanFactory.createScan(network)
 
         const event = args[2]
         const { lastFlagNumber, eventLogs } = await scan.getEventLogs(0, event)
     }
-    if (cmd == 'fletch') {
+    if (cmd == 'fetch') {
         const network = args[1]
         const event = args[2]
-        let fletcher: IFletcher = new Fletcher(network)
+        let fetcher: IFetcher = new Fetcher(network)
 
         if (event) {
-            let fletched = false
-            while (!fletched) {
-                fletched = await fletcher.fletchEvents([event], 0)
+            let fetched = false
+            while (!fetched) {
+                fetched = await fetcher.fetchEvents([event], 0)
             }
         } else {
-            let fletched = false
-            while (!fletched) {
-                fletched = await fletcher.fletchEvents(
+            let fetched = false
+            while (!fetched) {
+                fetched = await fetcher.fetchEvents(
                     [
                         EVENT.CallMessageSent,
                         EVENT.ResponseMessage,
