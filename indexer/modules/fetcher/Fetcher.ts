@@ -1,31 +1,19 @@
 import logger from '../logger/logger'
 import { Db } from '../../data/Db'
 import { EVENT, NETWORK } from '../../common/constants'
-import { IFletcher } from '../../interfaces/IFletcher'
+import { IFetcher } from '../../interfaces/IFetcher'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
-import { IconScan } from '../scan/IconScan'
-import { HavahScan } from '../scan/HavahScan'
-import { EvmScan } from '../scan/EvmScan'
 import { EventModel } from '../../types/DataModels'
-import { CosmosScan } from '../scan/CosmosScan'
+import { ScanFactory } from '../scan/ScanFactory'
 
-export class Fletcher implements IFletcher {
+export class Fetcher implements IFetcher {
     private _db = new Db()
 
     scan: IScan
 
-    constructor(network: string) {
-        this.scan = new IconScan(network)
-        if (network == NETWORK.HAVAH) {
-            this.scan = new HavahScan()
-        }
-        if (network == NETWORK.BSC || network == NETWORK.ETH2) {
-            this.scan = new EvmScan(network)
-        }
-        if (network == NETWORK.IBC_ARCHWAY) {
-            this.scan = new CosmosScan(network)
-        }
+    constructor(public network: string) {
+        this.scan = ScanFactory.createScan(network)
     }
 
     private async storeDb(eventLog: EventLog) {
@@ -81,34 +69,38 @@ export class Fletcher implements IFletcher {
         await this._db.insertEvent(this.scan.network, eventModel)
     }
 
-    async fletchEvents(eventNames: string[], flagNumber: number = 0) {
-        // work arround to prevent api block
-        if (this.scan.network == NETWORK.IBC_ARCHWAY) {
-            // let finished = true
-            // for (let i = 0; i < eventNames.length; i++) {
-            //     finished &&= await this.fletchEvent(eventNames[i], flagNumber)
-            //     await new Promise((f) => setTimeout(f, 1000 * 10))
-            // }
-            // return finished
+    private async getCounter(eventName: string) {
+        let flagName = 'BlockNumber'
+        if (this.scan.network == NETWORK.HAVAH) flagName = 'CountNumber'
+        if (this.scan.network == NETWORK.IBC_ARCHWAY) flagName = 'BlockTimestamp'
+        if (this.scan.network == NETWORK.IBC_NEUTRON) flagName = 'CountNumber'
 
+        let counterName = `${this.scan.network}_${eventName}_${flagName}`
+        let counter = await this._db.getCounterByName(counterName)
+        return counter
+    }
+
+    async fetchEvents(eventNames: string[], flagNumber: number = 0) {
+        if (this.network == NETWORK.IBC_ARCHWAY || this.network == NETWORK.IBC_NEUTRON) {
             let finished = true
-            finished &&= await this.fletchEvent('', flagNumber)
+            finished &&= await this.fetchEvent('', flagNumber)
             return finished
         } else {
             let promiseTasks = []
             for (let i = 0; i < eventNames.length; i++) {
-                promiseTasks.push(this.fletchEvent(eventNames[i], flagNumber))
+                promiseTasks.push(this.fetchEvent(eventNames[i], flagNumber))
             }
             const results = await Promise.all(promiseTasks)
             const finished = results.every((r) => r == true)
 
             if (finished) logger.info(`${this.scan.network} has no new events`)
+            // await new Promise((f) => setTimeout(f, 1000))
 
             return finished
         }
     }
 
-    async fletchEvent(eventName: string, flagNumber: number = 0) {
+    async fetchEvent(eventName: string, flagNumber: number = 0) {
         const counter = await this.getCounter(eventName)
         let fromFlagNumber = flagNumber > 0 ? flagNumber : counter.value
 
@@ -134,13 +126,5 @@ export class Fletcher implements IFletcher {
         if (!finished) await this._db.updateCounter(counter.name, lastFlagNumber)
 
         return finished
-    }
-
-    private async getCounter(eventName: string) {
-        let counterName = `${this.scan.network}_${eventName}_${
-            this.scan.network == NETWORK.HAVAH ? 'CountNumber' : this.scan.network == NETWORK.IBC_ARCHWAY ? 'BlockTimestamp' : 'BlockNumber'
-        }`
-        let counter = await this._db.getCounterByName(counterName)
-        return counter
     }
 }

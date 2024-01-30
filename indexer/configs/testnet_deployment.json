@@ -34,7 +34,15 @@
             "uri": "",
             "network_id": "archway",
             "btp_network_id": "archway",
-            "block_height": 0
+            "block_height": 0,
+            "block_timestamp": 1694476800
+        },
+        "ibc_neutron": {
+            "uri": "",
+            "network_id": "neutron",
+            "btp_network_id": "neutron",
+            "block_height": 0,
+            "block_timestamp": 1691971200
         }
     },
     "contracts": {
@@ -64,6 +72,9 @@
         },
         "ibc_archway": {
             "xcall": "archway1kenxz0wuczr04mc9q3gwjuyzd6ft4zqm5wach846gghfjupvlncshvchs2"
+        },
+        "ibc_neutron": {
+            "xcall": "neutron15a3x0zhayfnzlktplm4v0lfzl5gna42j0m4sf7flkclpsg3wxjsqz8jcnk"
         }
     }
 }

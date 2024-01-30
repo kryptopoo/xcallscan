@@ -34,7 +34,15 @@
             "uri": "xxx",
             "network_id": "archway",
             "btp_network_id": "archway",
-            "block_height": 0
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "ibc_neutron": {
+            "uri": "",
+            "network_id": "neutron",
+            "btp_network_id": "neutron",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -62,6 +70,9 @@
             "xcall": "0x0"
         },
         "ibc_archway": {
+            "xcall": "0x0"
+        },
+        "ibc_neutron": {
             "xcall": "0x0"
         }
     }

@@ -49,7 +49,7 @@ xCallScan is typically made of:
 - Command
     ```bash
     ts-node cmd scan <network> <event>
-    ts-node cmd fletch <network>
+    ts-node cmd fetch <network>
     ts-node cmd sync <from_sn> <to_sn>
     ```
 

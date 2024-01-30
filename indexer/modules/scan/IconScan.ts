@@ -7,22 +7,26 @@ import { EventLog } from '../../types/EventLog'
 
 export class IconScan implements IScan {
     network: string
+    latestBlockNumber: number = 0
+    totalCount: number = 0
 
     constructor(network: string = NETWORK.ICON) {
         this.network = network
     }
 
     async callApi(apiUrl: string, params: any): Promise<any> {
+        let errorCode = undefined
         try {
             const res = await axios.get(apiUrl, {
                 params: params
             })
             return res
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${error.code}`)
+            logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
+            errorCode = error.code
         }
 
-        return { data: [], totalSize: 0 }
+        return { data: [], totalSize: 0, error: errorCode }
     }
 
     async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
@@ -30,13 +34,15 @@ export class IconScan implements IScan {
         const limit = 100
 
         // always get lastest block of events
-        const latestBlockRes = await this.callApi(`${API_URL[this.network]}/logs`, {
-            address: CONTRACT[this.network].xcall,
-            limit: 1,
-            skip: 0
-        })
-        const totalCount = parseInt(latestBlockRes.headers['x-total-count'])
-        const blockLatest = latestBlockRes.data[0].block_number
+        if (this.latestBlockNumber == 0) {
+            const latestBlockRes = await this.callApi(`${API_URL[this.network]}/logs`, {
+                address: CONTRACT[this.network].xcall,
+                limit: 1,
+                skip: 0
+            })
+            this.latestBlockNumber = latestBlockRes.data[0].block_number
+            this.totalCount = parseInt(latestBlockRes.headers['x-total-count'])
+        }
 
         // set blockStart, blockEnd
         let blockStart = flagNumber
@@ -45,7 +51,7 @@ export class IconScan implements IScan {
             const blockStartRes = await this.callApi(`${API_URL[this.network]}/logs`, {
                 address: CONTRACT[this.network].xcall,
                 limit: 1,
-                skip: totalCount - 1
+                skip: this.totalCount - 1
             })
 
             blockStart = blockStartRes.data[blockStartRes.data.length - 1].block_number
@@ -61,6 +67,9 @@ export class IconScan implements IScan {
             block_end: blockEnd,
             limit: limit
         })
+
+        // do nothing if error
+        if (eventLogsRes.error) return { lastFlagNumber: flagNumber, eventLogs: [] }
 
         const eventLogs = eventLogsRes.data
         if (eventLogs) {
@@ -94,7 +103,7 @@ export class IconScan implements IScan {
             }
         }
 
-        return { lastFlagNumber: blockEnd > blockLatest ? blockLatest : blockEnd, eventLogs: result }
+        return { lastFlagNumber: blockEnd > this.latestBlockNumber ? this.latestBlockNumber : blockEnd, eventLogs: result }
     }
 
     private decodeEventLog(eventLog: any, eventName: string) {
@@ -105,8 +114,8 @@ export class IconScan implements IScan {
             case EVENT.CallMessageSent:
                 eventLogObj._from = eventData[1]
                 eventLogObj._to = eventData[2]
-                eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
-                eventLogObj._nsn = IconService.IconConverter.toNumber(eventData[4])
+                if (eventData[3]) eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
+                if (eventData[4]) eventLogObj._nsn = IconService.IconConverter.toNumber(eventData[4])
 
                 // icon always decode string
                 eventLogObj._decodedFrom = eventData[1]
@@ -135,9 +144,9 @@ export class IconScan implements IScan {
             case EVENT.CallMessage:
                 eventLogObj._from = eventData[1]
                 eventLogObj._to = eventData[2]
-                eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
-                eventLogObj._reqId = IconService.IconConverter.toNumber(eventData[4])
-                eventLogObj._data = eventData[5]
+                if (eventData[3]) eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
+                if (eventData[4]) eventLogObj._reqId = IconService.IconConverter.toNumber(eventData[4])
+                if (eventData[5]) eventLogObj._data = eventData[5]
 
                 eventLogObj._decodedFrom = eventData[1]
                 eventLogObj._decodedTo = eventData[2]
@@ -158,9 +167,7 @@ export class IconScan implements IScan {
     }
 
     private async getTransactionDetail(txHash: string) {
-        let txHashRes = await this.callApi(`${API_URL[this.network]}/transactions/details/${txHash}`, {})
-
-        // console.log('txHashRes', txHashRes.data)
+        const txHashRes = await this.callApi(`${API_URL[this.network]}/transactions/details/${txHash}`, {})
         return txHashRes.data
     }
 }
