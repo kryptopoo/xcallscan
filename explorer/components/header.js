@@ -2,11 +2,11 @@
 import { Dropdown } from 'flowbite-react'
 import SearchBar from '@/components/searchbar'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
 
 export default function Header({ showSearchBar, assets }) {
     const network = process.env.NETWORK ?? 'Testnet'
     assets = assets ?? []
+
     return (
         <header className="px-4 py-4 xl:px-24 2xl:px-48 w-full bg-gray-50 flex justify-between border-b-[1px]">
             <a className="text-4xl font-semibold flex mb-2 xl:mb-0" href="/">
@@ -16,17 +16,31 @@ export default function Header({ showSearchBar, assets }) {
 
             <div className="flex items-center gap-2">
                 <div className="xl:flex items-center gap-4 px-2 text-sm hidden">
-                    {Array.isArray(assets)
-                        ? assets.map((asset) => (
-                              <div key={asset.name} className="flex gap-1">
-                                  <Image src={asset.image} width={20} height={20} className="rounded-full" />
-                                  <span>${asset.current_price.toFixed(2)}</span>
-                                  <span className={asset.price_change_percentage_24h > 0 ? 'text-green-500' : 'text-red-500'}>
-                                      ({asset.price_change_percentage_24h.toFixed(2)}%)
-                                  </span>
-                              </div>
-                          ))
-                        : null}
+                    <div
+                        x-data="{}"
+                        x-init="$nextTick(() => {
+                        let ul = $refs.logos;
+                        ul.insertAdjacentHTML('afterend', ul.outerHTML);
+                        ul.nextSibling.setAttribute('aria-hidden', 'true');
+                    })"
+                        class="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
+                    >
+                        <ul x-ref="logos" class="flex items-center justify-center md:justify-start [&_li]:mx-3 animate-infinite-scroll">
+                            {Array.isArray(assets)
+                                ? assets.map((asset) => (
+                                      <li>
+                                          <div key={asset.name} className="flex gap-1">
+                                              <Image src={asset.image} width={20} height={20} className="rounded-full h-[20px] w-[20px]" />
+                                              <span>${asset.current_price.toFixed(2)}</span>
+                                              <span className={asset.price_change_percentage_24h > 0 ? 'text-green-500' : 'text-red-500'}>
+                                                  ({asset.price_change_percentage_24h.toFixed(2)}%)
+                                              </span>
+                                          </div>
+                                      </li>
+                                  ))
+                                : null}
+                        </ul>
+                    </div>
                 </div>
 
                 {showSearchBar ? <SearchBar showFull={false} /> : ''}

@@ -23,16 +23,16 @@ async function run() {
     // ICON <-> COSMOS
     // fetch data between ICON <-> COSMOS networks
     cron.schedule('0 */5 * * * *', async () => {
-        await Promise.all([fetch(NETWORK.IBC_ICON), fetch(NETWORK.IBC_ARCHWAY), fetch(NETWORK.IBC_NEUTRON)])
+        await Promise.all([fetch(NETWORK.IBC_ICON), fetch(NETWORK.IBC_ARCHWAY), fetch(NETWORK.IBC_NEUTRON), fetch(NETWORK.IBC_INJECTIVE)])
     })
     // sync new messages
     cron.schedule('45 */5 * * * *', async () => {
-        const syncer = new Syncer([NETWORK.IBC_ICON, NETWORK.IBC_ARCHWAY, NETWORK.IBC_NEUTRON])
+        const syncer = new Syncer([NETWORK.IBC_ICON, NETWORK.IBC_ARCHWAY, NETWORK.IBC_NEUTRON, NETWORK.IBC_INJECTIVE])
         await syncer.syncNewMessages()
     })
     // sync pending/unfinished messages
     cron.schedule('15 */15 * * * *', async () => {
-        const syncer = new Syncer([NETWORK.IBC_ICON, NETWORK.IBC_ARCHWAY, NETWORK.IBC_NEUTRON])
+        const syncer = new Syncer([NETWORK.IBC_ICON, NETWORK.IBC_ARCHWAY, NETWORK.IBC_NEUTRON, NETWORK.IBC_INJECTIVE])
         await syncer.syncUnfinishedMessages()
     })
 }

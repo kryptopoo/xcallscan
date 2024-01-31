@@ -7,9 +7,8 @@ export class Syncer {
     protected _db = new Db()
 
     sourceSyncers: { [network: string]: SourceSyncer } = {}
-    networks: string[] = []
 
-    constructor(networks: string[] = []) {
+    constructor(public networks: string[] = []) {
         this.networks = networks.length == 0 ? Object.values(NETWORK) : networks
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]

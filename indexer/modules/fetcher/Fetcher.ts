@@ -73,7 +73,7 @@ export class Fetcher implements IFetcher {
         let flagName = 'BlockNumber'
         if (this.scan.network == NETWORK.HAVAH) flagName = 'CountNumber'
         if (this.scan.network == NETWORK.IBC_ARCHWAY) flagName = 'BlockTimestamp'
-        if (this.scan.network == NETWORK.IBC_NEUTRON) flagName = 'CountNumber'
+        if (this.scan.network == NETWORK.IBC_NEUTRON || this.scan.network == NETWORK.IBC_INJECTIVE) flagName = 'CountNumber'
 
         let counterName = `${this.scan.network}_${eventName}_${flagName}`
         let counter = await this._db.getCounterByName(counterName)
@@ -81,11 +81,13 @@ export class Fetcher implements IFetcher {
     }
 
     async fetchEvents(eventNames: string[], flagNumber: number = 0) {
-        if (this.network == NETWORK.IBC_ARCHWAY || this.network == NETWORK.IBC_NEUTRON) {
+        // fetch all events once
+        if (this.network == NETWORK.IBC_ARCHWAY || this.network == NETWORK.IBC_NEUTRON || this.network == NETWORK.IBC_INJECTIVE) {
             let finished = true
             finished &&= await this.fetchEvent('', flagNumber)
             return finished
         } else {
+            // fetch each event
             let promiseTasks = []
             for (let i = 0; i < eventNames.length; i++) {
                 promiseTasks.push(this.fetchEvent(eventNames[i], flagNumber))

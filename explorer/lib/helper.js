@@ -5,7 +5,8 @@ const NETWORK = {
     HAVAH: 'havah',
     IBC_ICON: 'ibc_icon',
     IBC_ARCHWAY: 'ibc_archway',
-    IBC_NEUTRON: 'ibc_neutron'
+    IBC_NEUTRON: 'ibc_neutron',
+    IBC_INJECTIVE: 'ibc_injective'
 }
 
 const NATIVE_ASSET = {
@@ -15,7 +16,8 @@ const NATIVE_ASSET = {
     [NETWORK.HAVAH]: 'HVH',
     [NETWORK.IBC_ICON]: 'ICX',
     [NETWORK.IBC_ARCHWAY]: 'ARCH',
-    [NETWORK.IBC_NEUTRON]: 'NTRN'
+    [NETWORK.IBC_NEUTRON]: 'NTRN',
+    [NETWORK.IBC_INJECTIVE]: 'INJ'
 }
 
 const getNativeAsset = (network) => {

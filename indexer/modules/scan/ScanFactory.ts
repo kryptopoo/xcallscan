@@ -4,6 +4,7 @@ import { CelatoneScan } from './CelatoneScan'
 import { EvmScan } from './EvmScan'
 import { HavahScan } from './HavahScan'
 import { IconScan } from './IconScan'
+import { InjectiveScan } from './InjectiveScan'
 import { MintScan } from './MintScan'
 
 export class ScanFactory {
@@ -21,6 +22,9 @@ export class ScanFactory {
         }
         if (network == NETWORK.IBC_NEUTRON) {
             scan = new CelatoneScan(network)
+        }
+        if (network == NETWORK.IBC_INJECTIVE) {
+            scan = new InjectiveScan(network)
         }
 
         return scan
