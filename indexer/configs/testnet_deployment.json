@@ -43,6 +43,13 @@
             "btp_network_id": "neutron",
             "block_height": 0,
             "block_timestamp": 1691971200
+        },
+        "ibc_injective": {
+            "uri": "",
+            "network_id": "injective",
+            "btp_network_id": "injective",
+            "block_height": 0,
+            "block_timestamp": 1699833600
         }
     },
     "contracts": {
@@ -75,6 +82,9 @@
         },
         "ibc_neutron": {
             "xcall": "neutron15a3x0zhayfnzlktplm4v0lfzl5gna42j0m4sf7flkclpsg3wxjsqz8jcnk"
+        },
+        "ibc_injective": {
+            "xcall": "inj1saz7egwac8uxfwprddnaef66804r7r9gswu5p8"
         }
     }
 }

@@ -6,7 +6,7 @@ import { API_URL, EVENT, CONTRACT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 
-export class CelatoneScan implements IScan {
+export class InjectiveScan implements IScan {
     totalCount: number = 0
 
     constructor(public network: string) {}
@@ -29,26 +29,24 @@ export class CelatoneScan implements IScan {
 
         // only fetch total in first time
         if (this.totalCount == 0) {
-            const countRes = await this.callApi(`${API_URL[this.network]}/accounts/${CONTRACT[this.network].xcall}/txs-count`, {
-                is_wasm: true,
-                is_execute: true
+            const countRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${CONTRACT[this.network].xcall}`, {
+                limit: 1,
+                skip: 0
             })
-            this.totalCount = countRes.count
+            this.totalCount = countRes.paging.total
         }
 
         if (scanCount < this.totalCount) {
             const totalPages = Math.ceil(this.totalCount / limit)
             const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
-            const txsRes = await this.callApi(`${API_URL[this.network]}/accounts/${CONTRACT[this.network].xcall}/txs`, {
+            const txsRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${CONTRACT[this.network].xcall}`, {
                 limit: limit,
-                offset: flagPageIndex * limit,
-                is_wasm: true,
-                is_execute: true
+                skip: flagPageIndex * limit
             })
 
-            let txs = txsRes.items as any[]
+            let txs = txsRes.data as any[]
             txs = txs.sort((a, b) => {
-                return a.height - b.height
+                return a.block_number - b.block_number
             })
 
             let eventNames = [eventName]
@@ -56,12 +54,9 @@ export class CelatoneScan implements IScan {
 
             for (let i = 0; i < txs.length; i++) {
                 const tx = txs[i]
-                const txHash = tx.hash.toString().replace('\\x', '')
 
-                const txRes = await this.callApi(`${API_URL[this.network]}/txs/${txHash}`, {})
-                const txDetail = txRes.tx_response
-                const eventLogs: any[] = txDetail.logs[0].events
-                const msgExecuteContract = txDetail.tx.body.messages.find((t: any) => t['@type'] == '/cosmwasm.wasm.v1.MsgExecuteContract')
+                const eventLogs: any[] = tx.logs[0].events
+                const msgExecuteContract = tx.messages.find((t: any) => t.type == '/cosmwasm.wasm.v1.MsgExecuteContract')
 
                 for (let index = 0; index < eventNames.length; index++) {
                     const eventName = eventNames[index]
@@ -69,14 +64,14 @@ export class CelatoneScan implements IScan {
                     const decodeEventLog = this.decodeEventLog(eventLogs, eventName)
                     if (decodeEventLog) {
                         let log: EventLog = {
-                            txRaw: txDetail.raw_log,
-                            blockNumber: Number(txDetail.height),
-                            blockTimestamp: Math.floor(new Date(txDetail.timestamp).getTime() / 1000),
-                            txHash: txDetail.txhash,
-                            txFrom: msgExecuteContract.sender,
-                            txTo: msgExecuteContract.contract ?? '',
-                            txFee: txDetail.tx.auth_info.fee.amount[0].amount,
-                            txValue: msgExecuteContract.msg?.cross_transfer?.amount || msgExecuteContract.msg?.deposit?.amount || '0',
+                            // txRaw: txRes.data.raw_log,
+                            blockNumber: Number(tx.block_number),
+                            blockTimestamp: Math.floor(new Date(tx.block_unix_timestamp).getTime() / 1000),
+                            txHash: tx.hash,
+                            txFrom: msgExecuteContract.value.sender,
+                            txTo: msgExecuteContract.value.contract ?? '',
+                            txFee: tx.gas_fee.amount[0].amount,
+                            txValue: msgExecuteContract.value.msg?.cross_transfer?.amount || msgExecuteContract.value.msg?.deposit?.amount || '0',
 
                             eventName: eventName,
                             eventData: decodeEventLog

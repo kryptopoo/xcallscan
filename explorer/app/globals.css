@@ -39,12 +39,7 @@ body {
 
 body {
     color: rgb(var(--foreground-rgb));
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
 a {
@@ -52,16 +47,14 @@ a {
     text-decoration: none;
 }
 
-
 @keyframes fadeInAnimation {
     0% {
         opacity: 0;
     }
     100% {
         opacity: 1;
-     }
+    }
 }
-
 
 .fade-in {
     animation: fadeInAnimation ease 1.5s;
@@ -70,3 +63,4 @@ a {
 .hero {
     background-image: linear-gradient(to right, #087083, #00677f, #005d7a, #015475, #0c4a6e);
 }
+

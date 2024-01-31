@@ -137,12 +137,16 @@ export class MintScan implements IScan {
             }
             if (reqId) rs._reqId = reqId
             if (data && data != '' && data != '[]') {
-                const bytesArr = data
-                    .replace(/[\[\]]/g, '')
-                    .split(',')
-                    .map((x: any) => Number(x))
-                const dataHex = ethers.utils.hexlify(bytesArr)
-                rs._data = dataHex
+                if (data.toString().startsWith('[') && data.toString().endsWith(']')) {
+                    const bytesArr = data
+                        .replace(/[\[\]]/g, '')
+                        .split(',')
+                        .map((x: any) => Number(x))
+                    const dataHex = ethers.utils.hexlify(bytesArr)
+                    rs._data = dataHex
+                } else {
+                    rs._data = data
+                }
             }
             if (code) rs._code = code
             if (msg) rs._msg = msg
