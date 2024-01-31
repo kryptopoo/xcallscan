@@ -201,20 +201,26 @@ export class SourceSyncer implements ISourceSyncer {
 
     async syncReceivedMessages(sn: number): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
-        // console.log(this.network, 'syncReceivedMessages events', events)
+        const destNetwork = this.network
+
         for (let i = 0; i < events.length; i++) {
             const event = events[i]
 
             // RECEIVING
             if (event.event == EVENT.CallMessage) {
                 // find the source network of message
-                const { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
+                let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
+                    // correct ibc icon network
+                    if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
+                        srcNetwork = NETWORK.IBC_ICON
+                    }
+
                     // update status Delivered for the source network
                     const updateCount = await this._db.updateSentMessage(
                         event.sn,
                         srcNetwork,
-                        this.network,
+                        destNetwork,
                         srcDapp,
                         event.block_number,
                         event.block_timestamp,
@@ -228,12 +234,17 @@ export class SourceSyncer implements ISourceSyncer {
             }
             if (event.event == EVENT.CallExecuted) {
                 // find the source network of message
-                const { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
+                let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
+                    // correct ibc icon network
+                    if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
+                        srcNetwork = NETWORK.IBC_ICON
+                    }
+
                     const updateCount = await this._db.updateExecutedMessage(
                         event.sn,
                         srcNetwork,
-                        this.network,
+                        destNetwork,
                         srcDapp,
                         undefined,
                         event.msg,
