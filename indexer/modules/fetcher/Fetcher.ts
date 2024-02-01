@@ -88,9 +88,20 @@ export class Fetcher implements IFetcher {
             return finished
         } else {
             // fetch each event
+            const _this = this
             let promiseTasks = []
             for (let i = 0; i < eventNames.length; i++) {
-                promiseTasks.push(this.fetchEvent(eventNames[i], flagNumber))
+                // promiseTasks.push(this.fetchEvent(eventNames[i], flagNumber))
+
+                // delay to prevent API rate limit 
+                const delay = 500 * i
+                promiseTasks.push(
+                    new Promise(async function (resolve) {
+                        await new Promise((res) => setTimeout(res, delay))
+                        let result = await _this.fetchEvent(eventNames[i], flagNumber)
+                        resolve(result)
+                    })
+                )
             }
             const results = await Promise.all(promiseTasks)
             const finished = results.every((r) => r == true)
