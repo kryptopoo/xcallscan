@@ -21,10 +21,8 @@ const nextConfig = {
         ignoreDuringBuilds: true
     },
     env: {
-        BASE_API_URLL: 'http://localhost:4000/api',
-        TESTNET_APP_URL: 'http://localhost:3000',
-        MAINNET_APP_URL: 'http://localhost:3100',
-        NETWORK: 'Testnet'
+        TESTNET_APP_URL: 'https://testnet.xcallscan.xyz',
+        MAINNET_APP_URL: 'https://xcallscan.xyz',
     }
 }
 

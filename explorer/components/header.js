@@ -4,7 +4,6 @@ import SearchBar from '@/components/searchbar'
 import Image from 'next/image'
 
 export default function Header({ showSearchBar, assets }) {
-    const network = process.env.NETWORK ?? 'Testnet'
     assets = assets ?? []
 
     return (
@@ -23,12 +22,12 @@ export default function Header({ showSearchBar, assets }) {
                         ul.insertAdjacentHTML('afterend', ul.outerHTML);
                         ul.nextSibling.setAttribute('aria-hidden', 'true');
                     })"
-                        class="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
+                        className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
                     >
-                        <ul x-ref="logos" class="flex items-center justify-center md:justify-start [&_li]:mx-3 animate-infinite-scroll">
+                        <ul x-ref="logos" className="flex items-center justify-center md:justify-start [&_li]:mx-3 animate-infinite-scroll">
                             {Array.isArray(assets)
                                 ? assets.map((asset) => (
-                                      <li>
+                                      <li key={asset.name}>
                                           <div key={asset.name} className="flex gap-1">
                                               <Image src={asset.image} width={20} height={20} className="rounded-full h-[20px] w-[20px]" />
                                               <span>${asset.current_price.toFixed(2)}</span>
@@ -44,24 +43,19 @@ export default function Header({ showSearchBar, assets }) {
                 </div>
 
                 {showSearchBar ? <SearchBar showFull={false} /> : ''}
-                {/* <Dropdown label={network} size="sm" color={'light'} outline={false}>
+
+                <Dropdown
+                    label=""
+                    dismissOnClick={false}
+                    renderTrigger={() => <Image className="hover:cursor-pointer" src={`/images/network-icon.png`} width={24} height={24} />}
+                >
                     <Dropdown.Item>
-                        <a
-                            className="w-20"
-                            href={process.env.TESTNET_APP_URL}
-                        >
-                            Testnet
-                        </a>
+                        <a href={process.env.TESTNET_APP_URL}>Testnet</a>
                     </Dropdown.Item>
                     <Dropdown.Item>
-                        <a
-                            className="w-20"
-                            href={process.env.MAINNET_APP_URL}
-                        >
-                            Mainnet
-                        </a>
+                        <a href={process.env.MAINNET_APP_URL}>Mainnet</a>
                     </Dropdown.Item>
-                </Dropdown> */}
+                </Dropdown>
             </div>
         </header>
     )
