@@ -35,7 +35,7 @@ const API_URL: { [network: string]: string } = {
         ? 'https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1'
         : 'https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1',
     [NETWORK.IBC_INJECTIVE]: USE_MAINNET
-        ? 'https://products.exchange.grpc-web.injective.network/api/explorer/v1'
+        ? 'https://sentry.exchange.grpc-web.injective.network/api/explorer/v1'
         : 'https://testnet.sentry.exchange.grpc-web.injective.network/api/explorer/v1'
 }
 

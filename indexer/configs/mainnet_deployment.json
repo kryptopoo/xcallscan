@@ -1,71 +1,71 @@
 {
     "networks": {
         "icon": {
-            "uri": "https://lisbon.net.solidwallet.io/api/v3/icon_dex",
-            "network_id": "0x7",
-            "btp_network_id": "0x7.icon",
-            "block_height": 16561180
+            "uri": "https://ctz.solidwallet.io/api/v3/icon_dex",
+            "network_id": "0x1",
+            "btp_network_id": "0x1.icon",
+            "block_height": 0
         },
         "bsc": {
-            "uri": "https://data-seed-prebsc-1-s1.binance.org:8545",
-            "network_id": "0x61",
-            "btp_network_id": "0x61.bsc",
-            "block_height": 31022641
+            "uri": "https://bsc-dataseed.binance.org",
+            "network_id": "0x4",
+            "btp_network_id": "0x4.bsc",
+            "block_height": 76042342
         },
         "eth2": {
-            "uri": "https://sepolia.infura.io/v3/ffbf8ebe228f4758ae82e175640275e0",
-            "network_id": "0xaa36a7",
-            "btp_network_id": "0xaa36a7.eth2",
-            "block_height": 3813345
+            "uri": "https://mainnet.infura.io/v3/ae42152a1ec04530915a6a7f6a555f6a",
+            "network_id": "0x3",
+            "btp_network_id": "0x3.eth2",
+            "block_height": 75311723
         },
         "havah": {
-            "uri": "https://ctz.altair.havah.io/api/v3/icon_dex",
-            "network_id": "0x111.icon",
-            "btp_network_id": "0x111.icon",
-            "block_height": 9443
+            "uri": "",
+            "network_id": "0x0.icon",
+            "btp_network_id": "0x0.icon",
+            "block_height": 0
         },
         "ibc_icon": {
-            "uri": "xxx",
-            "network_id": "0x7",
-            "btp_network_id": "0x7.icon",
-            "block_height": 6229345
+            "uri": "https://ctz.solidwallet.io/api/v3/icon_dex",
+            "network_id": "0x1",
+            "btp_network_id": "0x1.icon",
+            "block_height": 0
         },
         "ibc_archway": {
-            "uri": "xxx",
+            "uri": "",
             "network_id": "archway",
             "btp_network_id": "archway",
-            "block_height": 0,
-            "block_timestamp": 0
+            "block_height": 1260794,
+            "block_timestamp": 1695859200
         },
         "ibc_neutron": {
             "uri": "",
             "network_id": "neutron",
             "btp_network_id": "neutron",
-            "block_height": 0,
-            "block_timestamp": 0
+            "block_height": 4115091,
+            "block_timestamp": 1698710400
         },
         "ibc_injective": {
             "uri": "",
             "network_id": "injective",
             "btp_network_id": "injective",
-            "block_height": 0,
-            "block_timestamp": 0
+            "block_height": 56477980,
+            "block_timestamp": 1704412800
         }
     },
     "contracts": {
         "icon": {
-            "bmc": "0x0",
-            "xcall": "0x0",
+            "bmc": "cxee7a00755a757e3c519a0616456030e33dc9d47f",
+            "xcall": "cxa07f426062a1384bdd762afa6a87d123fbc81c75",
             "dapp": "0x0"
         },
         "bsc": {
-            "bmc": "0x0",
-            "xcall": "0x0",
+            "bmc": "0x24415977c566f9300Ea6F0aC75AEA0c09C500e46",
+            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b",
             "dapp": "0x0"
         },
         "eth2": {
-            "bmc": "0x0",
-            "xcall": "0x0",
+            "bmc": "0xC355aDF0a9D64f29c0642adF8374f76a20B3fA9d",
+            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b",
             "dapp": "0x0"
         },
         "havah": {
@@ -74,16 +74,16 @@
             "dapp": "0x0"
         },
         "ibc_icon": {
-            "xcall": "0x0"
+            "xcall": "cxa07f426062a1384bdd762afa6a87d123fbc81c75"
         },
         "ibc_archway": {
-            "xcall": "0x0"
+            "xcall": "archway19hzhgd90etqc3z2qswumq80ag2d8het38r0al0r4ulrly72t20psdrpna6"
         },
         "ibc_neutron": {
-            "xcall": "0x0"
+            "xcall": "neutron1g28ca6axwkar5fuhhfcgua2807njh795nvrz6qf75u3xpv805y7sugakf9"
         },
         "ibc_injective": {
-            "xcall": "0x0"
+            "xcall": "inj177fx40l0g3jqmtmmuyl2zhrjvhr3knvthlr0ul"
         }
     }
 }

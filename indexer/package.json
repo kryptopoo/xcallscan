@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "ts-node-dev --exit-child indexer.ts",
     "start": "ts-node index.ts",
-    "init-data": "ts-node cmd initdb"
+    "init-data": "ts-node cmd db init"
   },
   "keywords": [],
   "author": "",
