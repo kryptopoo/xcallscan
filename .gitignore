@@ -105,3 +105,7 @@ dist
 /explorer/package-lock.json
 /api/package-lock.json
 /indexer/package-lock.json
+/indexer/.env.testnet
+/indexer/.env.mainnet
+/api/.env.mainnet
+/api/.env.testnet
