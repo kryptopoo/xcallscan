@@ -7,6 +7,7 @@ import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 
 export class CelatoneScan implements IScan {
+    countName: string = 'CountNumber'
     totalCount: number = 0
 
     constructor(public network: string) {}

@@ -6,12 +6,15 @@ import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 
 export class IconScan implements IScan {
-    network: string
+    countName: string = 'BlockNumber'
     latestBlockNumber: number = 0
     totalCount: number = 0
 
-    constructor(network: string = NETWORK.ICON) {
+    constructor(public network: string = NETWORK.ICON) {
         this.network = network
+
+        // in case of one contract only
+        if (this.network == NETWORK.IBC_ICON && CONTRACT[NETWORK.IBC_ICON].xcall == CONTRACT[NETWORK.ICON].xcall) this.network = NETWORK.ICON
     }
 
     async callApi(apiUrl: string, params: any): Promise<any> {
@@ -79,7 +82,7 @@ export class IconScan implements IScan {
                 // check event name correctly
                 if (eventLog.method == eventName) {
                     let tx = await this.getTransactionDetail(eventLog.transaction_hash)
-                    let decodeEventLog = this.decodeEventLog(eventLog, eventName) // console.log('decodeEventLog', decodeEventLog)
+                    let decodeEventLog = this.decodeEventLog(eventLog, eventName)
 
                     let log: EventLog = {
                         txRaw: tx,

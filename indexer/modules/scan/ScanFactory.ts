@@ -1,11 +1,12 @@
-import { NETWORK } from '../../common/constants'
+import { NETWORK, USE_MAINNET } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { CelatoneScan } from './CelatoneScan'
 import { EvmScan } from './EvmScan'
 import { HavahScan } from './HavahScan'
 import { IconScan } from './IconScan'
 import { InjectiveScan } from './InjectiveScan'
-import { MintScan } from './MintScan'
+import { MintAccountScan } from './MintAccountScan'
+import { MintScanV2 } from './MintScanV2'
 
 export class ScanFactory {
     static createScan(network: string) {
@@ -18,7 +19,8 @@ export class ScanFactory {
             scan = new EvmScan(network)
         }
         if (network == NETWORK.IBC_ARCHWAY) {
-            scan = new MintScan(network)
+            if (USE_MAINNET) scan = new MintScanV2(network)
+            else scan = new MintAccountScan(network)
         }
         if (network == NETWORK.IBC_NEUTRON) {
             scan = new CelatoneScan(network)

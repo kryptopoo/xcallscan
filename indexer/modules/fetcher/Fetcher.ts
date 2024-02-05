@@ -70,10 +70,10 @@ export class Fetcher implements IFetcher {
     }
 
     private async getCounter(eventName: string) {
-        let flagName = 'BlockNumber'
-        if (this.scan.network == NETWORK.HAVAH) flagName = 'CountNumber'
-        if (this.scan.network == NETWORK.IBC_ARCHWAY) flagName = 'BlockTimestamp'
-        if (this.scan.network == NETWORK.IBC_NEUTRON || this.scan.network == NETWORK.IBC_INJECTIVE) flagName = 'CountNumber'
+        let flagName = this.scan.countName
+        // if (this.scan.network == NETWORK.HAVAH) flagName = 'CountNumber'
+        // if (this.scan.network == NETWORK.IBC_ARCHWAY) flagName = 'BlockTimestamp'
+        // if (this.scan.network == NETWORK.IBC_NEUTRON || this.scan.network == NETWORK.IBC_INJECTIVE) flagName = 'CountNumber'
 
         let counterName = `${this.scan.network}_${eventName}_${flagName}`
         let counter = await this._db.getCounterByName(counterName)

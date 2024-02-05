@@ -6,21 +6,14 @@ import { API_URL, EVENT, CONTRACT, API_KEY, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMB
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { nowTimestamp, toDateString, toTimestamp } from '../../common/helper'
-// import { Crawler } from './Crawler'
 
-export class MintScan implements IScan {
-    // private _crawler: Crawler | undefined
+export class MintAccountScan implements IScan {
+    countName: string = 'BlockTimestamp'
 
-    constructor(public network: string) {
-        // this._crawler = new Crawler()
-    }
+    constructor(public network: string) {}
 
     async callApi(apiUrl: string, params: any): Promise<any[]> {
         try {
-            // // Using crawler
-            // const textRs = await this._crawler?.run(apiUrl)
-            // if (textRs) return JSON.parse(textRs)
-
             // Using proxy to prevent block
             const proxyUrl = `https://api.scrapingant.com/v2/extended?url=${encodeURIComponent(apiUrl)}&browser=false&x-api-key=${
                 SERVICE_API_KEY.SCRAPING_ANT

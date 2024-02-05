@@ -6,6 +6,7 @@ import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 
 export class HavahScan implements IScan {
+    countName: string = 'CountNumber'
     network: string = NETWORK.HAVAH
 
     async callApi(apiUrl: string, params: any): Promise<any> {

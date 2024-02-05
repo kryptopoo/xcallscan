@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import logger from '../logger/logger'
-import { BTP_NETWORK_ID, EVENT, MSG_STATUS, NETWORK } from '../../common/constants'
+import { BTP_NETWORK_ID, CONTRACT, EVENT, MSG_STATUS, NETWORK } from '../../common/constants'
 import { Db } from '../../data/Db'
 import { ISourceSyncer } from '../../interfaces/ISourceSyncer'
 import { EventModel, MessageModel } from '../../types/DataModels'
@@ -57,8 +57,10 @@ export class SourceSyncer implements ISourceSyncer {
         }
 
         // correct ibc icon network
-        if (msg.dest_network == NETWORK.ICON && msg.src_network?.startsWith('ibc')) {
-            msg.dest_network = NETWORK.IBC_ICON
+        if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
+            if (msg.dest_network == NETWORK.ICON && msg.src_network?.startsWith('ibc')) {
+                msg.dest_network = NETWORK.IBC_ICON
+            }
         }
 
         return msg
@@ -81,17 +83,12 @@ export class SourceSyncer implements ISourceSyncer {
             srcNetwork = srcNetworks[i]
 
             const srcDapps = await this._db.getDAppAddresses(srcNetwork)
-            // console.log('srcDapps', srcDapps)
 
             for (let j = 0; j < srcDapps.length; j++) {
                 const srcDapp = srcDapps[j]
-                // console.log('srcDapp', srcDapp)
 
                 const decodedFrom = this.buildBtpAddress(srcNetwork, srcDapp)
                 const encodedFrom = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(decodedFrom))
-                // console.log('decodedFrom', decodedFrom)
-                // console.log('encodedFrom', encodedFrom)
-                // console.log('from_raw', fromRaw)
 
                 if (fromRaw == encodedFrom) {
                     return { srcNetwork, srcDapp }
@@ -104,7 +101,6 @@ export class SourceSyncer implements ISourceSyncer {
 
     async syncSentMessages(sn: number): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
-        // console.log(this.network, 'syncSentMessages events', events)
         for (let i = 0; i < events.length; i++) {
             const event = events[i]
 
@@ -212,8 +208,10 @@ export class SourceSyncer implements ISourceSyncer {
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
                     // correct ibc icon network
-                    if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
-                        srcNetwork = NETWORK.IBC_ICON
+                    if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
+                        if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
+                            srcNetwork = NETWORK.IBC_ICON
+                        }
                     }
 
                     // update status Delivered for the source network
@@ -237,8 +235,10 @@ export class SourceSyncer implements ISourceSyncer {
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
                     // correct ibc icon network
-                    if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
-                        srcNetwork = NETWORK.IBC_ICON
+                    if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
+                        if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
+                            srcNetwork = NETWORK.IBC_ICON
+                        }
                     }
 
                     const updateCount = await this._db.updateExecutedMessage(

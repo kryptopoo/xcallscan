@@ -8,6 +8,7 @@ import xcallAbi from '../../abi/xcall.abi.json'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 
 export class EvmScan implements IScan {
+    countName: string = 'BlockNumber'
     provider: ethers.providers.BaseProvider
 
     constructor(public network: string) {

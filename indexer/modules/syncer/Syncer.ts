@@ -1,4 +1,4 @@
-import { NETWORK } from '../../common/constants'
+import { CONTRACT, NETWORK } from '../../common/constants'
 import { Db } from '../../data/Db'
 import logger from '../logger/logger'
 import { SourceSyncer } from './SourceSyncer'
@@ -10,6 +10,13 @@ export class Syncer {
 
     constructor(public networks: string[] = []) {
         this.networks = networks.length == 0 ? Object.values(NETWORK) : networks
+
+        // in case of one contract only
+        if (this.networks.includes(NETWORK.IBC_ICON) && CONTRACT[NETWORK.IBC_ICON].xcall == CONTRACT[NETWORK.ICON].xcall) {
+            const foundIndex = this.networks.findIndex(x => x == NETWORK.IBC_ICON);
+            this.networks[foundIndex] = NETWORK.ICON;
+        }
+
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
             const sourceSyncer = new SourceSyncer(network)
