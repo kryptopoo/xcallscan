@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.ibc_icon_events
 CREATE INDEX idx_ibc_icon_events_sn ON public.ibc_icon_events(sn);
 CREATE INDEX idx_ibc_icon_events_reqId ON public.ibc_icon_events(sn);
 CREATE INDEX idx_ibc_icon_events_event ON public.ibc_icon_events(event);
-CREATE INDEX idx_iibc_icon_events_tx_hash ON public.ibc_icon_events(tx_hash);
+CREATE INDEX idx_ibc_icon_events_tx_hash ON public.ibc_icon_events(tx_hash);
 
 
 -- Table: public.ibc_archway_events

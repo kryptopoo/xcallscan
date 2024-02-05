@@ -30,7 +30,7 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.HAVAH]: USE_MAINNET ? 'https://scan.havah.io/v3' : 'https://scan.altair.havah.io/v3',
 
     [NETWORK.IBC_ICON]: USE_MAINNET ? 'https://tracker.icon.community/api/v1' : 'https://tracker.berlin.icon.community/api/v1',
-    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://front.api.mintscan.io/v1/archway' : 'https://front.api.mintscan.io/v1/archway-testnet',
+    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://apis.mintscan.io/v1/archway' : 'https://front.api.mintscan.io/v1/archway-testnet',
     [NETWORK.IBC_NEUTRON]: USE_MAINNET
         ? 'https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1'
         : 'https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1',
@@ -60,7 +60,7 @@ const API_KEY: { [network: string]: string } = {
     [NETWORK.HAVAH]: '',
 
     [NETWORK.IBC_ICON]: '',
-    [NETWORK.IBC_ARCHWAY]: '',
+    [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',
     [NETWORK.IBC_INJECTIVE]: ''
 }
