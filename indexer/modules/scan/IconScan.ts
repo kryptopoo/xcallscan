@@ -43,7 +43,11 @@ export class IconScan implements IScan {
                 limit: 1,
                 skip: 0
             })
-            this.latestBlockNumber = latestBlockRes.data[0].block_number
+
+            // do nothing if error
+            if (latestBlockRes.error) return { lastFlagNumber: flagNumber, eventLogs: [] }
+
+            this.latestBlockNumber = latestBlockRes.data[0]?.block_number ?? 0
             this.totalCount = parseInt(latestBlockRes.headers['x-total-count'])
         }
 
