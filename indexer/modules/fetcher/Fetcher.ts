@@ -1,6 +1,6 @@
 import logger from '../logger/logger'
 import { Db } from '../../data/Db'
-import { EVENT, NETWORK } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK } from '../../common/constants'
 import { IFetcher } from '../../interfaces/IFetcher'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
@@ -93,7 +93,7 @@ export class Fetcher implements IFetcher {
             for (let i = 0; i < eventNames.length; i++) {
                 // promiseTasks.push(this.fetchEvent(eventNames[i], flagNumber))
 
-                // delay to prevent API rate limit 
+                // delay to prevent API rate limit
                 const delay = 500 * i
                 promiseTasks.push(
                     new Promise(async function (resolve) {
@@ -114,6 +114,12 @@ export class Fetcher implements IFetcher {
     }
 
     async fetchEvent(eventName: string, flagNumber: number = 0) {
+        // skip if contract address is not configured
+        if (CONTRACT[this.scan.network].xcall == '0x0' || CONTRACT[this.scan.network].xcall == '') {
+            logger.info(`${this.scan.network} skip fetching because xcall contract is not configured`)
+            return true
+        }
+
         const counter = await this.getCounter(eventName)
         let fromFlagNumber = flagNumber > 0 ? flagNumber : counter.value
 
