@@ -47,104 +47,111 @@ export class EvmScan implements IScan {
 
         for (let i = 0; i < eventLogs.length; i++) {
             const eventLog = eventLogs[i]
-            const decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            let decodeEventLog: any = undefined
 
-            // get tx
-            const tx = await this.provider.getTransaction(eventLog.transactionHash)
-
-            let log: EventLog = {
-                txRaw: tx,
-                blockNumber: ethers.BigNumber.from(eventLog.blockNumber).toNumber(),
-                blockTimestamp: ethers.BigNumber.from(eventLog.timeStamp).toNumber(),
-                txHash: eventLog.transactionHash,
-                txFrom: tx.from,
-                txTo: tx.to ?? '',
-                txFee: ethers.BigNumber.from(eventLog.gasUsed).mul(ethers.BigNumber.from(eventLog.gasPrice)).toString(),
-                txValue: ethers.BigNumber.from(tx.value).toString(),
-                // gasPrice: ethers.BigNumber.from(eventLog.gasPrice).toString(),
-                // gasUsed: ethers.BigNumber.from(eventLog.gasUsed).toString(),
-                eventName: eventName
+            try {
+                decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            } catch (error: any) {
+                logger.error(`${this.network} decodeEventLog error ${error.code}`)
             }
 
-            switch (eventName) {
-                case EVENT.CallMessageSent:
-                    log.eventData = {
-                        _sn: decodeEventLog._sn.toNumber(),
-                        _nsn: decodeEventLog._nsn.toNumber(),
-                        _from: decodeEventLog._from,
-                        _to: decodeEventLog._to.hash
-                    }
+            if (decodeEventLog) {
+                // get tx
+                const tx = await this.provider.getTransaction(eventLog.transactionHash)
+                let log: EventLog = {
+                    txRaw: tx,
+                    blockNumber: ethers.BigNumber.from(eventLog.blockNumber).toNumber(),
+                    blockTimestamp: ethers.BigNumber.from(eventLog.timeStamp).toNumber(),
+                    txHash: eventLog.transactionHash,
+                    txFrom: tx.from,
+                    txTo: tx.to ?? '',
+                    txFee: ethers.BigNumber.from(eventLog.gasUsed).mul(ethers.BigNumber.from(eventLog.gasPrice)).toString(),
+                    txValue: ethers.BigNumber.from(tx.value).toString(),
+                    // gasPrice: ethers.BigNumber.from(eventLog.gasPrice).toString(),
+                    // gasUsed: ethers.BigNumber.from(eventLog.gasUsed).toString(),
+                    eventName: eventName
+                }
 
-                    // try decode toBtp
-                    log.eventData._decodedFrom = log.eventData._from // _from is always address
-                    try {
-                        const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
-                        const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
-                        log.eventData._decodedTo = decodedSendMessage[0]
-                    } catch (error) {}
+                switch (eventName) {
+                    case EVENT.CallMessageSent:
+                        log.eventData = {
+                            _sn: decodeEventLog._sn.toNumber(),
+                            _nsn: decodeEventLog._nsn.toNumber(),
+                            _from: decodeEventLog._from,
+                            _to: decodeEventLog._to.hash
+                        }
 
-                    try {
-                        const sendMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
-                        const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
-                        log.eventData._decodedTo = decodedSendMessage[0]
-                    } catch (error) {}
+                        // try decode toBtp
+                        log.eventData._decodedFrom = log.eventData._from // _from is always address
+                        try {
+                            const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
+                            const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
+                            log.eventData._decodedTo = decodedSendMessage[0]
+                        } catch (error) {}
 
-                    break
-                case EVENT.ResponseMessage:
-                    log.eventData = {
-                        _sn: decodeEventLog._sn.toNumber(),
-                        _code: decodeEventLog._code.toNumber(),
-                        _msg: decodeEventLog._msg
-                    }
-                    break
-                case EVENT.RollbackMessage:
-                    log.eventData = {
-                        _sn: decodeEventLog._sn.toNumber()
-                    }
-                    break
-                case EVENT.RollbackExecuted:
-                    log.eventData = {
-                        _sn: decodeEventLog._sn.toNumber(),
-                        _code: decodeEventLog._code.toNumber(),
-                        _msg: decodeEventLog._msg
-                    }
-                    break
-                case EVENT.MessageReceived:
-                    log.eventData = {
-                        _from: decodeEventLog._from?.hash,
-                        _data: decodeEventLog._data
-                    }
-                    break
-                case EVENT.CallMessage:
-                    log.eventData = {
-                        _sn: decodeEventLog._sn.toNumber(),
-                        _from: decodeEventLog._from?.hash,
-                        _to: decodeEventLog._to?.hash,
-                        _reqId: decodeEventLog._reqId.toNumber(),
-                        _data: decodeEventLog._data
-                    }
+                        try {
+                            const sendMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
+                            const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
+                            log.eventData._decodedTo = decodedSendMessage[0]
+                        } catch (error) {}
 
-                    // // try decode toBtp
-                    // try {
-                    //     const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
-                    //     const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
-                    //     log.eventData._fromBtp = decodedSendMessage[0]
-                    // } catch (error) {}
+                        break
+                    case EVENT.ResponseMessage:
+                        log.eventData = {
+                            _sn: decodeEventLog._sn.toNumber(),
+                            _code: decodeEventLog._code.toNumber(),
+                            _msg: decodeEventLog._msg
+                        }
+                        break
+                    case EVENT.RollbackMessage:
+                        log.eventData = {
+                            _sn: decodeEventLog._sn.toNumber()
+                        }
+                        break
+                    case EVENT.RollbackExecuted:
+                        log.eventData = {
+                            _sn: decodeEventLog._sn.toNumber(),
+                            _code: decodeEventLog._code.toNumber(),
+                            _msg: decodeEventLog._msg
+                        }
+                        break
+                    case EVENT.MessageReceived:
+                        log.eventData = {
+                            _from: decodeEventLog._from?.hash,
+                            _data: decodeEventLog._data
+                        }
+                        break
+                    case EVENT.CallMessage:
+                        log.eventData = {
+                            _sn: decodeEventLog._sn.toNumber(),
+                            _from: decodeEventLog._from?.hash,
+                            _to: decodeEventLog._to?.hash,
+                            _reqId: decodeEventLog._reqId.toNumber(),
+                            _data: decodeEventLog._data
+                        }
 
-                    break
-                case EVENT.CallExecuted:
-                    log.eventData = {
-                        _reqId: decodeEventLog._reqId.toNumber(),
-                        _code: decodeEventLog._code.toNumber(),
-                        _msg: decodeEventLog._msg
-                    }
-                    break
-                default:
-                    break
+                        // // try decode toBtp
+                        // try {
+                        //     const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
+                        //     const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
+                        //     log.eventData._fromBtp = decodedSendMessage[0]
+                        // } catch (error) {}
+
+                        break
+                    case EVENT.CallExecuted:
+                        log.eventData = {
+                            _reqId: decodeEventLog._reqId.toNumber(),
+                            _code: decodeEventLog._code.toNumber(),
+                            _msg: decodeEventLog._msg
+                        }
+                        break
+                    default:
+                        break
+                }
+
+                if (lastBlockNumber < log.blockNumber) lastBlockNumber = log.blockNumber
+                result.push(log)
             }
-
-            if (lastBlockNumber < log.blockNumber) lastBlockNumber = log.blockNumber
-            result.push(log)
         }
 
         return { lastFlagNumber: lastBlockNumber, eventLogs: result }
