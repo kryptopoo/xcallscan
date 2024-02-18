@@ -84,16 +84,20 @@ export class Syncer {
     async syncUnfinishedMessages() {
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
-            const sourceSyncer = this.sourceSyncers[network]
-
             const pendingMsgs = await this._db.getNotSyncedMessages(network)
             logger.info(`${network} syncing ${pendingMsgs.length} unfinished messages ${pendingMsgs.map((m) => m.sn).join(', ')}`)
 
             // sync received messages
             for (let i = 0; i < pendingMsgs.length; i++) {
                 const sn = pendingMsgs[i].sn
-                await sourceSyncer.syncSentMessages(sn)
-                await sourceSyncer.syncReceivedMessages(sn)
+                const srcNetwork = pendingMsgs[i].src_network
+                const destNetwork = pendingMsgs[i].dest_network
+
+                const srcSyncer = this.sourceSyncers[srcNetwork]
+                await srcSyncer.syncSentMessages(sn)
+
+                const destSyncer = this.sourceSyncers[destNetwork]
+                await destSyncer.syncReceivedMessages(sn)
             }
         }
     }

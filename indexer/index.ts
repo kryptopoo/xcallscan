@@ -10,28 +10,28 @@ async function run() {
         await Promise.all([fetch(NETWORK.ICON), fetch(NETWORK.HAVAH), fetch(NETWORK.BSC), fetch(NETWORK.ETH2)])
     })
     // sync new messages
-    cron.schedule('45 * * * * *', async () => {
+    cron.schedule('20 * * * * *', async () => {
         const syncer = new Syncer([NETWORK.ICON, NETWORK.HAVAH, NETWORK.BSC, NETWORK.ETH2])
         await syncer.syncNewMessages()
     })
     // sync pending/unfinished messages
-    cron.schedule('15 */10 * * * *', async () => {
+    cron.schedule('40 */2 * * * *', async () => {
         const syncer = new Syncer([NETWORK.ICON, NETWORK.HAVAH, NETWORK.BSC, NETWORK.ETH2])
         await syncer.syncUnfinishedMessages()
     })
 
     // ICON <-> COSMOS
     // fetch data between ICON <-> COSMOS networks
-    cron.schedule('0 */5 * * * *', async () => {
+    cron.schedule('5 */2 * * * *', async () => {
         await Promise.all([fetch(NETWORK.IBC_ICON), fetch(NETWORK.IBC_ARCHWAY), fetch(NETWORK.IBC_NEUTRON), fetch(NETWORK.IBC_INJECTIVE)])
     })
     // sync new messages
-    cron.schedule('45 */5 * * * *', async () => {
+    cron.schedule('25 */2 * * * *', async () => {
         const syncer = new Syncer([NETWORK.IBC_ICON, NETWORK.IBC_ARCHWAY, NETWORK.IBC_NEUTRON, NETWORK.IBC_INJECTIVE])
         await syncer.syncNewMessages()
     })
     // sync pending/unfinished messages
-    cron.schedule('15 */15 * * * *', async () => {
+    cron.schedule('45 */2 * * * *', async () => {
         const syncer = new Syncer([NETWORK.IBC_ICON, NETWORK.IBC_ARCHWAY, NETWORK.IBC_NEUTRON, NETWORK.IBC_INJECTIVE])
         await syncer.syncUnfinishedMessages()
     })
