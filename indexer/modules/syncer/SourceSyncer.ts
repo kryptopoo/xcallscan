@@ -247,6 +247,9 @@ export class SourceSyncer implements ISourceSyncer {
                         destNetwork,
                         srcDapp,
                         undefined,
+                        event.block_number,
+                        event.block_timestamp,
+                        event.tx_hash,
                         event.msg,
                         MSG_STATUS.Executed
                     )
