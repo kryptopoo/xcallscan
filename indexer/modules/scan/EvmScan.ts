@@ -52,7 +52,7 @@ export class EvmScan implements IScan {
             try {
                 decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
             } catch (error: any) {
-                logger.error(`${this.network} decodeEventLog error ${error.code}`)
+                logger.error(`${this.network} ${eventName} decodeEventLog error ${error.code}`)
             }
 
             if (decodeEventLog) {
