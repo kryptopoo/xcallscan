@@ -83,19 +83,21 @@ export class EvmScan implements IScan {
 
                         // try decode toBtp
                         log.eventData._decodedFrom = log.eventData._from // _from is always address
+
                         try {
-                            // const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
-                            const sendMessageInterface = new ethers.utils.Interface([
-                                'function sendMessage(string _to,bytes _data,bytes _rollback,string[] sources,string[] destinations)'
-                            ])
-                            const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
+                            const sendCallMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
+                            const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
                             log.eventData._decodedTo = decodedSendMessage[0]
                         } catch (error) {}
 
                         try {
-                            const sendMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
-                            const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
+                            const sendCallMessageInterface = new ethers.utils.Interface([
+                                'function sendCallMessage(string _to,bytes _data,bytes _rollback,string[] sources,string[] destinations)'
+                            ])
+                            const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
                             log.eventData._decodedTo = decodedSendMessage[0]
+                            // const sources = decodedSendMessage[3]
+                            // const destinations = decodedSendMessage[4]
                         } catch (error) {}
 
                         break
