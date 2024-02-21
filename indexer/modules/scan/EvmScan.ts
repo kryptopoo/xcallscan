@@ -76,7 +76,7 @@ export class EvmScan implements IScan {
                     case EVENT.CallMessageSent:
                         log.eventData = {
                             _sn: decodeEventLog._sn.toNumber(),
-                            _nsn: decodeEventLog._nsn.toNumber(),
+                            _nsn: decodeEventLog._nsn?.toNumber(),
                             _from: decodeEventLog._from,
                             _to: decodeEventLog._to.hash
                         }
@@ -84,7 +84,10 @@ export class EvmScan implements IScan {
                         // try decode toBtp
                         log.eventData._decodedFrom = log.eventData._from // _from is always address
                         try {
-                            const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
+                            // const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
+                            const sendMessageInterface = new ethers.utils.Interface([
+                                'function sendMessage(string _to,bytes _data,bytes _rollback,string[] sources,string[] destinations)'
+                            ])
                             const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
                             log.eventData._decodedTo = decodedSendMessage[0]
                         } catch (error) {}
