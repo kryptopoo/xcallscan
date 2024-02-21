@@ -21,7 +21,9 @@ export class SourceSyncer implements ISourceSyncer {
     }
 
     protected buildBtpAddress(network: string, address: string) {
-        return `btp://${BTP_NETWORK_ID[network]}/${address}`
+        // TODO: review btp address if having 'btp://' prefix
+        // return `btp://${BTP_NETWORK_ID[network]}/${address}`
+        return `${BTP_NETWORK_ID[network]}/${address}`
     }
 
     protected getAddress(btpAddress: string) {

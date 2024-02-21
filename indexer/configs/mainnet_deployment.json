@@ -8,14 +8,14 @@
         },
         "bsc": {
             "uri": "https://bsc-dataseed.binance.org",
-            "network_id": "0x4",
-            "btp_network_id": "0x4.bsc",
+            "network_id": "0x38",
+            "btp_network_id": "0x38.bsc",
             "block_height": 76042342
         },
         "eth2": {
             "uri": "https://mainnet.infura.io/v3/ae42152a1ec04530915a6a7f6a555f6a",
-            "network_id": "0x3",
-            "btp_network_id": "0x3.eth2",
+            "network_id": "0x1",
+            "btp_network_id": "0x1.eth2",
             "block_height": 75311723
         },
         "havah": {

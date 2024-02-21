@@ -52,7 +52,7 @@ export class EvmScan implements IScan {
             try {
                 decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
             } catch (error: any) {
-                logger.error(`${this.network} decodeEventLog error ${error.code}`)
+                logger.error(`${this.network} ${eventName} decodeEventLog error ${error.code}`)
             }
 
             if (decodeEventLog) {
@@ -76,23 +76,28 @@ export class EvmScan implements IScan {
                     case EVENT.CallMessageSent:
                         log.eventData = {
                             _sn: decodeEventLog._sn.toNumber(),
-                            _nsn: decodeEventLog._nsn.toNumber(),
+                            _nsn: decodeEventLog._nsn?.toNumber(),
                             _from: decodeEventLog._from,
                             _to: decodeEventLog._to.hash
                         }
 
                         // try decode toBtp
                         log.eventData._decodedFrom = log.eventData._from // _from is always address
+
                         try {
-                            const sendMessageInterface = new ethers.utils.Interface(['function sendMessage(string _to,bytes _data,bytes _rollback)'])
-                            const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendMessage', tx.data)
+                            const sendCallMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
+                            const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
                             log.eventData._decodedTo = decodedSendMessage[0]
                         } catch (error) {}
 
                         try {
-                            const sendMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
-                            const decodedSendMessage = sendMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
+                            const sendCallMessageInterface = new ethers.utils.Interface([
+                                'function sendCallMessage(string _to,bytes _data,bytes _rollback,string[] sources,string[] destinations)'
+                            ])
+                            const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
                             log.eventData._decodedTo = decodedSendMessage[0]
+                            // const sources = decodedSendMessage[3]
+                            // const destinations = decodedSendMessage[4]
                         } catch (error) {}
 
                         break
