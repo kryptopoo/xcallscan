@@ -34,7 +34,7 @@ export class MintScanV2 implements IScan {
 
         const offsetTimestamp = 86400
         let lastBlockTimestamp = flagNumber == 0 ? SCAN_FROM_FLAG_NUMBER[this.network] : flagNumber
-        const fromDateTime = toDateString(lastBlockTimestamp)
+        const fromDateTime = toDateString(lastBlockTimestamp + 1)
         const toDateTime = toDateString(lastBlockTimestamp + offsetTimestamp)
 
         let txs: any[] = []
@@ -93,7 +93,12 @@ export class MintScanV2 implements IScan {
             }
         }
 
-        if (lastBlockTimestamp + offsetTimestamp < nowTimestamp()) lastBlockTimestamp += offsetTimestamp
+        if (lastBlockTimestamp + offsetTimestamp < nowTimestamp()) {
+            lastBlockTimestamp += offsetTimestamp
+        } else if (result.length > 0) {
+            const maxBlockTimestamp = Math.max(...result.map((o) => o.blockTimestamp))
+            lastBlockTimestamp = maxBlockTimestamp
+        }
 
         return { lastFlagNumber: lastBlockTimestamp, eventLogs: result }
     }

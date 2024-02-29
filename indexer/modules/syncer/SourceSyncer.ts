@@ -38,6 +38,13 @@ export class SourceSyncer implements ISourceSyncer {
     protected parseCallMessageSentEvent(event: EventModel) {
         if (!event.to_decoded) return undefined
 
+        // skip if cannot detect network
+        const destNetwork = this.getNetwork(event.to_decoded as string)
+        if (!destNetwork) {
+            logger.info(`cannot detect network ${this.network}->${destNetwork} event:${event.event} sn:${event.sn}`)
+            return undefined
+        }
+
         const msg: MessageModel = {
             sn: event.sn,
             status: MSG_STATUS.Pending,
@@ -49,7 +56,7 @@ export class SourceSyncer implements ISourceSyncer {
             src_block_timestamp: event.block_timestamp,
             src_tx_hash: event.tx_hash,
 
-            dest_network: this.getNetwork(event.to_decoded as string),
+            dest_network: destNetwork,
             dest_app: this.getAddress(event.to_decoded as string),
 
             fee: event.tx_fee,
