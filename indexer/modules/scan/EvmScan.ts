@@ -104,7 +104,7 @@ export class EvmScan implements IScan {
                     case EVENT.ResponseMessage:
                         log.eventData = {
                             _sn: decodeEventLog._sn.toNumber(),
-                            _code: decodeEventLog._code.toNumber(),
+                            _code: decodeEventLog._code?.toNumber(),
                             _msg: decodeEventLog._msg
                         }
                         break
@@ -116,7 +116,7 @@ export class EvmScan implements IScan {
                     case EVENT.RollbackExecuted:
                         log.eventData = {
                             _sn: decodeEventLog._sn.toNumber(),
-                            _code: decodeEventLog._code.toNumber(),
+                            _code: decodeEventLog._code?.toNumber(),
                             _msg: decodeEventLog._msg
                         }
                         break
@@ -131,7 +131,7 @@ export class EvmScan implements IScan {
                             _sn: decodeEventLog._sn.toNumber(),
                             _from: decodeEventLog._from?.hash,
                             _to: decodeEventLog._to?.hash,
-                            _reqId: decodeEventLog._reqId.toNumber(),
+                            _reqId: decodeEventLog._reqId?.toNumber(),
                             _data: decodeEventLog._data
                         }
 
@@ -145,8 +145,8 @@ export class EvmScan implements IScan {
                         break
                     case EVENT.CallExecuted:
                         log.eventData = {
-                            _reqId: decodeEventLog._reqId.toNumber(),
-                            _code: decodeEventLog._code.toNumber(),
+                            _reqId: decodeEventLog._reqId?.toNumber(),
+                            _code: decodeEventLog._code?.toNumber(),
                             _msg: decodeEventLog._msg
                         }
                         break
