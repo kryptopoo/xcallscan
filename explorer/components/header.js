@@ -8,10 +8,11 @@ export default function Header({ showSearchBar, assets }) {
 
     return (
         <header className="px-4 py-4 xl:px-24 2xl:px-48 w-full bg-gray-50 flex justify-between border-b-[1px]">
-            <a className="text-4xl font-semibold flex mb-2 xl:mb-0" href="/">
-                <img className="h-6 xl:h-8 mt-2" src="/images/xcall-logo.svg"></img>
-                <span className="bg-[#30aaae] text-white  rounded-md text-center text-sm h-5 px-1 xl:text-xl xl:h-7 xl:px-2">Scan</span>
-            </a>
+            <div>
+                <a className="" href="/">
+                    <img className="w-64 min-w-64" src="/images/gmp-logo.svg"></img>
+                </a>
+            </div>
 
             <div className="flex items-center gap-2">
                 <div className="xl:flex items-center gap-4 px-2 text-sm hidden">
@@ -44,11 +45,7 @@ export default function Header({ showSearchBar, assets }) {
 
                 {showSearchBar ? <SearchBar showFull={false} /> : ''}
 
-                <Dropdown
-                    label=""
-                    dismissOnClick={false}
-                    renderTrigger={() => <Image className="hover:cursor-pointer" src={`/images/network-icon.png`} width={24} height={24} />}
-                >
+                <Dropdown label="" dismissOnClick={false} renderTrigger={() => <Image className="hover:cursor-pointer" src={`/images/network-icon.png`} width={24} height={24} />}>
                     <Dropdown.Item>
                         <a href={process.env.TESTNET_APP_URL}>Testnet</a>
                     </Dropdown.Item>
