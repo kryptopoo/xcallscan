@@ -20,21 +20,23 @@ const NETWORK = {
     IBC_ICON: 'ibc_icon',
     IBC_ARCHWAY: 'ibc_archway',
     IBC_NEUTRON: 'ibc_neutron',
-    IBC_INJECTIVE: 'ibc_injective'
+    IBC_INJECTIVE: 'ibc_injective',
+    AVAX: 'avax'
 }
 
 const metaUrls = {
     tx: {
         [NETWORK.BSC]: useMainnet ? 'https://bscscan.com/tx/' : 'https://testnet.bscscan.com/tx/',
-        [NETWORK.ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.berlin.icon.community/transaction/',
+        [NETWORK.ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.lisbon.icon.community/transaction/',
         [NETWORK.ETH2]: useMainnet ? 'https://etherscan.io/tx/' : 'https://sepolia.etherscan.io/tx/',
-        [NETWORK.HAVAH]: useMainnet ? 'https://scan.havah.io/txn/' : 'https://scan.altair.havah.io/txn/',
-        [NETWORK.IBC_ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.berlin.icon.community/transaction/',
+        [NETWORK.HAVAH]: useMainnet ? 'https://scan.havah.io/txn/' : 'https://scan.vega.havah.io/txn/',
+        [NETWORK.IBC_ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.lisbon.icon.community/transaction/',
         [NETWORK.IBC_ARCHWAY]: useMainnet ? 'https://mintscan.io/archway/txs/' : 'https://testnet.mintscan.io/archway-testnet/txs/',
         [NETWORK.IBC_NEUTRON]: useMainnet ? 'https://neutron.celat.one/neutron-1/txs/' : 'https://neutron.celat.one/pion-1/txs/',
         [NETWORK.IBC_INJECTIVE]: useMainnet
             ? 'https://explorer.injective.network/transaction/'
-            : 'https://testnet.explorer.injective.network/transaction/'
+            : 'https://testnet.explorer.injective.network/transaction/',
+        [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/txs/' : 'https://testnet.snowtrace.io/tx/'
     }
 }
 

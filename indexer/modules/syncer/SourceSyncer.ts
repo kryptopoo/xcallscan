@@ -41,7 +41,16 @@ export class SourceSyncer implements ISourceSyncer {
         // skip if cannot detect network
         const destNetwork = this.getNetwork(event.to_decoded as string)
         if (!destNetwork) {
-            logger.info(`cannot detect network ${this.network}->${destNetwork} event:${event.event} sn:${event.sn}`)
+            let destBtpNetworkId = ''
+            if (event.to_decoded && event.to_decoded.split('/').length > 0) {
+                destBtpNetworkId = event.to_decoded.split('/')[0]
+            }
+
+            logger.info(
+                `cannot detect network ${this.network}->${destBtpNetworkId} event:${event.event} sn:${
+                    event.sn
+                }`
+            )
             return undefined
         }
 
@@ -110,6 +119,7 @@ export class SourceSyncer implements ISourceSyncer {
 
     async syncSentMessages(sn: number): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
+
         for (let i = 0; i < events.length; i++) {
             const event = events[i]
 

@@ -28,6 +28,9 @@ export class ScanFactory {
         if (network == NETWORK.IBC_INJECTIVE) {
             scan = new InjectiveScan(network)
         }
+        if (network == NETWORK.AVAX) {
+            scan = new EvmScan(network)
+        }
 
         return scan
     }
