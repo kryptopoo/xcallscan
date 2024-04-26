@@ -40,9 +40,10 @@ export class CelatoneScan implements IScan {
         if (scanCount < this.totalCount) {
             const totalPages = Math.ceil(this.totalCount / limit)
             const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
+            const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
             const txsRes = await this.callApi(`${API_URL[this.network]}/accounts/${CONTRACT[this.network].xcall}/txs`, {
                 limit: limit,
-                offset: flagPageIndex * limit,
+                offset: offset,
                 is_wasm: true,
                 is_execute: true
             })
@@ -60,6 +61,11 @@ export class CelatoneScan implements IScan {
                 const txHash = tx.hash.toString().replace('\\x', '')
 
                 const txRes = await this.callApi(`${API_URL[this.network]}/txs/${txHash}`, {})
+                if (!txRes) {
+                    logger.error(`${this.network} transaction ${txHash} not found`)
+                    continue
+                }
+
                 const txDetail = txRes.tx_response
                 const eventLogs: any[] = txDetail.logs[0].events
                 const msgExecuteContract = txDetail.tx.body.messages.find((t: any) => t['@type'] == '/cosmwasm.wasm.v1.MsgExecuteContract')

@@ -40,9 +40,10 @@ export class InjectiveScan implements IScan {
         if (scanCount < this.totalCount) {
             const totalPages = Math.ceil(this.totalCount / limit)
             const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
+            const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
             const txsRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${CONTRACT[this.network].xcall}`, {
                 limit: limit,
-                skip: flagPageIndex * limit
+                skip: offset
             })
 
             let txs = txsRes.data as any[]
@@ -55,6 +56,9 @@ export class InjectiveScan implements IScan {
 
             for (let i = 0; i < txs.length; i++) {
                 const tx = txs[i]
+
+                // skip if not existed logs
+                if (!tx.logs || tx.logs.length == 0) continue
 
                 const eventLogs: any[] = tx.logs[0].events
                 const msgExecuteContract = tx.messages.find((t: any) => t.type == '/cosmwasm.wasm.v1.MsgExecuteContract')
