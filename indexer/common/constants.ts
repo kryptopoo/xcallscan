@@ -4,6 +4,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const USE_MAINNET = process.env.USE_MAINNET == 'true'
+const CONFIG_NETWORKS = USE_MAINNET ? MainnetDeployment.networks : TestnetDeployment.networks
+const CONFIG_CONTRACTS = USE_MAINNET ? MainnetDeployment.contracts : TestnetDeployment.contracts
 
 const NETWORK = {
     ICON: 'icon',
@@ -18,49 +20,39 @@ const NETWORK = {
 }
 
 const RPC_URL: { [network: string]: string } = {
-    [NETWORK.ICON]: USE_MAINNET ? MainnetDeployment.networks.icon.uri : TestnetDeployment.networks.icon.uri,
-    [NETWORK.BSC]: USE_MAINNET ? MainnetDeployment.networks.bsc.uri : TestnetDeployment.networks.bsc.uri,
-    [NETWORK.ETH2]: USE_MAINNET ? MainnetDeployment.networks.eth2.uri : TestnetDeployment.networks.eth2.uri,
-    [NETWORK.HAVAH]: USE_MAINNET ? MainnetDeployment.networks.havah.uri : TestnetDeployment.networks.havah.uri,
-    [NETWORK.AVAX]: USE_MAINNET ? MainnetDeployment.networks.avax.uri : TestnetDeployment.networks.avax.uri
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.uri,
+    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uri,
+    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uri,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uri,
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uri
 }
 
 const API_URL: { [network: string]: string } = {
-    [NETWORK.ICON]: USE_MAINNET ? 'https://tracker.icon.community/api/v1' : 'https://tracker.lisbon.icon.community/api/v1',
-    [NETWORK.BSC]: USE_MAINNET ? 'https://api.bscscan.com/api' : 'https://api-testnet.bscscan.com/api',
-    [NETWORK.ETH2]: USE_MAINNET ? 'https://api.etherscan.io/api' : 'https://api-sepolia.etherscan.io/api',
-    [NETWORK.HAVAH]: USE_MAINNET ? 'https://scan.havah.io/v3' : 'https://scan.vega.havah.io/v3',
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
+    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.api,
+    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.api,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.api,
 
-    [NETWORK.IBC_ICON]: USE_MAINNET ? 'https://tracker.icon.community/api/v1' : 'https://tracker.lisbon.icon.community/api/v1',
-    [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://apis.mintscan.io/v1/archway' : 'https://front.api.mintscan.io/v1/archway-testnet',
-    [NETWORK.IBC_NEUTRON]: USE_MAINNET
-        ? 'https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1'
-        : 'https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1',
-    [NETWORK.IBC_INJECTIVE]: USE_MAINNET
-        ? 'https://sentry.exchange.grpc-web.injective.network/api/explorer/v1'
-        : 'https://testnet.sentry.exchange.grpc-web.injective.network/api/explorer/v1',
-    [NETWORK.AVAX]: USE_MAINNET
-        ? 'https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api'
-        : 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan/api'
+    [NETWORK.IBC_ICON]: CONFIG_NETWORKS.ibc_icon.api,
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.api,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.api,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.api,
+
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
-    [NETWORK.ICON]: USE_MAINNET ? MainnetDeployment.networks.icon.btp_network_id : TestnetDeployment.networks.icon.btp_network_id,
-    [NETWORK.BSC]: USE_MAINNET ? MainnetDeployment.networks.bsc.btp_network_id : TestnetDeployment.networks.bsc.btp_network_id,
-    [NETWORK.ETH2]: USE_MAINNET ? MainnetDeployment.networks.eth2.btp_network_id : TestnetDeployment.networks.eth2.btp_network_id,
-    [NETWORK.HAVAH]: USE_MAINNET ? MainnetDeployment.networks.havah.btp_network_id : TestnetDeployment.networks.havah.btp_network_id,
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.btp_network_id,
+    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.btp_network_id,
+    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.btp_network_id,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.btp_network_id,
 
-    [NETWORK.IBC_ICON]: USE_MAINNET ? MainnetDeployment.networks.ibc_icon.btp_network_id : TestnetDeployment.networks.ibc_icon.btp_network_id,
-    [NETWORK.IBC_ARCHWAY]: USE_MAINNET
-        ? MainnetDeployment.networks.ibc_archway.btp_network_id
-        : TestnetDeployment.networks.ibc_archway.btp_network_id,
-    [NETWORK.IBC_NEUTRON]: USE_MAINNET
-        ? MainnetDeployment.networks.ibc_neutron.btp_network_id
-        : TestnetDeployment.networks.ibc_neutron.btp_network_id,
-    [NETWORK.IBC_INJECTIVE]: USE_MAINNET
-        ? MainnetDeployment.networks.ibc_injective.btp_network_id
-        : TestnetDeployment.networks.ibc_injective.btp_network_id,
-    [NETWORK.AVAX]: USE_MAINNET ? MainnetDeployment.networks.avax.btp_network_id : TestnetDeployment.networks.avax.btp_network_id
+    [NETWORK.IBC_ICON]: CONFIG_NETWORKS.ibc_icon.btp_network_id,
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.btp_network_id,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.btp_network_id,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
+
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -81,43 +73,43 @@ const SERVICE_API_KEY = {
 
 const CONTRACT: { [network: string]: { xcall: string; bmc: string } } = {
     [NETWORK.ICON]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.icon.xcall : TestnetDeployment.contracts.icon.xcall,
-        bmc: USE_MAINNET ? MainnetDeployment.contracts.icon.bmc : TestnetDeployment.contracts.icon.bmc
+        xcall: CONFIG_CONTRACTS.icon.xcall,
+        bmc: CONFIG_CONTRACTS.icon.bmc
     },
     [NETWORK.BSC]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.bsc.xcall : TestnetDeployment.contracts.bsc.xcall,
-        bmc: USE_MAINNET ? MainnetDeployment.contracts.bsc.bmc : TestnetDeployment.contracts.bsc.bmc
+        xcall: CONFIG_CONTRACTS.bsc.xcall,
+        bmc: CONFIG_CONTRACTS.bsc.bmc
     },
     [NETWORK.ETH2]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.eth2.xcall : TestnetDeployment.contracts.eth2.xcall,
-        bmc: USE_MAINNET ? MainnetDeployment.contracts.eth2.bmc : TestnetDeployment.contracts.eth2.bmc
+        xcall: CONFIG_CONTRACTS.eth2.xcall,
+        bmc: CONFIG_CONTRACTS.eth2.bmc
     },
     [NETWORK.HAVAH]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.havah.xcall : TestnetDeployment.contracts.havah.xcall,
-        bmc: USE_MAINNET ? MainnetDeployment.contracts.havah.bmc : TestnetDeployment.contracts.havah.bmc
+        xcall: CONFIG_CONTRACTS.havah.xcall,
+        bmc: CONFIG_CONTRACTS.havah.bmc
     },
 
     // IBC
     [NETWORK.IBC_ICON]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_icon.xcall : TestnetDeployment.contracts.ibc_icon.xcall,
+        xcall: CONFIG_CONTRACTS.ibc_icon.xcall,
         bmc: ''
     },
     [NETWORK.IBC_ARCHWAY]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_archway.xcall : TestnetDeployment.contracts.ibc_archway.xcall,
+        xcall: CONFIG_CONTRACTS.ibc_archway.xcall,
         bmc: ''
     },
     [NETWORK.IBC_NEUTRON]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_neutron.xcall : TestnetDeployment.contracts.ibc_neutron.xcall,
+        xcall: CONFIG_CONTRACTS.ibc_neutron.xcall,
         bmc: ''
     },
     [NETWORK.IBC_INJECTIVE]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.ibc_injective.xcall : TestnetDeployment.contracts.ibc_injective.xcall,
+        xcall: CONFIG_CONTRACTS.ibc_injective.xcall,
         bmc: ''
     },
 
     // AVAX
     [NETWORK.AVAX]: {
-        xcall: USE_MAINNET ? MainnetDeployment.contracts.avax.xcall : TestnetDeployment.contracts.avax.xcall,
+        xcall: CONFIG_CONTRACTS.avax.xcall,
         bmc: ''
     }
 }
@@ -129,15 +121,9 @@ const SCAN_FROM_FLAG_NUMBER: { [network: string]: number } = {
     [NETWORK.HAVAH]: 0,
 
     [NETWORK.IBC_ICON]: 0,
-    [NETWORK.IBC_ARCHWAY]: USE_MAINNET
-        ? MainnetDeployment.networks.ibc_archway.block_timestamp
-        : TestnetDeployment.networks.ibc_archway.block_timestamp,
-    [NETWORK.IBC_NEUTRON]: USE_MAINNET
-        ? MainnetDeployment.networks.ibc_neutron.block_timestamp
-        : TestnetDeployment.networks.ibc_neutron.block_timestamp,
-    [NETWORK.IBC_INJECTIVE]: USE_MAINNET
-        ? MainnetDeployment.networks.ibc_injective.block_timestamp
-        : TestnetDeployment.networks.ibc_injective.block_timestamp
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.block_timestamp,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.block_timestamp,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.block_timestamp
 }
 
 const EVENT = {

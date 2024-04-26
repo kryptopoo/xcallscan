@@ -36,7 +36,7 @@ const metaUrls = {
         [NETWORK.IBC_INJECTIVE]: useMainnet
             ? 'https://explorer.injective.network/transaction/'
             : 'https://testnet.explorer.injective.network/transaction/',
-        [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/txs/' : 'https://testnet.snowtrace.io/tx/'
+        [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/tx/' : 'https://testnet.snowtrace.io/tx/'
     }
 }
 

@@ -107,7 +107,6 @@ export class MintContractScan implements IScan {
             return ev.type == `wasm-${eventName}`
         })
 
-        console.log('eventLog', eventLog)
         if (eventLog) {
             let rs: any = {}
             const sn = getEventLogValue(eventLog, 'sn')

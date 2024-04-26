@@ -5,6 +5,7 @@ import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY } from '../../common/constan
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import xcallAbi from '../../abi/xcall.abi.json'
+import { sleep } from '../../common/helper'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 
 export class EvmScan implements IScan {
@@ -57,7 +58,23 @@ export class EvmScan implements IScan {
 
             if (decodeEventLog) {
                 // get tx
-                const tx = await this.provider.getTransaction(eventLog.transactionHash)
+                let tx: any = undefined
+                const maxRetries = 3
+                const retryDelay = 3000
+                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                    try {
+                        tx = await this.provider.getTransaction(eventLog.transactionHash)
+                    } catch (error: any) {
+                        logger.error(`${this.network} get transaction error ${error.code}`)
+                        if (attempt < maxRetries) {
+                            await sleep(retryDelay)
+                        } else {
+                            logger.error(`${this.network} get transaction failed ${eventLog.transactionHash}`)
+                        }
+                    }
+                }
+                if (!tx) continue
+
                 let log: EventLog = {
                     txRaw: tx,
                     blockNumber: ethers.BigNumber.from(eventLog.blockNumber).toNumber(),

@@ -1,59 +1,59 @@
 {
     "networks": {
         "icon": {
+            "api": "https://tracker.lisbon.icon.community/api/v1",
             "uri": "https://lisbon.net.solidwallet.io/api/v3/icon_dex",
-            "network_id": "0x2",
             "btp_network_id": "0x2.icon",
             "block_height": 28149874
         },
         "bsc": {
+            "api": "https://api-testnet.bscscan.com/api",
             "uri": "https://data-seed-prebsc-1-s1.binance.org:8545",
-            "network_id": "0x61",
             "btp_network_id": "0x61.bsc",
             "block_height": 0
         },
         "eth2": {
+            "api": "https://api-sepolia.etherscan.io/api",
             "uri": "https://sepolia.infura.io/v3/ffbf8ebe228f4758ae82e175640275e0",
-            "network_id": "0xaa36a7",
             "btp_network_id": "0xaa36a7.eth2",
             "block_height": 0
         },
         "havah": {
+            "api": "https://scan.vega.havah.io/v3",
             "uri": "https://ctz.vega.havah.io/api/v3",
-            "network_id": "0x101.icon",
             "btp_network_id": "0x101.icon",
             "block_height": 0
         },
         "ibc_icon": {
+            "api": "https://tracker.lisbon.icon.community/api/v1",
             "uri": "https://lisbon.net.solidwallet.io/api/v3/icon_dex",
-            "network_id": "0x2",
             "btp_network_id": "0x2.icon",
             "block_height": 0
         },
         "ibc_archway": {
+            "api": "https://front.api.mintscan.io/v1/archway-testnet",
             "uri": "",
-            "network_id": "archway",
             "btp_network_id": "archway",
             "block_height": 0,
             "block_timestamp": 1694476800
         },
         "ibc_neutron": {
+            "api": "https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1",
             "uri": "",
-            "network_id": "neutron",
             "btp_network_id": "neutron",
             "block_height": 0,
             "block_timestamp": 1691971200
         },
         "ibc_injective": {
+            "api": "https://testnet.sentry.exchange.grpc-web.injective.network/api/explorer/v1",
             "uri": "",
-            "network_id": "injective",
             "btp_network_id": "injective",
             "block_height": 0,
             "block_timestamp": 1699833600
         },
         "avax": {
+            "api": "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan/ap",
             "uri": "https://rpc.ankr.com/avalanche_fuji",
-            "network_id": "avax",
             "btp_network_id": "0xa869.fuji",
             "block_height": 0,
             "block_timestamp": 0
@@ -66,8 +66,7 @@
         },
         "bsc": {
             "bmc": "",
-            "xcall": "0xD59C71E42a1Fc070e4c2c94f0eAE0840043681D0",
-            "dapp": ""
+            "xcall": "0xD59C71E42a1Fc070e4c2c94f0eAE0840043681D0"
         },
         "eth2": {
             "bmc": "",
