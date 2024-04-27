@@ -131,7 +131,7 @@ export class IconScan implements IScan {
                 break
             case EVENT.ResponseMessage:
                 eventLogObj._sn = IconService.IconConverter.toNumber(eventData[1])
-                eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
+                if (eventData[2]) eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
                 eventLogObj._msg = eventData[3]
                 break
             case EVENT.RollbackMessage:
@@ -139,8 +139,8 @@ export class IconScan implements IScan {
                 break
             case EVENT.RollbackExecuted:
                 eventLogObj._sn = IconService.IconConverter.toNumber(eventData[1])
-                eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
-                eventLogObj._msg = eventData[3]
+                if (eventData[2]) eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
+                if (eventData[3]) eventLogObj._msg = eventData[3]
                 break
             case EVENT.MessageReceived:
                 eventLogObj._from = eventData[1]
@@ -161,8 +161,8 @@ export class IconScan implements IScan {
 
             case EVENT.CallExecuted:
                 eventLogObj._reqId = IconService.IconConverter.toNumber(eventData[1])
-                eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
-                eventLogObj._msg = eventData[3]
+                if (eventData[2]) eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
+                if (eventData[3]) eventLogObj._msg = eventData[3]
                 break
             default:
                 break

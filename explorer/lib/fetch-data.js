@@ -1,5 +1,7 @@
 const getAssets = async () => {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=icon,binancecoin,ethereum,bitcoin,havah,archway,neutron-3,injective-protocol&order=market_cap_desc&per_page=100&page=1&sparkline=false`, {
+    const assetIds = `icon,binancecoin,ethereum,bitcoin,havah,archway,neutron-3,injective-protocol,avalanche-2`
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${assetIds}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+    const res = await fetch(url, {
         next: { revalidate: 600 }
     })
 

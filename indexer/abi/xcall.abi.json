@@ -188,6 +188,34 @@
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "from",
+                "type": "string"
+            },
+            {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+            },
+            {
+                "internalType": "string[]",
+                "name": "protocols",
+                "type": "string[]"
+            }
+        ],
+        "name": "executeMessage",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "uint256",
                 "name": "_sn",
                 "type": "uint256"
@@ -438,6 +466,30 @@
                 "internalType": "bytes",
                 "name": "_data",
                 "type": "bytes"
+            }
+        ],
+        "name": "sendCall",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "_to",
+                "type": "string"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_data",
+                "type": "bytes"
             },
             {
                 "internalType": "bytes",
@@ -548,39 +600,6 @@
             }
         ],
         "name": "setProtocolFeeHandler",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "toAddr",
-                "type": "address"
-            },
-            {
-                "internalType": "string",
-                "name": "to",
-                "type": "string"
-            },
-            {
-                "internalType": "string",
-                "name": "from",
-                "type": "string"
-            },
-            {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-            },
-            {
-                "internalType": "string[]",
-                "name": "protocols",
-                "type": "string[]"
-            }
-        ],
-        "name": "tryHandleCallMessage",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"

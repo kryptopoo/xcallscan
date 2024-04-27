@@ -1,77 +1,81 @@
 {
     "networks": {
         "icon": {
+            "api": "https://tracker.icon.community/api/v1",
             "uri": "https://ctz.solidwallet.io/api/v3/icon_dex",
-            "network_id": "0x1",
             "btp_network_id": "0x1.icon",
             "block_height": 0
         },
         "bsc": {
+            "api": "https://api.bscscan.com/api",
             "uri": "https://bsc-dataseed.binance.org",
             "network_id": "0x38",
             "btp_network_id": "0x38.bsc",
             "block_height": 76042342
         },
         "eth2": {
+            "api": "https://api.etherscan.io/api",
             "uri": "https://mainnet.infura.io/v3/ae42152a1ec04530915a6a7f6a555f6a",
-            "network_id": "0x1",
             "btp_network_id": "0x1.eth",
             "block_height": 75311723
         },
         "havah": {
+            "api": "https://scan.havah.io/v3",
             "uri": "",
-            "network_id": "0x0.icon",
-            "btp_network_id": "0x0.icon",
+            "btp_network_id": "0x100.icon",
             "block_height": 0
         },
         "ibc_icon": {
+            "api": "https://tracker.icon.community/api/v1",
             "uri": "https://ctz.solidwallet.io/api/v3/icon_dex",
-            "network_id": "0x1",
             "btp_network_id": "0x1.icon",
             "block_height": 0
         },
         "ibc_archway": {
+            "api": "https://apis.mintscan.io/v1/archway",
             "uri": "",
-            "network_id": "archway",
             "btp_network_id": "archway",
             "block_height": 1260794,
             "block_timestamp": 1695859200
         },
         "ibc_neutron": {
+            "api": "https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1",
             "uri": "",
-            "network_id": "neutron",
             "btp_network_id": "neutron",
             "block_height": 4115091,
             "block_timestamp": 1698710400
         },
         "ibc_injective": {
+            "api": "https://sentry.exchange.grpc-web.injective.network/api/explorer/v1",
             "uri": "",
-            "network_id": "injective",
             "btp_network_id": "injective",
             "block_height": 56477980,
             "block_timestamp": 1704412800
+        },
+        "avax": {
+            "api": "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api",
+            "uri": "https://rpc.ankr.com/avalanche",
+            "btp_network_id": "0xa86a.avax",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
         "icon": {
-            "bmc": "cxee7a00755a757e3c519a0616456030e33dc9d47f",
-            "xcall": "cxa07f426062a1384bdd762afa6a87d123fbc81c75",
-            "dapp": "0x0"
+            "bmc": "",
+            "xcall": "cxa07f426062a1384bdd762afa6a87d123fbc81c75"
         },
         "bsc": {
-            "bmc": "0x24415977c566f9300Ea6F0aC75AEA0c09C500e46",
-            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b",
-            "dapp": "0x0"
+            "bmc": "",
+            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"
         },
         "eth2": {
-            "bmc": "0xC355aDF0a9D64f29c0642adF8374f76a20B3fA9d",
-            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b",
-            "dapp": "0x0"
+            "bmc": "",
+            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"
         },
         "havah": {
-            "bmc": "0x0",
-            "xcall": "0x0",
-            "dapp": "0x0"
+            "bmc": "cxcf2c8d58fd7bbd25866de0660b155f057ea489eb",
+            "xcall": "cx00104193d0a593c4b57fda544d1b7c88b8ed4fae"
         },
         "ibc_icon": {
             "xcall": "cxa07f426062a1384bdd762afa6a87d123fbc81c75"
@@ -84,6 +88,9 @@
         },
         "ibc_injective": {
             "xcall": "inj177fx40l0g3jqmtmmuyl2zhrjvhr3knvthlr0ul"
+        },
+        "avax": {
+            "xcall": "0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"
         }
     }
 }

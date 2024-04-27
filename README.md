@@ -50,7 +50,7 @@ xCallScan is typically made of:
     ```bash
     ts-node cmd scan <network> <event>
     ts-node cmd fetch <network>
-    ts-node cmd sync <from_sn> <to_sn>
+    ts-node cmd sync <from_sn> <to_sn> <networks_separated_by_comma>
     ```
 
 ### Api
@@ -85,3 +85,8 @@ xCallScan is typically made of:
 - This is still under testing and known issues found.
 - Improving Indexer to fetch data faster.
 - Improving Explorer UI/UX, supporting mobile responsiveness.
+
+
+## References
+- https://github.com/icon-project/xcall-multi/wiki/xCall-Deployment-Info
+- https://docs.icon.community/cross-chain-communication/general-message-passing-xcall

@@ -24,15 +24,15 @@ export class HavahScan implements IScan {
 
     async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         const limit = 100
-        // const scoreAddr = [EVENT.RollbackExecuted, EVENT.CallExecuted].indexOf(eventName) > -1 ? CONTRACT[this.network].xcall : CONTRACT[this.network].dapp
 
-        let scoreAddr = CONTRACT[this.network].dapp
-        if ([EVENT.RollbackExecuted, EVENT.CallExecuted].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].xcall
+        // // deprecated
+        // let scoreAddr = CONTRACT[this.network].dapp
+        // if ([EVENT.RollbackExecuted, EVENT.CallExecuted].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].xcall
+        // if ([EVENT.CallMessage, EVENT.ResponseMessage, EVENT.RollbackMessage].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].bmc
+        let scoreAddr = CONTRACT[this.network].xcall
         if ([EVENT.CallMessage, EVENT.ResponseMessage, EVENT.RollbackMessage].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].bmc
 
         let result: EventLog[] = []
-
-        // https://scan.altair.havah.io/v3/score/eventLogList?scoreAddr=cxce3a72cc1defaf07b23e05b595840c00d5a80b0c&page=1&count=5
 
         // always get lastest block of events
         const latestEventRes = await this.callApi(`${API_URL[this.network]}/score/eventLogList`, {
@@ -43,7 +43,6 @@ export class HavahScan implements IScan {
 
         const totalCount = latestEventRes.data.totalSize
         const lastPage = Math.ceil((totalCount - flagNumber) / limit)
-        // console.log('lastPage', lastPage)
 
         if (lastPage == 0) return { lastFlagNumber: flagNumber, eventLogs: result }
 
@@ -55,20 +54,14 @@ export class HavahScan implements IScan {
 
         const eventLogs = eventLogsRes.data.data
         flagNumber = flagNumber + eventLogs.length
-        // console.log('flagNumber', flagNumber)
-        // console.log('eventLogs', eventLogs)
         if (eventLogs) {
-            // console.log('eventLogs', eventLogs)
             for (let j = 0; j < eventLogs.length; j++) {
                 let eventLog = eventLogs[j]
 
                 // check event name correctly
                 if (eventLog.method.startsWith(`${eventName}(`)) {
-                    // console.log('tx', tx)
                     let tx = await this.getTransactionDetail(eventLog.txHash)
-
                     let decodeEventLog = this.decodeEventLog(eventLog.eventLog, eventName)
-                    // console.log('decodeEventLog', decodeEventLog)
 
                     let log: EventLog = {
                         txRaw: tx,
@@ -107,8 +100,8 @@ export class HavahScan implements IScan {
             case EVENT.CallMessageSent:
                 eventLogObj._from = eventData[1]
                 eventLogObj._to = eventData[2]
-                eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
-                eventLogObj._nsn = IconService.IconConverter.toNumber(eventData[4])
+                if (eventData[3]) eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
+                if (eventData[4]) eventLogObj._nsn = IconService.IconConverter.toNumber(eventData[4])
 
                 // icon always decode string
                 eventLogObj._decodedFrom = eventData[1]
@@ -117,7 +110,7 @@ export class HavahScan implements IScan {
                 break
             case EVENT.ResponseMessage:
                 eventLogObj._sn = IconService.IconConverter.toNumber(eventData[1])
-                eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
+                if (eventData[2]) eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
                 eventLogObj._msg = eventData[3]
                 break
             case EVENT.RollbackMessage:
@@ -125,7 +118,7 @@ export class HavahScan implements IScan {
                 break
             case EVENT.RollbackExecuted:
                 eventLogObj._sn = IconService.IconConverter.toNumber(eventData[1])
-                eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
+                if (eventData[2]) eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
                 eventLogObj._msg = eventData[3]
                 break
             case EVENT.MessageReceived:
@@ -137,9 +130,9 @@ export class HavahScan implements IScan {
             case EVENT.CallMessage:
                 eventLogObj._from = eventData[1]
                 eventLogObj._to = eventData[2]
-                eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
-                eventLogObj._reqId = IconService.IconConverter.toNumber(eventData[4])
-                eventLogObj._data = eventData[5]
+                if (eventData[3]) eventLogObj._sn = IconService.IconConverter.toNumber(eventData[3])
+                if (eventData[4]) eventLogObj._reqId = IconService.IconConverter.toNumber(eventData[4])
+                if (eventData[5]) eventLogObj._data = eventData[5]
 
                 eventLogObj._decodedFrom = eventData[1]
                 eventLogObj._decodedTo = eventData[2]
@@ -147,8 +140,8 @@ export class HavahScan implements IScan {
 
             case EVENT.CallExecuted:
                 eventLogObj._reqId = IconService.IconConverter.toNumber(eventData[1])
-                eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
-                eventLogObj._msg = eventData[3]
+                if (eventData[2]) eventLogObj._code = IconService.IconConverter.toNumber(eventData[2])
+                if (eventData[3]) eventLogObj._msg = eventData[3]
                 break
             default:
                 break

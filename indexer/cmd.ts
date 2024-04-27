@@ -31,7 +31,7 @@ const runCmd = async () => {
         const network = args[1]
         const event = args[2]
 
-        if (network == NETWORK.ICON || network == NETWORK.IBC_ICON || network == NETWORK.ETH2 || network == NETWORK.BSC) {
+        if (network == NETWORK.ICON || network == NETWORK.IBC_ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX) {
             if (!event) {
                 console.log('eventName is required')
                 return

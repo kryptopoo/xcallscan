@@ -17,4 +17,8 @@ const toTimestamp = (date: Date) => {
     return timestamp
 }
 
-export { nowTimestamp, lastWeekTimestamp, toDateString, toTimestamp }
+const sleep = (ms: number) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+export { nowTimestamp, lastWeekTimestamp, toDateString, toTimestamp, sleep }
