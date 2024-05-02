@@ -23,9 +23,9 @@ export default function Header({ showSearchBar, assets }) {
                         ul.insertAdjacentHTML('afterend', ul.outerHTML);
                         ul.nextSibling.setAttribute('aria-hidden', 'true');
                     })"
-                        className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
+                        className="w-full max-w-[820px] 3xl:max-w-6xl inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
                     >
-                        <ul x-ref="logos" className="flex items-center justify-center md:justify-start [&_li]:mx-3 animate-infinite-scroll">
+                        <ul x-ref="logos" className="flex items-center justify-center md:justify-start [&_li]:mx-4 animate-infinite-scroll">
                             {Array.isArray(assets)
                                 ? assets.map((asset) => (
                                       <li key={asset.name}>

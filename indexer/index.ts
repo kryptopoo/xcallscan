@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import { EVENT, NETWORK } from './common/constants'
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
+import { sleep } from './common/helper'
 
 async function run() {
     const networks = Object.values(NETWORK)
@@ -9,6 +10,7 @@ async function run() {
 
     // fetch data between networks
     cron.schedule('0 */2 * * * *', async () => {
+        // TODO: review ETIMEDOUT issue
         await Promise.all(
             networks.map((network) => {
                 return fetch(network)

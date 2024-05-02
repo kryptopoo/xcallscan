@@ -21,7 +21,10 @@ const NETWORK = {
     IBC_ARCHWAY: 'ibc_archway',
     IBC_NEUTRON: 'ibc_neutron',
     IBC_INJECTIVE: 'ibc_injective',
-    AVAX: 'avax'
+    AVAX: 'avax',
+    BASE: 'base',
+    ARBITRUM: 'arbitrum',
+    OPTIMISM: 'optimism'
 }
 
 const metaUrls = {
@@ -36,7 +39,10 @@ const metaUrls = {
         [NETWORK.IBC_INJECTIVE]: useMainnet
             ? 'https://explorer.injective.network/transaction/'
             : 'https://testnet.explorer.injective.network/transaction/',
-        [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/tx/' : 'https://testnet.snowtrace.io/tx/'
+        [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/tx/' : 'https://testnet.snowtrace.io/tx/',
+        [NETWORK.BASE]: useMainnet ? 'https://basescan.org/tx/' : 'https://sepolia.basescan.org/tx/',
+        [NETWORK.ARBITRUM]: useMainnet ? 'https://arbiscan.io/tx/' : 'https://sepolia.arbiscan.io/tx/',
+        [NETWORK.OPTIMISM]: useMainnet ? 'https://optimistic.etherscan.io/tx/' : 'https://sepolia-optimism.etherscan.io/tx/'
     }
 }
 

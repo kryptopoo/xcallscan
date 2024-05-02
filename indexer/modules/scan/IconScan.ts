@@ -1,9 +1,10 @@
 import logger from '../logger/logger'
-import axios from 'axios'
 import IconService from 'icon-sdk-js'
 import { API_URL, EVENT, NETWORK, CONTRACT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
+import AxiosCustomInstance from './AxiosCustomInstance'
+import { sleep } from '../../common/helper'
 
 export class IconScan implements IScan {
     countName: string = 'BlockNumber'
@@ -20,7 +21,8 @@ export class IconScan implements IScan {
     async callApi(apiUrl: string, params: any): Promise<any> {
         let errorCode = undefined
         try {
-            const res = await axios.get(apiUrl, {
+            const axiosInstance = AxiosCustomInstance.getInstance()
+            const res = await axiosInstance.get(apiUrl, {
                 params: params
             })
             return res
@@ -86,6 +88,11 @@ export class IconScan implements IScan {
                 // check event name correctly
                 if (eventLog.method == eventName) {
                     let tx = await this.getTransactionDetail(eventLog.transaction_hash)
+                    if (!tx) {
+                        logger.error(`${this.network} transaction not found ${eventLog.txHash}`)
+                        continue
+                    }
+
                     let decodeEventLog = this.decodeEventLog(eventLog, eventName)
 
                     let log: EventLog = {
@@ -174,7 +181,22 @@ export class IconScan implements IScan {
     }
 
     private async getTransactionDetail(txHash: string) {
-        const txHashRes = await this.callApi(`${API_URL[this.network]}/transactions/details/${txHash}`, {})
-        return txHashRes.data
+        const maxRetries = 3
+        const retryDelay = 3000
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const txHashRes = await this.callApi(`${API_URL[this.network]}/transactions/details/${txHash}`, {})
+                return txHashRes.data
+            } catch (error: any) {
+                logger.error(`${this.network} get transaction error ${error.code}`)
+                if (attempt < maxRetries) {
+                    await sleep(retryDelay)
+                } else {
+                    logger.error(`${this.network} get transaction failed ${txHash}`)
+                }
+            }
+        }
+
+        return undefined
     }
 }

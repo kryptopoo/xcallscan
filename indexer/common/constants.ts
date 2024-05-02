@@ -16,7 +16,10 @@ const NETWORK = {
     IBC_ARCHWAY: 'ibc_archway',
     IBC_NEUTRON: 'ibc_neutron',
     IBC_INJECTIVE: 'ibc_injective',
-    AVAX: 'avax'
+    AVAX: 'avax',
+    BASE: 'base',
+    ARBITRUM: 'arbitrum',
+    OPTIMISM: 'optimism'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -24,7 +27,10 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uri,
     [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uri,
     [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uri,
-    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uri
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uri,
+    [NETWORK.BASE]: CONFIG_NETWORKS.base.uri,
+    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri
 }
 
 const API_URL: { [network: string]: string } = {
@@ -38,7 +44,10 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.api,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.api,
 
-    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.api
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.api,
+    [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
+    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -52,7 +61,10 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.btp_network_id,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
 
-    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.btp_network_id
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.btp_network_id,
+    [NETWORK.BASE]: CONFIG_NETWORKS.base.btp_network_id,
+    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.btp_network_id,
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -64,7 +76,11 @@ const API_KEY: { [network: string]: string } = {
     [NETWORK.IBC_ICON]: '',
     [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',
-    [NETWORK.IBC_INJECTIVE]: ''
+    [NETWORK.IBC_INJECTIVE]: '',
+
+    [NETWORK.BASE]: process.env.SCAN_BASE_API_KEY ?? '',
+    [NETWORK.ARBITRUM]: process.env.SCAN_ARBITRUM_API_KEY ?? '',
+    [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? ''
 }
 
 const SERVICE_API_KEY = {
@@ -110,6 +126,19 @@ const CONTRACT: { [network: string]: { xcall: string; bmc: string } } = {
     // AVAX
     [NETWORK.AVAX]: {
         xcall: CONFIG_CONTRACTS.avax.xcall,
+        bmc: ''
+    },
+
+    [NETWORK.BASE]: {
+        xcall: CONFIG_CONTRACTS.base.xcall,
+        bmc: ''
+    },
+    [NETWORK.ARBITRUM]: {
+        xcall: CONFIG_CONTRACTS.arbitrum.xcall,
+        bmc: ''
+    },
+    [NETWORK.OPTIMISM]: {
+        xcall: CONFIG_CONTRACTS.optimism.xcall,
         bmc: ''
     }
 }

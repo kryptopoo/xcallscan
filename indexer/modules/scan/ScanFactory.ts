@@ -15,7 +15,13 @@ export class ScanFactory {
         if (network == NETWORK.HAVAH) {
             scan = new HavahScan()
         }
-        if (network == NETWORK.BSC || network == NETWORK.ETH2) {
+        if (
+            network == NETWORK.BSC ||
+            network == NETWORK.ETH2 ||
+            network == NETWORK.BASE ||
+            network == NETWORK.ARBITRUM ||
+            network == NETWORK.OPTIMISM
+        ) {
             scan = new EvmScan(network)
         }
         if (network == NETWORK.IBC_ARCHWAY) {
