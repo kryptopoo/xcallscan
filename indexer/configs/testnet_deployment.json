@@ -57,6 +57,27 @@
             "btp_network_id": "0xa869.fuji",
             "block_height": 0,
             "block_timestamp": 0
+        },
+        "base": {
+            "api": "https://api-sepolia.basescan.org/api",
+            "uri": "https://base-sepolia.blockpi.network/v1/rpc/public",
+            "btp_network_id": "0x14a34.base",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "arbitrum": {
+            "api": "https://api-sepolia.arbiscan.io/api",
+            "uri": "https://arbitrum-sepolia.blockpi.network/v1/rpc/public",
+            "btp_network_id": "0xaa37dc.arbitrum",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "optimism": {
+            "api": "https://api-sepolia-optimistic.etherscan.io/api",
+            "uri": "https://optimism-sepolia.blockpi.network/v1/rpc/public",
+            "btp_network_id": "0x66eee.optimism",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -72,7 +93,7 @@
             "bmc": "",
             "xcall": "0xB7039f15fFa33A6f44cA4913f33cE2adC0dbe71D"
         },
-        
+
         "havah": {
             "bmc": "cxbc156dbb9ce60e64d9ff02e5b95e206980b5cf5f",
             "xcall": "cxd34a83458cb4adb49f48e411105f69ec35e3c3d5"
@@ -91,6 +112,15 @@
         },
         "avax": {
             "xcall": "0x28ecb198e86a7FcA1cf51032635967fc26cDDAaD"
+        },
+        "base": {
+            "xcall": "0x0B59764C48297E768c135b8D072F9884a37EB84c"
+        },
+        "arbitrum": {
+            "xcall": "0x52eC9a532439AAB34FbbD20aFb3D2351fA982583"
+        },
+        "optimism": {
+            "xcall": "0x9835d02616f76Dc5f92E689F49b08566CFAFafcA"
         }
     }
 }

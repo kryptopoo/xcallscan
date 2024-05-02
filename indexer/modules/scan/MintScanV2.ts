@@ -1,11 +1,11 @@
 import logger from '../logger/logger'
-import axios from 'axios'
 import { ethers } from 'ethers'
 
 import { API_URL, EVENT, CONTRACT, API_KEY, SCAN_FROM_FLAG_NUMBER } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { nowTimestamp, toDateString, toTimestamp } from '../../common/helper'
+import AxiosCustomInstance from './AxiosCustomInstance'
 
 export class MintScanV2 implements IScan {
     countName: string = 'BlockTimestamp'
@@ -14,7 +14,8 @@ export class MintScanV2 implements IScan {
 
     async callApi(apiUrl: string, params: any): Promise<any> {
         try {
-            const res = await axios.get(apiUrl, {
+            const axiosInstance = AxiosCustomInstance.getInstance()
+            const res = await axiosInstance.get(apiUrl, {
                 params: params,
                 headers: {
                     Authorization: 'Bearer ' + API_KEY[this.network]
@@ -22,7 +23,7 @@ export class MintScanV2 implements IScan {
             })
             return res.data
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${error.code}`)
+            logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
 
         return undefined

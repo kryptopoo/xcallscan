@@ -1,10 +1,10 @@
 import logger from '../logger/logger'
-import axios from 'axios'
 import { ethers } from 'ethers'
 
 import { API_URL, EVENT, CONTRACT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
+import AxiosCustomInstance from './AxiosCustomInstance'
 
 export class InjectiveScan implements IScan {
     countName: string = 'CountNumber'
@@ -14,12 +14,13 @@ export class InjectiveScan implements IScan {
 
     async callApi(apiUrl: string, params: any): Promise<any> {
         try {
-            const res = await axios.get(apiUrl, {
+            const axiosInstance = AxiosCustomInstance.getInstance()
+            const res = await axiosInstance.get(apiUrl, {
                 params: params
             })
             return res.data
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${error.code}`)
+            logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
     }
 

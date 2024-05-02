@@ -1,9 +1,10 @@
 import logger from '../logger/logger'
-import axios from 'axios'
 import IconService from 'icon-sdk-js'
 import { API_URL, EVENT, NETWORK, CONTRACT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
+import AxiosCustomInstance from './AxiosCustomInstance'
+import { sleep } from '../../common/helper'
 
 export class HavahScan implements IScan {
     countName: string = 'CountNumber'
@@ -11,12 +12,13 @@ export class HavahScan implements IScan {
 
     async callApi(apiUrl: string, params: any): Promise<any> {
         try {
-            const res = await axios.get(apiUrl, {
+            const axiosInstance = AxiosCustomInstance.getInstance()
+            const res = await axiosInstance.get(apiUrl, {
                 params: params
             })
-            return res
+            return res.data
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${error.code}`)
+            logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
 
         return { data: [], totalSize: 0 }
@@ -41,7 +43,7 @@ export class HavahScan implements IScan {
             count: 1
         })
 
-        const totalCount = latestEventRes.data.totalSize
+        const totalCount = latestEventRes.totalSize
         const lastPage = Math.ceil((totalCount - flagNumber) / limit)
 
         if (lastPage == 0) return { lastFlagNumber: flagNumber, eventLogs: result }
@@ -52,7 +54,7 @@ export class HavahScan implements IScan {
             count: limit
         })
 
-        const eventLogs = eventLogsRes.data.data
+        const eventLogs = eventLogsRes.data
         flagNumber = flagNumber + eventLogs.length
         if (eventLogs) {
             for (let j = 0; j < eventLogs.length; j++) {
@@ -61,6 +63,11 @@ export class HavahScan implements IScan {
                 // check event name correctly
                 if (eventLog.method.startsWith(`${eventName}(`)) {
                     let tx = await this.getTransactionDetail(eventLog.txHash)
+                    if (!tx) {
+                        logger.error(`${this.network} transaction not found ${eventLog.txHash}`)
+                        continue
+                    }
+
                     let decodeEventLog = this.decodeEventLog(eventLog.eventLog, eventName)
 
                     let log: EventLog = {
@@ -153,10 +160,25 @@ export class HavahScan implements IScan {
     }
 
     private async getTransactionDetail(txHash: string) {
-        let txHashRes = await this.callApi(`${API_URL[this.network]}/transaction/info`, {
-            txHash: txHash
-        })
+        const maxRetries = 3
+        const retryDelay = 3000
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                let txHashRes = await this.callApi(`${API_URL[this.network]}/transaction/info`, {
+                    txHash: txHash
+                })
 
-        return txHashRes.data.data
+                return txHashRes.data.data
+            } catch (error: any) {
+                logger.error(`${this.network} get transaction error ${error.code}`)
+                if (attempt < maxRetries) {
+                    await sleep(retryDelay)
+                } else {
+                    logger.error(`${this.network} get transaction failed ${txHash}`)
+                }
+            }
+        }
+
+        return undefined
     }
 }

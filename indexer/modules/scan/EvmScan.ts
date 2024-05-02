@@ -1,11 +1,11 @@
 import logger from '../logger/logger'
-import axios from 'axios'
 import { ethers } from 'ethers'
 import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import xcallAbi from '../../abi/xcall.abi.json'
 import { sleep } from '../../common/helper'
+import AxiosCustomInstance from './AxiosCustomInstance'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 
 export class EvmScan implements IScan {
@@ -18,12 +18,14 @@ export class EvmScan implements IScan {
 
     async callApi(apiUrl: string, params: any): Promise<any[]> {
         try {
-            const res = await axios.get(apiUrl, {
+            const axiosInstance = AxiosCustomInstance.getInstance()
+            const res = await axiosInstance.get(apiUrl, {
                 params: params
             })
-            return res.data.result as any[]
+
+            if (res.data.result) return res.data.result as any[]
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${error.code}`)
+            logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
 
         return []
@@ -73,7 +75,10 @@ export class EvmScan implements IScan {
                         }
                     }
                 }
-                if (!tx) continue
+                if (!tx) {
+                    logger.error(`${this.network} transaction not found ${eventLog.transactionHash}`)
+                    continue
+                }
 
                 let log: EventLog = {
                     txRaw: tx,

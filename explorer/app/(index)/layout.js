@@ -18,6 +18,8 @@ export default async function RootLayout({ children }) {
     ]
     try {
         assets = await fetchData.getAssets()
+        // // random assets
+        // assets = assets.sort(() => Math.random() - Math.random()).slice(0, 8)
     } catch (error) {
         console.log('error', error)
     }

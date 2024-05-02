@@ -1,11 +1,11 @@
 import logger from '../logger/logger'
-import axios from 'axios'
 import { ethers } from 'ethers'
 
 import { API_URL, EVENT, CONTRACT, API_KEY, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMBER } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { nowTimestamp, toDateString, toTimestamp } from '../../common/helper'
+import AxiosCustomInstance from './AxiosCustomInstance'
 
 export class MintAccountScan implements IScan {
     countName: string = 'BlockTimestamp'
@@ -14,11 +14,12 @@ export class MintAccountScan implements IScan {
 
     async callApi(apiUrl: string, params: any): Promise<any[]> {
         try {
+            const axiosInstance = AxiosCustomInstance.getInstance()
             // Using proxy to prevent block
             const proxyUrl = `https://api.scrapingant.com/v2/extended?url=${encodeURIComponent(apiUrl)}&browser=false&x-api-key=${
                 SERVICE_API_KEY.SCRAPING_ANT
             }`
-            const res = await axios.get(proxyUrl)
+            const res = await axiosInstance.get(proxyUrl)
             logger.info(`${this.network} calling api ${proxyUrl}`)
             if (res.data.status_code == 200) {
                 const resJson = JSON.parse(res.data.text)
@@ -27,7 +28,7 @@ export class MintAccountScan implements IScan {
                 logger.error(`${this.network} called api failed ${res.data.status_code}`)
             }
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${error.code}`)
+            logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
 
         return []
