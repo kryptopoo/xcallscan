@@ -39,7 +39,9 @@ export class InjectiveScan implements IScan {
         }
 
         if (scanCount < this.totalCount) {
-            const offset = scanCount
+            const totalPages = Math.ceil(this.totalCount / limit)
+            const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
+            const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
             const txsRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${CONTRACT[this.network].xcall}`, {
                 limit: limit,
                 skip: offset
@@ -87,6 +89,7 @@ export class InjectiveScan implements IScan {
             }
 
             scanCount += txs.length
+            if (scanCount > this.totalCount) scanCount = this.totalCount
         }
 
         return { lastFlagNumber: scanCount, eventLogs: result }
