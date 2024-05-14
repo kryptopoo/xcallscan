@@ -1,9 +1,10 @@
 import logger from '../logger/logger'
 import { ethers } from 'ethers'
-import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY } from '../../common/constants'
+import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY, BTP_NETWORK_ID, NETWORK } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import xcallAbi from '../../abi/xcall.abi.json'
+import assetManagerAbi from '../../abi/AssetManager.abi.json'
 import { sleep } from '../../common/helper'
 import AxiosCustomInstance from './AxiosCustomInstance'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
@@ -107,19 +108,63 @@ export class EvmScan implements IScan {
                         log.eventData._decodedFrom = log.eventData._from // _from is always address
 
                         try {
-                            const sendCallMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
-                            const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
-                            log.eventData._decodedTo = decodedSendMessage[0]
+                            if (!log.eventData._decodedTo) {
+                                const sendCallMessageInterface = new ethers.utils.Interface([
+                                    'sendCallMessage(string _to,bytes _data,bytes _rollback)'
+                                ])
+                                const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
+                                log.eventData._decodedTo = decodedSendMessage[0]
+                            }
                         } catch (error) {}
 
                         try {
-                            const sendCallMessageInterface = new ethers.utils.Interface([
-                                'function sendCallMessage(string _to,bytes _data,bytes _rollback,string[] sources,string[] destinations)'
-                            ])
-                            const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
-                            log.eventData._decodedTo = decodedSendMessage[0]
-                            // const sources = decodedSendMessage[3]
-                            // const destinations = decodedSendMessage[4]
+                            if (!log.eventData._decodedTo) {
+                                const sendCallMessageInterface = new ethers.utils.Interface([
+                                    'function sendCallMessage(string _to,bytes _data,bytes _rollback,string[] sources,string[] destinations)'
+                                ])
+                                const decodedSendMessage = sendCallMessageInterface.decodeFunctionData('sendCallMessage', tx.data)
+                                log.eventData._decodedTo = decodedSendMessage[0]
+                                // const sources = decodedSendMessage[3]
+                                // const destinations = decodedSendMessage[4]
+                            }
+                        } catch (error) {}
+
+                        // Try decode from AssetManager contract
+                        try {
+                            if (!log.eventData._decodedTo) {
+                                let decodedData: any = undefined
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(
+                                        assetManagerAbi,
+                                        'deposit(address token,uint256 amount,string to)',
+                                        tx.data
+                                    )
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(assetManagerAbi, 'depositNative(uint256 amount,string to)', tx.data)
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(assetManagerAbi, 'deposit(address token,uint amount)', tx.data)
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(
+                                        assetManagerAbi,
+                                        'deposit(address token,uint amount,string memory to,bytes memory data)',
+                                        tx.data
+                                    )
+                                if (!decodedData) decodedData = await this.decodeFunction(assetManagerAbi, 'depositNative(uint amount)', tx.data)
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(
+                                        assetManagerAbi,
+                                        'depositNative(uint amount,string memory to,bytes memory data)',
+                                        tx.data
+                                    )
+
+                                if (decodedData) {
+                                    // const encodedTo = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`${BTP_NETWORK_ID[NETWORK.ICON]}/${CONTRACT[NETWORK.ICON].asset_manager}`))
+                                    const assetManagerAddr = log.txTo
+                                    const assetManagerContract = new ethers.Contract(assetManagerAddr, assetManagerAbi, this.provider)
+                                    const iconAssetManagerAddr = await assetManagerContract.iconAssetManager()
+                                    log.eventData._decodedTo = iconAssetManagerAddr
+                                }
+                            }
                         } catch (error) {}
 
                         break
@@ -182,5 +227,17 @@ export class EvmScan implements IScan {
         }
 
         return { lastFlagNumber: lastBlockNumber, eventLogs: result }
+    }
+
+    private async decodeFunction(abi: any, funcName: string, data: string) {
+        try {
+            const contractInterface = new ethers.utils.Interface(abi)
+            const decodedData = contractInterface.decodeFunctionData(funcName, data)
+            return decodedData
+        } catch (error) {
+            logger.error(`decoding ${funcName} error`)
+        }
+
+        return undefined
     }
 }

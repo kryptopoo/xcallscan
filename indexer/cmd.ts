@@ -30,6 +30,7 @@ const runCmd = async () => {
     if (cmd == 'scan') {
         const network = args[1]
         const event = args[2]
+        const flagNumber = args[3] ?? 0
 
         if (network == NETWORK.ICON || network == NETWORK.IBC_ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX) {
             if (!event) {
@@ -40,7 +41,7 @@ const runCmd = async () => {
 
         let scan: IScan = ScanFactory.createScan(network)
 
-        const { lastFlagNumber, eventLogs } = await scan.getEventLogs(0, event)
+        const { lastFlagNumber, eventLogs } = await scan.getEventLogs(flagNumber, event)
         console.log(eventLogs)
     }
     if (cmd == 'fetch') {
