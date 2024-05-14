@@ -3,10 +3,12 @@ import { ethers } from 'ethers'
 import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY, BTP_NETWORK_ID, NETWORK } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
-import xcallAbi from '../../abi/xcall.abi.json'
-import assetManagerAbi from '../../abi/AssetManager.abi.json'
 import { sleep } from '../../common/helper'
 import AxiosCustomInstance from './AxiosCustomInstance'
+import xcallAbi from '../../abi/xcall.abi.json'
+import assetManagerAbi from '../../abi/AssetManager.abi.json'
+import oracleProxyAbi from '../../abi/OracleProxy.abi.json'
+import balancedDollarAbi from '../../abi/BalancedDollar.abi.json'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 
 export class EvmScan implements IScan {
@@ -167,6 +169,46 @@ export class EvmScan implements IScan {
                             }
                         } catch (error) {}
 
+                        // Try decode from OracleProxy contract
+                        try {
+                            if (!log.eventData._decodedTo) {
+                                let decodedData: any = undefined
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(oracleProxyAbi, 'updateCreditVaultPrice(address _vault)', tx.data)
+
+                                if (decodedData) {
+                                    const oracleProxyAddr = log.txTo
+                                    const oracleProxyContract = new ethers.Contract(oracleProxyAddr, oracleProxyAbi, this.provider)
+                                    const iconOracleAddr = await oracleProxyContract.iconOracle()
+                                    log.eventData._decodedTo = iconOracleAddr
+                                }
+                            }
+                        } catch (error) {}
+
+                        // Try decode from BalancedDollar contract
+                        try {
+                            if (!log.eventData._decodedTo) {
+                                let decodedData: any = undefined
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(balancedDollarAbi, 'crossTransfer(string to, uint256 value)', tx.data)
+                                if (!decodedData)
+                                    decodedData = await this.decodeFunction(
+                                        balancedDollarAbi,
+                                        'crossTransfer(string to, uint256 value,bytes memory data)',
+                                        tx.data
+                                    )
+
+                                if (decodedData) {
+                                    const balancedDollarAddr = log.txTo
+                                    const balancedDollarContract = new ethers.Contract(balancedDollarAddr, balancedDollarAbi, this.provider)
+                                    const iconBnUSDAddr = await balancedDollarContract.iconBnUSD()
+                                    log.eventData._decodedTo = iconBnUSDAddr
+                                }
+                            }
+                        } catch (error) {}
+
+                        console.log('log.eventData', log.eventData)
+
                         break
                     case EVENT.ResponseMessage:
                         log.eventData = {
@@ -235,7 +277,7 @@ export class EvmScan implements IScan {
             const decodedData = contractInterface.decodeFunctionData(funcName, data)
             return decodedData
         } catch (error) {
-            logger.error(`decoding ${funcName} error`)
+            // logger.error(`decoding function error ${funcName}`)
         }
 
         return undefined
