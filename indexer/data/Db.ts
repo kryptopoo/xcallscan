@@ -138,6 +138,27 @@ class Db {
         return maxSnRs.rows.length > 0 ? Number(maxSnRs.rows[0].max) : 0
     }
 
+    async getMaxEventBlockNumber(network: string) {
+        const maxBlockNumberRs = await this.pool.query(`SELECT max(block_number) FROM ${network}_events`)
+        return maxBlockNumberRs.rows.length > 0 ? Number(maxBlockNumberRs.rows[0].max) : 0
+    }
+
+    async getNewSnList(network: string, fromBlockNumber: number, toBlockNumber: number) {
+        // const snListRs = await this.pool.query(
+        //     `SELECT distinct sn FROM ${network}_events
+        //     WHERE block_number >= $1 AND block_number <= $2 AND sn NOT IN (SELECT sn FROM messages where src_network = $3 OR dest_network = $3)
+        //     ORDER BY sn`,
+        //     [fromBlockNumber, toBlockNumber, network]
+        // )
+        const snListRs = await this.pool.query(
+            `SELECT distinct sn FROM ${network}_events 
+            WHERE block_number > $1 AND block_number <= $2
+            ORDER BY sn`,
+            [fromBlockNumber, toBlockNumber]
+        )
+        return snListRs.rows
+    }
+
     // MESSAGE
     async insertMessage(message: MessageModel) {
         const existedTxs = await this.pool.query(`SELECT 1 FROM messages where sn = $1 and src_network = $2 and dest_network = $3`, [
@@ -390,6 +411,20 @@ class Db {
     async getMaxMessageSn(src_network: string) {
         const maxSnRs = await this.pool.query(`SELECT max(sn) FROM messages where src_network = $1 or dest_network = $1`, [src_network])
         return maxSnRs.rows.length > 0 ? Number(maxSnRs.rows[0].max) : 0
+    }
+
+    async getMaxMessageBlockNumber(src_network: string) {
+        const maxSrcBlockNumberRs = await this.pool.query(
+            `SELECT MAX(GREATEST(src_block_number::bigint, response_block_number::bigint, rollback_block_number::bigint)) FROM messages WHERE src_network = $1 `,
+            [src_network]
+        )
+        const maxDestBlockNumberRs = await this.pool.query(`SELECT MAX(dest_block_number) FROM messages WHERE dest_network = $1 `, [src_network])
+
+        if (maxSrcBlockNumberRs.rows.length > 0 && maxDestBlockNumberRs.rows.length > 0) {
+            return Math.max(Number(maxSrcBlockNumberRs.rows[0].max), Number(maxDestBlockNumberRs.rows[0].max))
+        }
+
+        return 0
     }
 }
 

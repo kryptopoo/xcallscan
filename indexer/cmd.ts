@@ -77,9 +77,12 @@ const runCmd = async () => {
         const networks = args[3] ? args[3].split(',') : []
 
         const syncer = new Syncer(networks)
-
-        for (let sn = snFrom; sn <= snTo; sn++) {
-            await syncer.syncMessage(sn)
+        if (snFrom > 0 && snTo > 0) {
+            for (let sn = snFrom; sn <= snTo; sn++) {
+                await syncer.syncMessage(sn)
+            }
+        } else {
+            await syncer.syncNewMessages()
         }
     }
 }

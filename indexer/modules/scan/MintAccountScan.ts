@@ -38,7 +38,7 @@ export class MintAccountScan implements IScan {
         let result: EventLog[] = []
 
         const offsetTimestamp = 86400
-        const limit = 50
+        const limit = 20
         const executeContractType = 47
         let lastBlockTimestamp = flagNumber == 0 ? SCAN_FROM_FLAG_NUMBER[this.network] : flagNumber
         const startTimestamp = toDateString(lastBlockTimestamp + 1)
