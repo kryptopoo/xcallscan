@@ -6,8 +6,8 @@ import fetchData from '@/lib/fetch-data'
 import Script from 'next/script'
 
 export const metadata = {
-    title: 'xCall Scan - xCall Service Explorer',
-    description: 'xCallScan is an explorer that allows users to look up relay messages and transactions being sent through xCall Service.',
+    title: `xCallScan - ICON's General Message Passing Explorer`,
+    description: `xCallScan is an explorer that allows users to look up relay messages and transactions being sent through ICON's General Message Passing (xCall).`,
     icons: [{ rel: 'icon', url: Favicon.src }],
 }
 
