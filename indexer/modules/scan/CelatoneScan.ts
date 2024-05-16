@@ -28,7 +28,7 @@ export class CelatoneScan implements IScan {
 
     async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
-        const limit = 50
+        const limit = 20
         let scanCount = flagNumber
 
         // only fetch total in first time
@@ -64,7 +64,7 @@ export class CelatoneScan implements IScan {
                 const txHash = tx.hash.toString().replace('\\x', '')
 
                 const txRes = await this.callApi(`${API_URL[this.network]}/txs/${txHash}`, {})
-                if (!txRes) {
+                if (!txRes || !txRes.tx_response) {
                     logger.error(`${this.network} transaction ${txHash} not found`)
                     continue
                 }
@@ -98,6 +98,7 @@ export class CelatoneScan implements IScan {
             }
 
             scanCount += txs.length
+            if (scanCount > this.totalCount) scanCount = this.totalCount
         }
 
         return { lastFlagNumber: scanCount, eventLogs: result }

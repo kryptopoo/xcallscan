@@ -13,8 +13,8 @@ export class Syncer {
 
         // in case of one contract only
         if (this.networks.includes(NETWORK.IBC_ICON) && CONTRACT[NETWORK.IBC_ICON].xcall == CONTRACT[NETWORK.ICON].xcall) {
-            const foundIndex = this.networks.findIndex(x => x == NETWORK.IBC_ICON);
-            this.networks[foundIndex] = NETWORK.ICON;
+            const foundIndex = this.networks.findIndex((x) => x == NETWORK.IBC_ICON)
+            this.networks[foundIndex] = NETWORK.ICON
         }
 
         for (let i = 0; i < this.networks.length; i++) {
@@ -45,21 +45,38 @@ export class Syncer {
             const network = this.networks[i]
             const sourceSyncer = this.sourceSyncers[network]
 
-            const maxMsgSn = await this._db.getMaxMessageSn(network)
-            const maxEventSn = await this._db.getMaxEventSn(network)
-            const syncFrom = maxMsgSn < maxEventSn ? maxMsgSn : maxEventSn
-            const syncTo = maxMsgSn > maxEventSn ? maxMsgSn : maxEventSn
-            const newMsgCount = maxEventSn - maxMsgSn
-            logger.info(`${network} syncing ${newMsgCount > 0 ? newMsgCount : 0} new messages fromSn:${syncFrom} toSn:${syncTo}`)
+            // // Detect new messages by sn number
+            // const maxMsgSn = await this._db.getMaxMessageSn(network)
+            // const maxEventSn = await this._db.getMaxEventSn(network)
+            // const syncFrom = maxMsgSn < maxEventSn ? maxMsgSn : maxEventSn
+            // const syncTo = maxMsgSn > maxEventSn ? maxMsgSn : maxEventSn
+            // const newMsgCount = maxEventSn - maxMsgSn
+            // logger.info(`${network} syncing ${newMsgCount > 0 ? newMsgCount : 0} new messages fromSn:${syncFrom} toSn:${syncTo}`)
+            // if (newMsgCount > 0) {
+            //     // sync sent messages
+            //     for (let sn = syncFrom; sn <= syncTo; sn++) {
+            //         await sourceSyncer.syncSentMessages(sn)
+            //     }
+            //     // sync received messages
+            //     for (let sn = syncFrom; sn <= syncTo; sn++) {
+            //         await sourceSyncer.syncReceivedMessages(sn)
+            //     }
+            // }
 
+            // // Detect new messages by block number
+            const maxMsgBlockNumber = await this._db.getMaxMessageBlockNumber(network)
+            const maxEventBlockNumber = await this._db.getMaxEventBlockNumber(network)
+            const snList = await this._db.getNewSnList(network, maxMsgBlockNumber, maxEventBlockNumber)
+            const newMsgCount = snList.length
+            logger.info(`${network} syncing ${newMsgCount > 0 ? newMsgCount : 0} new messages ${snList.map((it) => it.sn).join(', ')}`)
             if (newMsgCount > 0) {
                 // sync sent messages
-                for (let sn = syncFrom; sn <= syncTo; sn++) {
-                    await sourceSyncer.syncSentMessages(sn)
+                for (let i = 0; i < newMsgCount; i++) {
+                    await sourceSyncer.syncSentMessages(snList[i].sn)
                 }
                 // sync received messages
-                for (let sn = syncFrom; sn <= syncTo; sn++) {
-                    await sourceSyncer.syncReceivedMessages(sn)
+                for (let i = 0; i < newMsgCount; i++) {
+                    await sourceSyncer.syncReceivedMessages(snList[i].sn)
                 }
             }
         }

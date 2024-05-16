@@ -36,7 +36,7 @@ export class MintContractScan implements IScan {
 
     async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
-        const limit = 50
+        const limit = 20
         let scanCount = flagNumber
 
         // only fetch total in first time
@@ -93,6 +93,7 @@ export class MintContractScan implements IScan {
             }
 
             scanCount += txs.length
+            if (scanCount > this.totalCount) scanCount = this.totalCount
         }
 
         return { lastFlagNumber: scanCount, eventLogs: result }

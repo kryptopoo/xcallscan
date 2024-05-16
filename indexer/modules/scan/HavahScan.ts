@@ -168,7 +168,7 @@ export class HavahScan implements IScan {
                     txHash: txHash
                 })
 
-                return txHashRes.data.data
+                return txHashRes.data
             } catch (error: any) {
                 logger.error(`${this.network} get transaction error ${error.code}`)
                 if (attempt < maxRetries) {
