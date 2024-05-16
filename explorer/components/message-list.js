@@ -26,13 +26,7 @@ export default async function MessageList({ data, meta, showPagination }) {
                                 <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">
                                     {Render.renderHashLink(meta.urls.tx[item.src_network], item.src_network, item.src_tx_hash)}
                                 </div>
-                                <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">
-                                    {item.dest_tx_hash
-                                        ? Render.renderHashLink(meta.urls.tx[item.dest_network], item.dest_network, item.dest_tx_hash)
-                                        : item.response_tx_hash
-                                        ? Render.renderHashLink(meta.urls.tx[item.src_network], item.dest_network, item.response_tx_hash)
-                                        : Render.renderHashLink(meta.urls.tx[item.src_network], item.dest_network, item.rollback_tx_hash)}
-                                </div>
+                                <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3">{Render.renderDestHashLink(item, meta)}</div>
                                 <div className="table-cell align-middle px-2 py-1 xl:px-6 xl:py-3 text-right">{timeAgo(item.src_block_timestamp * 1000)} ago</div>
                             </Link>
                         ))}
