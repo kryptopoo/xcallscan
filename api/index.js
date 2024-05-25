@@ -24,9 +24,16 @@ app.get('/api', (req, res) => {
 app.get('/api/messages', async (req, res) => {
     const skip = req.query.skip ? parseInt(req.query.skip) : 0
     const limit = req.query.limit ? parseInt(req.query.limit) : 10
+    const status = req.query.status
+    const src_network = req.query.src_network
+    const dest_network = req.query.dest_network
+    const src_address = req.query.src_address
+    const dest_address = req.query.dest_address
+    const from_timestamp = req.query.from_timestamp
+    const to_timestamp = req.query.to_timestamp
 
     try {
-        const rs = await db.getMessages(skip, limit)
+        const rs = await db.getMessages(skip, limit, status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp)
 
         res.status(200).json(rs)
     } catch (error) {
@@ -57,9 +64,24 @@ app.get('/api/search', async (req, res) => {
     }
 })
 
+// TODO: to be removed
 app.get('/api/statistic', async (req, res) => {
     try {
         const rs = await db.getStatistic()
+
+        res.status(200).json(rs)
+    } catch (error) {
+        res.status(400)
+    }
+})
+
+app.get('/api/statistics/total_messages', async (req, res) => {
+    const src_network = req.query.src_network
+    const dest_network = req.query.dest_network
+    const status = req.query.status
+
+    try {
+        const rs = await db.getTotalMessages(src_network, dest_network, status)
 
         res.status(200).json(rs)
     } catch (error) {
