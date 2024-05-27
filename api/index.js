@@ -76,12 +76,16 @@ app.get('/api/statistic', async (req, res) => {
 })
 
 app.get('/api/statistics/total_messages', async (req, res) => {
+    const status = req.query.status
     const src_network = req.query.src_network
     const dest_network = req.query.dest_network
-    const status = req.query.status
+    const src_address = req.query.src_address
+    const dest_address = req.query.dest_address
+    const from_timestamp = req.query.from_timestamp
+    const to_timestamp = req.query.to_timestamp
 
     try {
-        const rs = await db.getTotalMessages(src_network, dest_network, status)
+        const rs = await db.getTotalMessages(status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp)
 
         res.status(200).json(rs)
     } catch (error) {

@@ -2,7 +2,7 @@
 
 This documentation describes how to use the `xcallscan` REST APIs
 
-## NETWORK SUPPORTED
+## Network Supported
 
 | Name  | Id  |
 |--|--|
@@ -18,14 +18,14 @@ This documentation describes how to use the `xcallscan` REST APIs
 | Arbitrum | arbitrum |
 | Optimism | optimism |
 
-## BASE_URL
+## Base URLs
 
 #### Mainnet: https://xcallscan.xyz/api
 #### Testnet: https://testnet.xcallscan.xyz/api
 
 ## /messages
 
-Listing all messages 
+Listing messages
 
 #### *GET* `base_url/messages`
 
@@ -39,6 +39,7 @@ Listing all messages
 - `dest_address`: *(optional)* recipient address
 - `from_timestamp`: *(optional)* from block timestamp
 - `to_timestamp`: *(optional)* to block timestamp
+- `status`: *(optional)* message status, one of values `pending`, `delivered`, `executed`, `rollbacked`
 
 ## /messages/:id
 
@@ -64,7 +65,7 @@ Search messages by tx hash or serial number
 
 ## /statistics/total_messages
 
-Get total messages by networks
+Get total number of messages
 
 #### *GET* `base_url/statistics/total_messages`
 
@@ -72,5 +73,7 @@ Get total messages by networks
 
 - `src_network`: *(optional)* source network, eg: `icon`, `bsc`...
 - `dest_network`: *(optional)* destination network, eg: `icon`, `bsc`...
+- `from_timestamp`: *(optional)* from block timestamp
+- `to_timestamp`: *(optional)* to block timestamp
 - `status`: *(optional)* message status, one of values `pending`, `delivered`, `executed`, `rollbacked`
 

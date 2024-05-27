@@ -46,8 +46,7 @@ const metaUrls = {
     }
 }
 
-const getMessages = async (skip, limit, status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp) => {
-    // build sql
+const buildWhereSql = (status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp) => {
     let values = []
     let conditions = []
     if (status) {
@@ -81,6 +80,13 @@ const getMessages = async (skip, limit, status, src_network, dest_network, src_a
                             rollback_block_timestamp <= $${conditions.length + 1})`)
         values.push(to_timestamp)
     }
+
+    return { conditions, values }
+}
+
+const getMessages = async (skip, limit, status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp) => {
+    // build sql
+    let { conditions, values } = buildWhereSql(status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp)
 
     let sqlTotal = `SELECT count(*) FROM messages`
     let sqlMessages = `SELECT id, sn, status, src_network, src_block_number, src_block_timestamp, src_tx_hash, src_app as src_address, src_error, 
@@ -156,6 +162,7 @@ const searchMessages = async (value) => {
     }
 }
 
+// TODO: to be removed
 const getStatistic = async () => {
     const totalRs = await pool.query('SELECT count(*) FROM messages')
     const messages = Number(totalRs.rows[0].count)
@@ -179,22 +186,10 @@ const getStatistic = async () => {
     }
 }
 
-const getTotalMessages = async (src_network, dest_network, status) => {
+const getTotalMessages = async (status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp) => {
     // build sql
-    let values = []
-    let conditions = []
-    if (src_network) {
-        conditions.push(`src_network = $${conditions.length + 1}`)
-        values.push(src_network)
-    }
-    if (dest_network) {
-        conditions.push(`dest_network = $${conditions.length + 1}`)
-        values.push(dest_network)
-    }
-    if (status) {
-        conditions.push(`status = $${conditions.length + 1}`)
-        values.push(status)
-    }
+    let { conditions, values } = buildWhereSql(status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp)
+
     let sql = `SELECT count(*) FROM messages`
     if (conditions.length > 0) {
         sql = `SELECT count(*) FROM messages WHERE ${conditions.join(' AND ')}`
