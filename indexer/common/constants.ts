@@ -173,7 +173,8 @@ const EVENT = {
 const MSG_STATUS = {
     Pending: 'pending',
     Delivered: 'delivered',
-    Executed: 'executed'
+    Executed: 'executed',
+    Rollbacked: 'rollbacked'
 }
 
 export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMBER }

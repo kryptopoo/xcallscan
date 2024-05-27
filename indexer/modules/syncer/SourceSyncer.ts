@@ -46,11 +46,7 @@ export class SourceSyncer implements ISourceSyncer {
                 destBtpNetworkId = event.to_decoded.split('/')[0]
             }
 
-            logger.info(
-                `cannot detect network ${this.network}->${destBtpNetworkId} event:${event.event} sn:${
-                    event.sn
-                }`
-            )
+            logger.info(`cannot detect network ${this.network}->${destBtpNetworkId} event:${event.event} sn:${event.sn}`)
             return undefined
         }
 
@@ -139,6 +135,16 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
+                    // skip updating status if status is already MSG_STATUS.Executed or MSG_STATUS.Rollbacked
+                    const currentStatus = await this._db.getMessageStatus(
+                        msg.sn,
+                        msg.src_network as string,
+                        msg.dest_network as string,
+                        msg.src_app as string
+                    )
+                    const status =
+                        currentStatus == MSG_STATUS.Rollbacked || currentStatus == MSG_STATUS.Executed ? currentStatus : MSG_STATUS.Delivered
+
                     const updateCount = await this._db.updateResponseMessage(
                         msg.sn,
                         msg.src_network as string,
@@ -148,7 +154,7 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        MSG_STATUS.Delivered
+                        status
                     )
 
                     // event.code == -1
@@ -159,7 +165,7 @@ export class SourceSyncer implements ISourceSyncer {
                         // stop sync
                         await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
-                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`)
+                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${status}`)
                     }
                 }
             }
@@ -201,13 +207,16 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        MSG_STATUS.Executed
+                        MSG_STATUS.Rollbacked
                     )
+
                     if (updateCount > 0) {
                         // stop sync
                         await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
-                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Executed}`)
+                        logger.info(
+                            `synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Rollbacked}`
+                        )
                     }
                 }
             }
@@ -260,6 +269,10 @@ export class SourceSyncer implements ISourceSyncer {
                         }
                     }
 
+                    // check if msg rollbacked
+                    const isRollbacked = await this._db.validateRollbackedStatus(event.sn, srcNetwork, destNetwork, srcDapp)
+                    const status = isRollbacked ? MSG_STATUS.Rollbacked : MSG_STATUS.Executed
+
                     const updateCount = await this._db.updateExecutedMessage(
                         event.sn,
                         srcNetwork,
@@ -270,13 +283,13 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        MSG_STATUS.Executed
+                        status
                     )
                     if (updateCount > 0) {
                         // stop sync
                         await this._db.updateMessageSynced(event.sn, srcNetwork, this.network, srcDapp, true)
 
-                        logger.info(`synced ${this.network}<-${srcNetwork} event:${event.event} sn:${event.sn} status:${MSG_STATUS.Executed}`)
+                        logger.info(`synced ${this.network}<-${srcNetwork} event:${event.event} sn:${event.sn} status:${status}`)
                     }
                 }
             }
