@@ -33,6 +33,17 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri
 }
 
+const RPC_URLS: { [network: string]: string[] } = {
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.uris,
+    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uris,
+    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uris,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uris,
+    [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
+    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uris,
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris
+}
+
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.api,
@@ -177,4 +188,17 @@ const MSG_STATUS = {
     Rollbacked: 'rollbacked'
 }
 
-export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMBER }
+export {
+    USE_MAINNET,
+    NETWORK,
+    API_URL,
+    API_KEY,
+    CONTRACT,
+    EVENT,
+    MSG_STATUS,
+    RPC_URL,
+    RPC_URLS,
+    BTP_NETWORK_ID,
+    SERVICE_API_KEY,
+    SCAN_FROM_FLAG_NUMBER
+}

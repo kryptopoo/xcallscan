@@ -3,12 +3,20 @@
         "icon": {
             "api": "https://tracker.icon.community/api/v1",
             "uri": "https://ctz.solidwallet.io/api/v3/icon_dex",
+            "uris": [],
             "btp_network_id": "0x1.icon",
             "block_height": 0
         },
         "bsc": {
             "api": "https://api.bscscan.com/api",
             "uri": "https://bsc-dataseed.binance.org",
+            "uris": [
+                "https://rpc.ankr.com/bsc",
+                "https://binance.llamarpc.com",
+                "https://bsc-rpc.publicnode.com",
+                "https://binance.llamarpc.com",
+                "https://bsc.blockpi.network/v1/rpc/public"
+            ],
             "network_id": "0x38",
             "btp_network_id": "0x38.bsc",
             "block_height": 76042342
@@ -16,24 +24,33 @@
         "eth2": {
             "api": "https://api.etherscan.io/api",
             "uri": "https://mainnet.infura.io/v3/ae42152a1ec04530915a6a7f6a555f6a",
+            "uris": [
+                "https://rpc.ankr.com/eth",
+                "https://eth.llamarpc.com",
+                "https://ethereum-rpc.publicnode.com",
+                "https://ethereum.blockpi.network/v1/rpc/public"
+            ],
             "btp_network_id": "0x1.eth",
             "block_height": 75311723
         },
         "havah": {
             "api": "https://scan.havah.io/v3",
             "uri": "",
+            "uris": [],
             "btp_network_id": "0x100.icon",
             "block_height": 0
         },
         "ibc_icon": {
             "api": "https://tracker.icon.community/api/v1",
             "uri": "https://ctz.solidwallet.io/api/v3/icon_dex",
+            "uris": [],
             "btp_network_id": "0x1.icon",
             "block_height": 0
         },
         "ibc_archway": {
             "api": "https://apis.mintscan.io/v1/archway",
             "uri": "",
+            "uris": [],
             "btp_network_id": "archway",
             "block_height": 1260794,
             "block_timestamp": 1695859200
@@ -41,6 +58,7 @@
         "ibc_neutron": {
             "api": "https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1",
             "uri": "",
+            "uris": [],
             "btp_network_id": "neutron",
             "block_height": 4115091,
             "block_timestamp": 1698710400
@@ -48,34 +66,62 @@
         "ibc_injective": {
             "api": "https://sentry.exchange.grpc-web.injective.network/api/explorer/v1",
             "uri": "",
+            "uris": [],
             "btp_network_id": "injective",
             "block_height": 56477980,
             "block_timestamp": 1704412800
         },
         "avax": {
             "api": "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api",
-            "uri": "https://avalanche.blockpi.network/v1/rpc/public",
+            "uri": "https://avalanche.public-rpc.com",
+            "uris": [
+                "https://rpc.ankr.com/avalanche",
+                "https://avalanche.drpc.org",
+                "https://avalanche.public-rpc.com",
+                "https://avalanche-c-chain-rpc.publicnode.com",
+                "https://avalanche.blockpi.network/v1/rpc/public"
+            ],
             "btp_network_id": "0xa86a.avax",
             "block_height": 0,
             "block_timestamp": 0
         },
         "base": {
             "api": "https://api.basescan.org/api",
-            "uri": "https://base.blockpi.network/v1/rpc/public",
+            "uri": "https://mainnet.base.org",
+            "uris": [
+                "https://base.llamarpc.com",
+                "https://base-rpc.publicnode.com",
+                "https://1rpc.io/base",
+                "https://base.blockpi.network/v1/rpc/public"
+            ],
             "btp_network_id": "0x2105.base",
             "block_height": 0,
             "block_timestamp": 0
         },
         "arbitrum": {
             "api": "https://api.arbiscan.io/api",
-            "uri": "https://arbitrum.blockpi.network/v1/rpc/public",
+            "uri": "https://rpc.ankr.com/arbitrum",
+            "uris": [
+                "https://rpc.ankr.com/arbitrum",
+                "https://arbitrum-one.publicnode.com",
+                "https://arbitrum.meowrpc.com",
+                "https://arbitrum.llamarpc.com",
+                "https://arbitrum.blockpi.network/v1/rpc/public"
+            ],
             "btp_network_id": "0xa4b1.arbitrum",
             "block_height": 0,
             "block_timestamp": 0
         },
         "optimism": {
             "api": "https://api-optimistic.etherscan.io/api",
-            "uri": "https://optimism.blockpi.network/v1/rpc/public",
+            "uri": "https://mainnet.optimism.io",
+            "uris": [
+                "https://rpc.ankr.com/optimism",
+                "https://optimism.llamarpc.com",
+                "https://optimism.meowrpc.com",
+                "https://optimism.drpc.org",
+                "https://optimism.blockpi.network/v1/rpc/public"
+            ],
             "btp_network_id": "0xa.optimism",
             "block_height": 0,
             "block_timestamp": 0

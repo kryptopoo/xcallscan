@@ -1,6 +1,6 @@
 import logger from '../logger/logger'
 import { ethers } from 'ethers'
-import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY, BTP_NETWORK_ID, NETWORK } from '../../common/constants'
+import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY, BTP_NETWORK_ID, NETWORK, RPC_URLS } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { sleep } from '../../common/helper'
@@ -63,21 +63,7 @@ export class EvmScan implements IScan {
 
             if (decodeEventLog) {
                 // get tx
-                let tx: any = undefined
-                const maxRetries = 3
-                const retryDelay = 3000
-                for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                    try {
-                        tx = await this.provider.getTransaction(eventLog.transactionHash)
-                    } catch (error: any) {
-                        logger.error(`${this.network} get transaction error ${error.code}`)
-                        if (attempt < maxRetries) {
-                            await sleep(retryDelay)
-                        } else {
-                            logger.error(`${this.network} get transaction failed ${eventLog.transactionHash}`)
-                        }
-                    }
-                }
+                let tx: any = await this.getTransactionDetail(eventLog.transactionHash)
                 if (!tx) {
                     logger.error(`${this.network} transaction not found ${eventLog.transactionHash}`)
                     continue
@@ -276,6 +262,34 @@ export class EvmScan implements IScan {
             return decodedData
         } catch (error) {
             // logger.error(`decoding function error ${funcName}`)
+        }
+
+        return undefined
+    }
+
+    private async getTransactionDetail(txHash: string) {
+        const maxRetries = 5
+        const retryDelay = 2000
+        let retryProviderIndex = -1
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const tx = await this.provider.getTransaction(txHash)
+                return tx
+            } catch (error: any) {
+                logger.error(`${this.network} get transaction error ${error.code}`)
+                if (attempt < maxRetries) {
+                    // try change other provider
+                    if (retryProviderIndex < RPC_URLS[this.network].length - 1) {
+                        retryProviderIndex += 1
+                        this.provider = new ethers.providers.JsonRpcProvider(RPC_URLS[this.network][retryProviderIndex])
+                        logger.info(`${this.network} change provider uri ${RPC_URLS[this.network][retryProviderIndex]}`)
+                    }
+
+                    await sleep(retryDelay)
+                } else {
+                    logger.error(`${this.network} get transaction failed ${txHash}`)
+                }
+            }
         }
 
         return undefined
