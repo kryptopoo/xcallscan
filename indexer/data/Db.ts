@@ -250,7 +250,7 @@ class Db {
             const rs = await this.pool.query(
                 `UPDATE messages   
                 SET dest_block_number = $5, dest_block_timestamp = $6, dest_tx_hash = $7, status = $8, updated_at = $9
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
                 [sn, src_network, dest_network, src_app, dest_block_number, dest_block_timestamp, dest_tx_hash, status, nowTimestamp()]
             )
 
@@ -315,7 +315,7 @@ class Db {
             const rs = await this.pool.query(
                 `UPDATE messages   
                 SET response_block_number = $5, response_block_timestamp = $6, response_tx_hash = $7, rollback_error =$8, status = $9, updated_at =$10
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
                 [
                     sn,
                     src_network,

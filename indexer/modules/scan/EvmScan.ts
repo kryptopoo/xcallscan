@@ -207,8 +207,6 @@ export class EvmScan implements IScan {
                             }
                         } catch (error) {}
 
-                        console.log('log.eventData', log.eventData)
-
                         break
                     case EVENT.ResponseMessage:
                         log.eventData = {

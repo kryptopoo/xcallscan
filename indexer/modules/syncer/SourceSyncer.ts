@@ -135,16 +135,6 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
-                    // skip updating status if status is already MSG_STATUS.Executed or MSG_STATUS.Rollbacked
-                    const currentStatus = await this._db.getMessageStatus(
-                        msg.sn,
-                        msg.src_network as string,
-                        msg.dest_network as string,
-                        msg.src_app as string
-                    )
-                    const status =
-                        currentStatus == MSG_STATUS.Rollbacked || currentStatus == MSG_STATUS.Executed ? currentStatus : MSG_STATUS.Delivered
-
                     const updateCount = await this._db.updateResponseMessage(
                         msg.sn,
                         msg.src_network as string,
@@ -154,7 +144,7 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        status
+                        MSG_STATUS.Delivered
                     )
 
                     // event.code == -1

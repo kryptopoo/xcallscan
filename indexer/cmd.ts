@@ -42,17 +42,25 @@ const runCmd = async () => {
         let scan: IScan = ScanFactory.createScan(network)
 
         const { lastFlagNumber, eventLogs } = await scan.getEventLogs(flagNumber, event)
-        console.log(eventLogs)
+        console.log(
+            eventLogs.map(function (item) {
+                delete item.txRaw
+                return item
+            })
+        )
     }
     if (cmd == 'fetch') {
         const network = args[1]
-        const event = args[2]
+        const event = args[2].split(',')
+        const flagNumber = args[3] ?? 0
+
         let fetcher: IFetcher = new Fetcher(network)
 
         if (event) {
             let fetched = false
             while (!fetched) {
-                fetched = await fetcher.fetchEvents([event], 0)
+                fetched = await fetcher.fetchEvents(event, flagNumber)
+                if (flagNumber > 0) fetched = true
             }
         } else {
             let fetched = false
@@ -66,8 +74,10 @@ const runCmd = async () => {
                         EVENT.CallMessage,
                         EVENT.CallExecuted
                     ],
-                    0
+                    flagNumber
                 )
+
+                if (flagNumber > 0) fetched = true
             }
         }
     }
@@ -75,8 +85,8 @@ const runCmd = async () => {
         const snFrom = args[1]
         const snTo = args[2] ?? snFrom
         const networks = args[3] ? args[3].split(',') : []
-
         const syncer = new Syncer(networks)
+
         if (snFrom > 0 && snTo > 0) {
             for (let sn = snFrom; sn <= snTo; sn++) {
                 await syncer.syncMessage(sn)
