@@ -70,13 +70,6 @@ export class SourceSyncer implements ISourceSyncer {
             synced: false
         }
 
-        // correct ibc icon network
-        if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
-            if (msg.dest_network == NETWORK.ICON && msg.src_network?.startsWith('ibc')) {
-                msg.dest_network = NETWORK.IBC_ICON
-            }
-        }
-
         return msg
     }
 
@@ -225,13 +218,6 @@ export class SourceSyncer implements ISourceSyncer {
                 // find the source network of message
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
-                    // correct ibc icon network
-                    if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
-                        if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
-                            srcNetwork = NETWORK.IBC_ICON
-                        }
-                    }
-
                     // update status Delivered for the source network
                     const updateCount = await this._db.updateSentMessage(
                         event.sn,
@@ -252,13 +238,6 @@ export class SourceSyncer implements ISourceSyncer {
                 // find the source network of message
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
-                    // correct ibc icon network
-                    if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
-                        if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
-                            srcNetwork = NETWORK.IBC_ICON
-                        }
-                    }
-
                     // check if msg rollbacked
                     const isRollbacked = await this._db.validateRollbackedStatus(event.sn, srcNetwork, destNetwork, srcDapp)
                     const status = isRollbacked ? MSG_STATUS.Rollbacked : MSG_STATUS.Executed

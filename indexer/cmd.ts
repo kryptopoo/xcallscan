@@ -32,7 +32,7 @@ const runCmd = async () => {
         const event = args[2]
         const flagNumber = args[3] ?? 0
 
-        if (network == NETWORK.ICON || network == NETWORK.IBC_ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX) {
+        if (network == NETWORK.ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX) {
             if (!event) {
                 console.log('eventName is required')
                 return

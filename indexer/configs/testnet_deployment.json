@@ -28,13 +28,6 @@
             "btp_network_id": "0x101.icon",
             "block_height": 0
         },
-        "ibc_icon": {
-            "api": "https://tracker.lisbon.icon.community/api/v1",
-            "uri": "https://lisbon.net.solidwallet.io/api/v3/icon_dex",
-            "uris": [],
-            "btp_network_id": "0x2.icon",
-            "block_height": 0
-        },
         "ibc_archway": {
             "api": "https://front.api.mintscan.io/v1/archway-testnet",
             "uri": "",
@@ -109,9 +102,6 @@
         "havah": {
             "bmc": "cxbc156dbb9ce60e64d9ff02e5b95e206980b5cf5f",
             "xcall": "cxd34a83458cb4adb49f48e411105f69ec35e3c3d5"
-        },
-        "ibc_icon": {
-            "xcall": "cx15a339fa60bd86225050b22ea8cd4a9d7cd8bb83"
         },
         "ibc_archway": {
             "xcall": "archway1h04c8eqr99dnsw6wqx80juj2vtuxth70eh65cf6pnj4zan6ms4jqshc5wk"
