@@ -3,6 +3,8 @@ const bodyParser = require('body-parser')
 const app = express()
 const port = process.env.PORT || 4000
 const db = require('./db')
+const logger = require('./logger')
+const { error } = require('winston')
 
 app.use(bodyParser.json())
 app.use(
@@ -37,7 +39,8 @@ app.get('/api/messages', async (req, res) => {
 
         res.status(200).json(rs)
     } catch (error) {
-        res.status(400)
+        logger.error(error)
+        res.status(400).json({ error: error.message })
     }
 })
 
@@ -49,7 +52,8 @@ app.get('/api/messages/:id', async (req, res) => {
 
         res.status(200).json(rs)
     } catch (error) {
-        res.status(400)
+        logger.error(error)
+        res.status(400).json({ error: error.message })
     }
 })
 
@@ -60,7 +64,8 @@ app.get('/api/search', async (req, res) => {
 
         res.status(200).json(rs)
     } catch (error) {
-        res.status(400)
+        logger.error(error)
+        res.status(400).json({ error: error.message })
     }
 })
 
@@ -89,7 +94,8 @@ app.get('/api/statistics/total_messages', async (req, res) => {
 
         res.status(200).json(rs)
     } catch (error) {
-        res.status(400)
+        logger.error(error)
+        res.status(400).json({ error: error.message })
     }
 })
 

@@ -1,6 +1,7 @@
 const Pool = require('pg').Pool
 const dotenv = require('dotenv')
 dotenv.config()
+const logger  = require('./logger')
 
 const pool = new Pool({
     user: process.env.PGUSER,
@@ -8,6 +9,9 @@ const pool = new Pool({
     database: process.env.PGDATABASE,
     password: process.env.PGPASSWORD,
     port: process.env.PGPORT
+})
+pool.on('error', function (error, client) {
+    logger.error(error)
 })
 
 const useMainnet = process.env.USE_MAINNET == 'true'
