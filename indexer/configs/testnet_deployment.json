@@ -3,36 +3,35 @@
         "icon": {
             "api": "https://tracker.lisbon.icon.community/api/v1",
             "uri": "https://lisbon.net.solidwallet.io/api/v3/icon_dex",
+            "uris": [],
             "btp_network_id": "0x2.icon",
             "block_height": 28149874
         },
         "bsc": {
             "api": "https://api-testnet.bscscan.com/api",
             "uri": "https://data-seed-prebsc-1-s1.binance.org:8545",
+            "uris": [],
             "btp_network_id": "0x61.bsc",
             "block_height": 0
         },
         "eth2": {
             "api": "https://api-sepolia.etherscan.io/api",
             "uri": "https://sepolia.infura.io/v3/ffbf8ebe228f4758ae82e175640275e0",
+            "uris": [],
             "btp_network_id": "0xaa36a7.eth2",
             "block_height": 0
         },
         "havah": {
             "api": "https://scan.vega.havah.io/v3",
             "uri": "https://ctz.vega.havah.io/api/v3",
+            "uris": [],
             "btp_network_id": "0x101.icon",
-            "block_height": 0
-        },
-        "ibc_icon": {
-            "api": "https://tracker.lisbon.icon.community/api/v1",
-            "uri": "https://lisbon.net.solidwallet.io/api/v3/icon_dex",
-            "btp_network_id": "0x2.icon",
             "block_height": 0
         },
         "ibc_archway": {
             "api": "https://front.api.mintscan.io/v1/archway-testnet",
             "uri": "",
+            "uris": [],
             "btp_network_id": "archway",
             "block_height": 0,
             "block_timestamp": 1694476800
@@ -40,6 +39,7 @@
         "ibc_neutron": {
             "api": "https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1",
             "uri": "",
+            "uris": [],
             "btp_network_id": "neutron",
             "block_height": 0,
             "block_timestamp": 1691971200
@@ -47,6 +47,7 @@
         "ibc_injective": {
             "api": "https://testnet.sentry.exchange.grpc-web.injective.network/api/explorer/v1",
             "uri": "",
+            "uris": [],
             "btp_network_id": "injective",
             "block_height": 0,
             "block_timestamp": 1699833600
@@ -54,6 +55,7 @@
         "avax": {
             "api": "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan/ap",
             "uri": "https://rpc.ankr.com/avalanche_fuji",
+            "uris": [],
             "btp_network_id": "0xa869.fuji",
             "block_height": 0,
             "block_timestamp": 0
@@ -61,6 +63,7 @@
         "base": {
             "api": "https://api-sepolia.basescan.org/api",
             "uri": "https://base-sepolia.blockpi.network/v1/rpc/public",
+            "uris": [],
             "btp_network_id": "0x14a34.base",
             "block_height": 0,
             "block_timestamp": 0
@@ -68,6 +71,7 @@
         "arbitrum": {
             "api": "https://api-sepolia.arbiscan.io/api",
             "uri": "https://arbitrum-sepolia.blockpi.network/v1/rpc/public",
+            "uris": [],
             "btp_network_id": "0xaa37dc.arbitrum",
             "block_height": 0,
             "block_timestamp": 0
@@ -75,6 +79,7 @@
         "optimism": {
             "api": "https://api-sepolia-optimistic.etherscan.io/api",
             "uri": "https://optimism-sepolia.blockpi.network/v1/rpc/public",
+            "uris": [],
             "btp_network_id": "0x66eee.optimism",
             "block_height": 0,
             "block_timestamp": 0
@@ -97,9 +102,6 @@
         "havah": {
             "bmc": "cxbc156dbb9ce60e64d9ff02e5b95e206980b5cf5f",
             "xcall": "cxd34a83458cb4adb49f48e411105f69ec35e3c3d5"
-        },
-        "ibc_icon": {
-            "xcall": "cx15a339fa60bd86225050b22ea8cd4a9d7cd8bb83"
         },
         "ibc_archway": {
             "xcall": "archway1h04c8eqr99dnsw6wqx80juj2vtuxth70eh65cf6pnj4zan6ms4jqshc5wk"

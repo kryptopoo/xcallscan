@@ -12,7 +12,6 @@ const NETWORK = {
     BSC: 'bsc',
     ETH2: 'eth2',
     HAVAH: 'havah',
-    IBC_ICON: 'ibc_icon',
     IBC_ARCHWAY: 'ibc_archway',
     IBC_NEUTRON: 'ibc_neutron',
     IBC_INJECTIVE: 'ibc_injective',
@@ -33,13 +32,23 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri
 }
 
+const RPC_URLS: { [network: string]: string[] } = {
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.uris,
+    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uris,
+    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uris,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uris,
+    [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
+    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uris,
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris
+}
+
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.api,
     [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.api,
     [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.api,
 
-    [NETWORK.IBC_ICON]: CONFIG_NETWORKS.ibc_icon.api,
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.api,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.api,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.api,
@@ -56,7 +65,6 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.btp_network_id,
     [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.btp_network_id,
 
-    [NETWORK.IBC_ICON]: CONFIG_NETWORKS.ibc_icon.btp_network_id,
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.btp_network_id,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.btp_network_id,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
@@ -73,7 +81,6 @@ const API_KEY: { [network: string]: string } = {
     [NETWORK.ETH2]: process.env.SCAN_ETH_API_KEY ?? '',
     [NETWORK.HAVAH]: '',
 
-    [NETWORK.IBC_ICON]: '',
     [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',
     [NETWORK.IBC_INJECTIVE]: '',
@@ -106,10 +113,6 @@ const CONTRACT: { [network: string]: { xcall: string; bmc: string } } = {
     },
 
     // IBC
-    [NETWORK.IBC_ICON]: {
-        xcall: CONFIG_CONTRACTS.ibc_icon.xcall,
-        bmc: ''
-    },
     [NETWORK.IBC_ARCHWAY]: {
         xcall: CONFIG_CONTRACTS.ibc_archway.xcall,
         bmc: ''
@@ -149,7 +152,6 @@ const SCAN_FROM_FLAG_NUMBER: { [network: string]: number } = {
     [NETWORK.ETH2]: 0,
     [NETWORK.HAVAH]: 0,
 
-    [NETWORK.IBC_ICON]: 0,
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.block_timestamp,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.block_timestamp,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.block_timestamp
@@ -173,7 +175,21 @@ const EVENT = {
 const MSG_STATUS = {
     Pending: 'pending',
     Delivered: 'delivered',
-    Executed: 'executed'
+    Executed: 'executed',
+    Rollbacked: 'rollbacked'
 }
 
-export { USE_MAINNET, NETWORK, API_URL, API_KEY, CONTRACT, EVENT, MSG_STATUS, RPC_URL, BTP_NETWORK_ID, SERVICE_API_KEY, SCAN_FROM_FLAG_NUMBER }
+export {
+    USE_MAINNET,
+    NETWORK,
+    API_URL,
+    API_KEY,
+    CONTRACT,
+    EVENT,
+    MSG_STATUS,
+    RPC_URL,
+    RPC_URLS,
+    BTP_NETWORK_ID,
+    SERVICE_API_KEY,
+    SCAN_FROM_FLAG_NUMBER
+}

@@ -201,14 +201,23 @@ class Db {
         return 0
     }
 
-    async isExecutedStatus(sn: number, src_network: string, dest_network: string, src_app: string) {
-        const isExecutedStatusRs = await this.pool.query(
-            `SELECT 1 FROM messages WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND status = $5`,
-            [sn, src_network, dest_network, src_app, MSG_STATUS.Executed]
+    async getMessageStatus(sn: number, src_network: string, dest_network: string, src_app: string) {
+        const msgStatusRs = await this.pool.query(
+            `SELECT status FROM messages WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4`,
+            [sn, src_network, dest_network, src_app]
         )
-        const isExecutedStatus = isExecutedStatusRs && isExecutedStatusRs.rows.length > 0
 
-        return isExecutedStatus
+        return msgStatusRs.rows.length > 0 ? msgStatusRs.rows[0].status : undefined
+    }
+
+    async validateRollbackedStatus(sn: number, src_network: string, dest_network: string, src_app: string) {
+        const isRollbackedStatusRs = await this.pool.query(
+            `SELECT 1 FROM messages WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND rollback_tx_hash is not null`,
+            [sn, src_network, dest_network, src_app]
+        )
+        const isRollbackedStatus = isRollbackedStatusRs && isRollbackedStatusRs.rows.length > 0
+
+        return isRollbackedStatus
     }
 
     async updateMessageSynced(sn: number, src_network: string, dest_network: string, src_app: string, synced: boolean) {
@@ -241,7 +250,7 @@ class Db {
             const rs = await this.pool.query(
                 `UPDATE messages   
                 SET dest_block_number = $5, dest_block_timestamp = $6, dest_tx_hash = $7, status = $8, updated_at = $9
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
                 [sn, src_network, dest_network, src_app, dest_block_number, dest_block_timestamp, dest_tx_hash, status, nowTimestamp()]
             )
 
@@ -264,9 +273,6 @@ class Db {
         rollback_error: string | undefined,
         status: string
     ) {
-        // skip updating status if status is already MSG_STATUS.Executed
-        const isExecutedStatus = await this.isExecutedStatus(sn, src_network, dest_network, src_app)
-
         try {
             const rs = await this.pool.query(
                 `UPDATE messages   
@@ -281,7 +287,7 @@ class Db {
                     rollback_block_timestamp,
                     rollback_tx_hash,
                     rollback_error,
-                    isExecutedStatus ? MSG_STATUS.Executed : status,
+                    status,
                     nowTimestamp()
                 ]
             )
@@ -305,14 +311,11 @@ class Db {
         rollback_error: string | undefined,
         status: string
     ) {
-        // skip updating status if status is already MSG_STATUS.Executed
-        const isExecutedStatus = await this.isExecutedStatus(sn, src_network, dest_network, src_app)
-
         try {
             const rs = await this.pool.query(
                 `UPDATE messages   
                 SET response_block_number = $5, response_block_timestamp = $6, response_tx_hash = $7, rollback_error =$8, status = $9, updated_at =$10
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 `,
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
                 [
                     sn,
                     src_network,
@@ -322,7 +325,7 @@ class Db {
                     response_block_timestamp,
                     response_tx_hash,
                     rollback_error,
-                    isExecutedStatus ? MSG_STATUS.Executed : status,
+                    status,
                     nowTimestamp()
                 ]
             )

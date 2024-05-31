@@ -13,9 +13,6 @@ export class IconScan implements IScan {
 
     constructor(public network: string = NETWORK.ICON) {
         this.network = network
-
-        // in case of one contract only
-        if (this.network == NETWORK.IBC_ICON && CONTRACT[NETWORK.IBC_ICON].xcall == CONTRACT[NETWORK.ICON].xcall) this.network = NETWORK.ICON
     }
 
     async callApi(apiUrl: string, params: any): Promise<any> {

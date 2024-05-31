@@ -46,11 +46,7 @@ export class SourceSyncer implements ISourceSyncer {
                 destBtpNetworkId = event.to_decoded.split('/')[0]
             }
 
-            logger.info(
-                `cannot detect network ${this.network}->${destBtpNetworkId} event:${event.event} sn:${
-                    event.sn
-                }`
-            )
+            logger.info(`cannot detect network ${this.network}->${destBtpNetworkId} event:${event.event} sn:${event.sn}`)
             return undefined
         }
 
@@ -72,13 +68,6 @@ export class SourceSyncer implements ISourceSyncer {
             value: event.tx_value,
 
             synced: false
-        }
-
-        // correct ibc icon network
-        if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
-            if (msg.dest_network == NETWORK.ICON && msg.src_network?.startsWith('ibc')) {
-                msg.dest_network = NETWORK.IBC_ICON
-            }
         }
 
         return msg
@@ -159,7 +148,7 @@ export class SourceSyncer implements ISourceSyncer {
                         // stop sync
                         await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
-                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`)
+                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${status}`)
                     }
                 }
             }
@@ -201,13 +190,16 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        MSG_STATUS.Executed
+                        MSG_STATUS.Rollbacked
                     )
+
                     if (updateCount > 0) {
                         // stop sync
                         await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
-                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Executed}`)
+                        logger.info(
+                            `synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Rollbacked}`
+                        )
                     }
                 }
             }
@@ -226,13 +218,6 @@ export class SourceSyncer implements ISourceSyncer {
                 // find the source network of message
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
-                    // correct ibc icon network
-                    if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
-                        if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
-                            srcNetwork = NETWORK.IBC_ICON
-                        }
-                    }
-
                     // update status Delivered for the source network
                     const updateCount = await this._db.updateSentMessage(
                         event.sn,
@@ -253,12 +238,9 @@ export class SourceSyncer implements ISourceSyncer {
                 // find the source network of message
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
-                    // correct ibc icon network
-                    if (CONTRACT[NETWORK.ICON].xcall != CONTRACT[NETWORK.IBC_ICON].xcall) {
-                        if (srcNetwork == NETWORK.ICON && destNetwork?.startsWith('ibc')) {
-                            srcNetwork = NETWORK.IBC_ICON
-                        }
-                    }
+                    // check if msg rollbacked
+                    const isRollbacked = await this._db.validateRollbackedStatus(event.sn, srcNetwork, destNetwork, srcDapp)
+                    const status = isRollbacked ? MSG_STATUS.Rollbacked : MSG_STATUS.Executed
 
                     const updateCount = await this._db.updateExecutedMessage(
                         event.sn,
@@ -270,13 +252,13 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        MSG_STATUS.Executed
+                        status
                     )
                     if (updateCount > 0) {
                         // stop sync
                         await this._db.updateMessageSynced(event.sn, srcNetwork, this.network, srcDapp, true)
 
-                        logger.info(`synced ${this.network}<-${srcNetwork} event:${event.event} sn:${event.sn} status:${MSG_STATUS.Executed}`)
+                        logger.info(`synced ${this.network}<-${srcNetwork} event:${event.event} sn:${event.sn} status:${status}`)
                     }
                 }
             }
