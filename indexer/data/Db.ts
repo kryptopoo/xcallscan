@@ -18,6 +18,12 @@ class Db {
         port: parseInt(process.env.PGPORT || '5432')
     })
 
+    constructor() {
+        this.pool.on('error', function (error, client) {
+            logger.error(`db: pool error ${error.message}`)
+        })
+    }
+
     async init() {
         const sqlFilePath = path.join(__dirname, 'db.sql')
         const sql = fs.readFileSync(sqlFilePath, 'utf8')

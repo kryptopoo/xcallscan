@@ -59,7 +59,7 @@ const runCmd = async () => {
         if (event) {
             let fetched = false
             while (!fetched) {
-                fetched = await fetcher.fetchEvents(event, flagNumber)
+                fetched = await fetcher.fetchEvents(event, flagNumber, false)
                 if (flagNumber > 0) fetched = true
             }
         } else {
@@ -74,7 +74,8 @@ const runCmd = async () => {
                         EVENT.CallMessage,
                         EVENT.CallExecuted
                     ],
-                    flagNumber
+                    flagNumber,
+                    false
                 )
 
                 if (flagNumber > 0) fetched = true

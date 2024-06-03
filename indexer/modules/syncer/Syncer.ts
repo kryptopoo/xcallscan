@@ -1,5 +1,6 @@
-import { CONTRACT, NETWORK } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK } from '../../common/constants'
 import { Db } from '../../data/Db'
+import { Fetcher } from '../fetcher/Fetcher'
 import logger from '../logger/logger'
 import { SourceSyncer } from './SourceSyncer'
 
@@ -76,6 +77,7 @@ export class Syncer {
         }
     }
 
+    // TODO: to be removed
     async syncPendingMessages() {
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
@@ -106,6 +108,16 @@ export class Syncer {
 
                 const srcSyncer = this.sourceSyncers[srcNetwork]
                 await srcSyncer.syncSentMessages(sn)
+
+                // handle missing CallExecuted event
+                let destEvents = await this._db.getEventsBySn(destNetwork, sn)
+                if (destEvents.length == 1) {
+                    // try fetching again
+                    logger.info(`${destNetwork} try fetching events ${EVENT.CallExecuted} sn ${sn}`)
+                    const fromBlockNumber = destEvents[0].block_number
+                    const fetcher = new Fetcher(destNetwork)
+                    fetcher.fetchEvents([EVENT.CallExecuted], fromBlockNumber, false)
+                }
 
                 const destSyncer = this.sourceSyncers[destNetwork]
                 await destSyncer.syncReceivedMessages(sn)

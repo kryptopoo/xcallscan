@@ -2,11 +2,11 @@ import cron from 'node-cron'
 import { EVENT, NETWORK } from './common/constants'
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
-import { sleep } from './common/helper'
+import logger from './modules/logger/logger'
 
 async function run() {
     const networks = Object.values(NETWORK)
-    console.log('start indexing networks', networks)
+    logger.info('start indexing networks', networks)
 
     // fetch data between networks
     cron.schedule('0 */2 * * * *', async () => {

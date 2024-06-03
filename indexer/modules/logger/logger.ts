@@ -11,7 +11,8 @@ const logger = winston.createLogger({
     // format: format.combine(format.splat(), format.simple()),
     format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), myFormat),
     transports: [
-        new winston.transports.Console({  }),
+        new winston.transports.Console({}),
+        new winston.transports.File({ filename: './logs/error.log', level: 'error' }),
         new DailyRotateFile({
             // name: 'info-file',
             level: 'info',
