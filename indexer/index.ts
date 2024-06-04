@@ -1,16 +1,17 @@
 import cron from 'node-cron'
-import { EVENT, NETWORK } from './common/constants'
+import { EVENT, NETWORK, USE_MAINNET } from './common/constants'
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
 import logger from './modules/logger/logger'
 
 async function run() {
+    const interval = USE_MAINNET ? 1 : 5 // in minutes
     const networks = Object.values(NETWORK)
     logger.info('start indexing networks', networks)
 
     // fetch data between networks
     // fetch ICON networks
-    cron.schedule('0 */1 * * * *', async () => {
+    cron.schedule(`0 */${interval} * * * *`, async () => {
         await Promise.all(
             [NETWORK.ICON, NETWORK.HAVAH].map((network) => {
                 return fetch(network)
@@ -18,7 +19,7 @@ async function run() {
         )
     })
     // fetch evm networks
-    cron.schedule('15 */1 * * * *', async () => {
+    cron.schedule(`20 */${interval} * * * *`, async () => {
         await Promise.all(
             [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2].map((network) => {
                 return fetch(network)
@@ -26,7 +27,7 @@ async function run() {
         )
     })
     // fetch ibc networks
-    cron.schedule('30 */1 * * * *', async () => {
+    cron.schedule(`40 */${interval} * * * *`, async () => {
         await Promise.all(
             [NETWORK.IBC_ARCHWAY, NETWORK.IBC_INJECTIVE, NETWORK.IBC_NEUTRON].map((network) => {
                 return fetch(network)
@@ -34,15 +35,10 @@ async function run() {
         )
     })
 
-    // sync new messages
-    cron.schedule('45 */1 * * * *', async () => {
+    // sync messages
+    cron.schedule(`*/30 * * * * *`, async () => {
         const syncer = new Syncer(networks)
         await syncer.syncNewMessages()
-    })
-
-    // sync pending/unfinished messages
-    cron.schedule('55 */2 * * * *', async () => {
-        const syncer = new Syncer(networks)
         await syncer.syncUnfinishedMessages()
     })
 }

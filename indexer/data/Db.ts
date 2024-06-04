@@ -7,7 +7,7 @@ const Pool = pg.Pool
 import { MSG_STATUS } from '../common/constants'
 import logger from '../modules/logger/logger'
 import { BaseMessageModel, EventModel, MessageModel } from '../types/DataModels'
-import { lastWeekTimestamp, nowTimestamp } from '../common/helper'
+import { lastDaysTimestamp, lastWeekTimestamp, nowTimestamp } from '../common/helper'
 
 class Db {
     pool = new Pool({
@@ -391,14 +391,14 @@ class Db {
     }
 
     async getNotSyncedMessages(src_network: string) {
-        // only check messages in a week
+        // only check messages in 1 day
         let snsRs = await this.pool.query(
             `SELECT sn, src_network, dest_network 
             FROM messages 
             WHERE src_network = $1 AND synced = $2 AND src_block_timestamp > $3
             GROUP BY sn, src_network, dest_network
             ORDER BY sn desc`,
-            [src_network, false, lastWeekTimestamp()]
+            [src_network, false, lastDaysTimestamp(1)]
         )
 
         return snsRs.rows as BaseMessageModel[]
