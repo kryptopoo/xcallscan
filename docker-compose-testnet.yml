@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api-container
+    networks:
+      - mynetwork
+    depends_on:
+      - indexer
+
+  indexer:
+    build:
+      context: ./indexer
+      dockerfile: Dockerfile
+    container_name: indexer-container
+    networks:
+      - mynetwork
+    volumes:
+      - ./indexer/data:/app/data
+
+  explorer:
+    build:
+      context: ./explorer
+      dockerfile: Dockerfile
+    env_file: 
+      - ./explorer/.env
+    ports:
+      - "${TESTNET_EXPLORER_PORT}:${TESTNET_EXPLORER_PORT}"
+    container_name: explorer-container
+    depends_on:
+      - api
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
