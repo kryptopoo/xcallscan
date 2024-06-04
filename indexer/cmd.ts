@@ -53,13 +53,14 @@ const runCmd = async () => {
         const network = args[1]
         const event = args[2]?.split(',')
         const flagNumber = args[3] ?? 0
+        const updateCounter = false
 
         let fetcher: IFetcher = new Fetcher(network)
 
         if (event) {
             let fetched = false
             while (!fetched) {
-                fetched = await fetcher.fetchEvents(event, flagNumber, false)
+                fetched = await fetcher.fetchEvents(event, flagNumber, updateCounter)
                 if (flagNumber > 0) fetched = true
             }
         } else {
@@ -75,7 +76,7 @@ const runCmd = async () => {
                         EVENT.CallExecuted
                     ],
                     flagNumber,
-                    false
+                    updateCounter
                 )
 
                 if (flagNumber > 0) fetched = true
