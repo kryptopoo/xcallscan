@@ -11,23 +11,25 @@ async function run() {
 
     // fetch data between networks
     // fetch ICON networks
-    cron.schedule(`0 */${interval} * * * *`, async () => {
+    cron.schedule(`*/30 * * * * *`, async () => {
         await Promise.all(
-            [NETWORK.ICON, NETWORK.HAVAH].map((network) => {
+            [NETWORK.ICON].map((network) => {
                 return fetch(network)
             })
         )
     })
+
     // fetch evm networks
-    cron.schedule(`20 */${interval} * * * *`, async () => {
+    cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
-            [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2].map((network) => {
+            [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2, NETWORK.HAVAH].map((network) => {
                 return fetch(network)
             })
         )
     })
+
     // fetch ibc networks
-    cron.schedule(`40 */${interval} * * * *`, async () => {
+    cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
             [NETWORK.IBC_ARCHWAY, NETWORK.IBC_INJECTIVE, NETWORK.IBC_NEUTRON].map((network) => {
                 return fetch(network)
@@ -36,7 +38,7 @@ async function run() {
     })
 
     // sync messages
-    cron.schedule(`*/30 * * * * *`, async () => {
+    cron.schedule(`15,45 * * * * *`, async () => {
         const syncer = new Syncer(networks)
         await syncer.syncNewMessages()
         await syncer.syncUnfinishedMessages()
