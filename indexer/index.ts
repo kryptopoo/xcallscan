@@ -35,13 +35,13 @@ async function run() {
     })
 
     // sync new messages
-    cron.schedule('0 */1 * * * *', async () => {
+    cron.schedule('45 */1 * * * *', async () => {
         const syncer = new Syncer(networks)
         await syncer.syncNewMessages()
     })
 
     // sync pending/unfinished messages
-    cron.schedule('45 */1 * * * *', async () => {
+    cron.schedule('55 */2 * * * *', async () => {
         const syncer = new Syncer(networks)
         await syncer.syncUnfinishedMessages()
     })

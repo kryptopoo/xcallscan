@@ -51,7 +51,7 @@ const runCmd = async () => {
     }
     if (cmd == 'fetch') {
         const network = args[1]
-        const event = args[2].split(',')
+        const event = args[2]?.split(',')
         const flagNumber = args[3] ?? 0
 
         let fetcher: IFetcher = new Fetcher(network)
