@@ -12,7 +12,14 @@ const logger = winston.createLogger({
     format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), myFormat),
     transports: [
         new winston.transports.Console({}),
-        new winston.transports.File({ filename: './logs/error.log', level: 'error' }),
+        // new winston.transports.File({ filename: './logs/error.log', level: 'error' }),
+        new DailyRotateFile({
+            level: 'error',
+            filename: './logs/%DATE%.error.log',
+            json: false,
+            datePattern: 'yyyy-MM-DD',
+            maxFiles: 10
+        }),
         new DailyRotateFile({
             // name: 'info-file',
             level: 'info',
