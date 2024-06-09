@@ -7,6 +7,7 @@ import logger from './modules/logger/logger'
 async function run() {
     const interval = USE_MAINNET ? 1 : 5 // in minutes
     const networks = Object.values(NETWORK)
+    const syncer = new Syncer(networks)
     logger.info('start indexing networks', networks)
 
     // fetch data between networks
@@ -39,8 +40,9 @@ async function run() {
 
     // sync messages
     cron.schedule(`15,45 * * * * *`, async () => {
-        const syncer = new Syncer(networks)
         await syncer.syncNewMessages()
+    })
+    cron.schedule(`20,50 * * * * *`, async () => {
         await syncer.syncUnfinishedMessages()
     })
 }
