@@ -128,6 +128,15 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
+                    // TODO: review
+                    // const msgStatus = await this._db.getMessageStatus(
+                    //     event.sn,
+                    //     msg.src_network as string,
+                    //     msg.dest_network as string,
+                    //     msg.src_app as string
+                    // )
+                    // const status = msgStatus == MSG_STATUS.Rollbacked || msgStatus == MSG_STATUS.Executed ? msgStatus : MSG_STATUS.Delivered
+
                     const updateCount = await this._db.updateResponseMessage(
                         msg.sn,
                         msg.src_network as string,
@@ -143,12 +152,20 @@ export class SourceSyncer implements ISourceSyncer {
                     // event.code == -1
                     // msg response failed, it would emit RollbackMessage
                     // msg response succeeded, it wouldn't emit RollbackMessage
-
-                    if (updateCount > 0 && event.code == 0) {
-                        // stop sync
-                        await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
-
+                    if (updateCount > 0) {
                         logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`)
+
+                        // if error
+                        if (event.code == 0) {
+                            // stop sync
+                            await this._db.updateMessageSynced(
+                                msg.sn,
+                                msg.src_network as string,
+                                msg.dest_network as string,
+                                msg.src_app as string,
+                                true
+                            )
+                        }
                     }
                 }
             }
