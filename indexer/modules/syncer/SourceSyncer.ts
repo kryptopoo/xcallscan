@@ -148,7 +148,7 @@ export class SourceSyncer implements ISourceSyncer {
                         // stop sync
                         await this._db.updateMessageSynced(msg.sn, msg.src_network as string, msg.dest_network as string, msg.src_app as string, true)
 
-                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${status}`)
+                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`)
                     }
                 }
             }
