@@ -13,11 +13,7 @@ async function run() {
     // fetch data between networks
     // fetch ICON networks
     cron.schedule(`*/30 * * * * *`, async () => {
-        await Promise.all(
-            [NETWORK.ICON].map((network) => {
-                return fetch(network)
-            })
-        )
+        await fetch(NETWORK.ICON)
     })
 
     // fetch evm networks
