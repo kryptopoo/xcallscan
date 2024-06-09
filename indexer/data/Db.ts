@@ -320,8 +320,8 @@ class Db {
         try {
             const rs = await this.pool.query(
                 `UPDATE messages   
-                SET response_block_number = $5, response_block_timestamp = $6, response_tx_hash = $7, rollback_error =$8, status = $9, updated_at =$10
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
+                SET response_block_number = $5, response_block_timestamp = $6, response_tx_hash = $7, rollback_error = $8, status = $9, updated_at =$10
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 AND src_app = $4`,
                 [
                     sn,
                     src_network,

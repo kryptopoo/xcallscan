@@ -84,13 +84,25 @@ const runCmd = async () => {
         }
     }
     if (cmd == 'sync') {
-        const snFrom = args[1]
-        const snTo = args[2] ?? snFrom
-        const networks = args[3] ? args[3].split(',') : []
+        let snList = []
+        if (args[1].indexOf(',') > 0) {
+            snList = args[1].split(',')
+        }
+        if (args[1].indexOf('-') > 0) {
+            const snFromTo = args[1].split('-')
+            const snFrom = Number(snFromTo[0])
+            const snTo = Number(snFromTo[1])
+            for (let index = snFrom; index <= snTo; index++) {
+                const sn = index;
+                snList.push(sn)
+            }
+        }
+        const networks = args[2] ? args[2].split(',') : []
         const syncer = new Syncer(networks)
 
-        if (snFrom > 0 && snTo > 0) {
-            for (let sn = snFrom; sn <= snTo; sn++) {
+        if (snList.length > 0) {
+            for (let index = 0; index < snList.length; index++) {
+                const sn = Number(snList[index]);
                 await syncer.syncMessage(sn)
             }
         } else {
