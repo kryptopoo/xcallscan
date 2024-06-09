@@ -128,14 +128,14 @@ export class SourceSyncer implements ISourceSyncer {
                     const msg = this.parseCallMessageSentEvent(callMsgSentEvent)
                     if (!msg) continue
 
-                    // TODO: review
-                    // const msgStatus = await this._db.getMessageStatus(
-                    //     event.sn,
-                    //     msg.src_network as string,
-                    //     msg.dest_network as string,
-                    //     msg.src_app as string
-                    // )
-                    // const status = msgStatus == MSG_STATUS.Rollbacked || msgStatus == MSG_STATUS.Executed ? msgStatus : MSG_STATUS.Delivered
+                    // skip updating status if it's executed/rollbacked
+                    const msgStatus = await this._db.getMessageStatus(
+                        event.sn,
+                        msg.src_network as string,
+                        msg.dest_network as string,
+                        msg.src_app as string
+                    )
+                    const status = msgStatus == MSG_STATUS.Rollbacked || msgStatus == MSG_STATUS.Executed ? msgStatus : MSG_STATUS.Delivered
 
                     const updateCount = await this._db.updateResponseMessage(
                         msg.sn,
@@ -146,14 +146,14 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_timestamp,
                         event.tx_hash,
                         event.msg,
-                        MSG_STATUS.Delivered
+                        status
                     )
 
                     // event.code == -1
                     // msg response failed, it would emit RollbackMessage
                     // msg response succeeded, it wouldn't emit RollbackMessage
                     if (updateCount > 0) {
-                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${MSG_STATUS.Delivered}`)
+                        logger.info(`synced ${msg.src_network}->${msg.dest_network} event:${event.event} sn:${msg.sn} status:${status}`)
 
                         // if error
                         if (event.code == 0) {
