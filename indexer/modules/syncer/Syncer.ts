@@ -113,10 +113,15 @@ export class Syncer {
                 let destEvents = await this._db.getEventsBySn(destNetwork, sn)
                 if (destEvents.length == 1) {
                     // try fetching again
-                    logger.info(`${destNetwork} try fetching events ${EVENT.CallExecuted} sn ${sn}`)
-                    const fromBlockNumber = destEvents[0].block_number
-                    const fetcher = new Fetcher(destNetwork)
-                    fetcher.fetchEvents([EVENT.CallExecuted], fromBlockNumber, false)
+                    logger.info(`${destNetwork} try fetching events ${EVENT.CallExecuted} sn:${sn}`)
+
+                    try {
+                        const fromBlockNumber = Number(destEvents[0].block_number)
+                        const fetcher = new Fetcher(destNetwork)
+                        await fetcher.fetchEvents([EVENT.CallExecuted], fromBlockNumber, false)
+                    } catch (error: any) {
+                        logger.error(`${destNetwork} try fetching events sn:${sn} failed ${error.message}`)
+                    }
                 }
 
                 const destSyncer = this.sourceSyncers[destNetwork]
