@@ -27,7 +27,7 @@ const getMessages = async (pageSize, pageNumber) => {
 }
 
 const getMessageById = async (msgId) => {
-    const res = await fetch(`${process.env.BASE_API_URL}/messages/${msgId}`)
+    const res = await fetch(`${process.env.BASE_API_URL}/messages/${msgId}`, { cache: 'no-store' })
 
     if (res.status !== 200) {
         throw new Error(`Status ${res.status}`)

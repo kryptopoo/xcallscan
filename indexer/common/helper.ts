@@ -7,6 +7,11 @@ const lastWeekTimestamp = () => {
     return now - 7 * 24 * 60 * 60
 }
 
+const lastDaysTimestamp = (days: number) => {
+    const now = nowTimestamp()
+    return now - days * 24 * 60 * 60
+}
+
 const toDateString = (timestamp: number) => {
     const dateString = new Date(timestamp * 1000).toISOString()
     return dateString
@@ -21,4 +26,4 @@ const sleep = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export { nowTimestamp, lastWeekTimestamp, toDateString, toTimestamp, sleep }
+export { nowTimestamp, lastWeekTimestamp, lastDaysTimestamp, toDateString, toTimestamp, sleep }

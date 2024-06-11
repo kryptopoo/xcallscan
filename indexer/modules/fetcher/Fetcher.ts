@@ -80,11 +80,11 @@ export class Fetcher implements IFetcher {
         return counter
     }
 
-    async fetchEvents(eventNames: string[], flagNumber: number = 0) {
+    async fetchEvents(eventNames: string[], flagNumber: number = 0, updateCounter: boolean = true) {
         // fetch all events once
         if (this.network == NETWORK.IBC_ARCHWAY || this.network == NETWORK.IBC_NEUTRON || this.network == NETWORK.IBC_INJECTIVE) {
             let finished = true
-            finished &&= await this.fetchEvent('', flagNumber)
+            finished &&= await this.fetchEvent('', flagNumber, updateCounter)
             return finished
         } else {
             // fetch each event
@@ -98,7 +98,7 @@ export class Fetcher implements IFetcher {
                 promiseTasks.push(
                     new Promise(async function (resolve) {
                         await new Promise((res) => setTimeout(res, delay))
-                        let result = await _this.fetchEvent(eventNames[i], flagNumber)
+                        let result = await _this.fetchEvent(eventNames[i], flagNumber, updateCounter)
                         resolve(result)
                     })
                 )
@@ -113,7 +113,7 @@ export class Fetcher implements IFetcher {
         }
     }
 
-    async fetchEvent(eventName: string, flagNumber: number = 0) {
+    private async fetchEvent(eventName: string, flagNumber: number = 0, updateCounter: boolean = true) {
         // skip if contract address is not configured
         if (CONTRACT[this.scan.network].xcall == '0x0' || CONTRACT[this.scan.network].xcall == '') {
             logger.info(`${this.scan.network} skip fetching because xcall contract is not configured`)
@@ -142,7 +142,7 @@ export class Fetcher implements IFetcher {
         }
 
         const finished = lastFlagNumber == counter.value
-        if (!finished) await this._db.updateCounter(counter.name, lastFlagNumber)
+        if (!finished && updateCounter) await this._db.updateCounter(counter.name, lastFlagNumber)
 
         return finished
     }
