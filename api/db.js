@@ -1,7 +1,7 @@
 const Pool = require('pg').Pool
 const dotenv = require('dotenv')
 dotenv.config()
-const logger  = require('./logger')
+const logger = require('./logger')
 
 const pool = new Pool({
     user: process.env.PGUSER,
@@ -56,11 +56,11 @@ const buildWhereSql = (status, src_network, dest_network, src_address, dest_addr
         values.push(status)
     }
     if (src_network) {
-        conditions.push(`src_network = $${conditions.length + 1}`)
+        conditions.push(`src_network = any(string_to_array($${conditions.length + 1},','))`)
         values.push(src_network)
     }
     if (dest_network) {
-        conditions.push(`dest_network = $${conditions.length + 1}`)
+        conditions.push(`dest_network = any(string_to_array($${conditions.length + 1},','))`)
         values.push(dest_network)
     }
     if (src_address) {
@@ -188,23 +188,58 @@ const getStatistic = async () => {
     }
 }
 
-const getTotalMessages = async (status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp) => {
-    // build sql
-    let { conditions, values } = buildWhereSql(status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp)
+const getTotalMessages = async (status, src_networks, dest_networks, src_address, dest_address, from_timestamp, to_timestamp) => {
+    let data = {}
 
-    let sql = `SELECT count(*) FROM messages`
-    if (conditions.length > 0) {
-        sql = `SELECT count(*) FROM messages WHERE ${conditions.join(' AND ')}`
+    // build sql
+    let { conditions, values } = buildWhereSql(status, src_networks, dest_networks, src_address, dest_address, from_timestamp, to_timestamp)
+
+    let sql = `SELECT count(*) as total FROM messages`
+    if (conditions.length == 0) {
+        // query data
+        const totalRs = await pool.query(sql, values)
+        const total = Number(totalRs.rows[0].total)
+        data.total = total
+    } else {
+        if (!src_networks && !dest_networks) {
+            sql = `SELECT count(*) as total   
+                    FROM messages 
+                    WHERE ${conditions.join(' AND ')}`
+            const totalRs = await pool.query(sql, values)
+            const total = Number(totalRs.rows[0].total)
+            data.total = total
+        } else {
+            if (src_networks) {
+                let { conditions, values } = buildWhereSql(status, src_networks, undefined, src_address, dest_address, from_timestamp, to_timestamp)
+                sql = `SELECT src_network, count(*) as total   
+                    FROM messages 
+                    WHERE ${conditions.join(' AND ')} 
+                    GROUP BY src_network
+                    ORDER BY src_network`
+                const srcNetworkTotalRs = await pool.query(sql, values)
+                data.src_networks = {}
+                srcNetworkTotalRs.rows.forEach((n) => {
+                    data.src_networks[n.src_network] = { total: Number(n.total) }
+                })
+            }
+            if (dest_networks) {
+                let { conditions, values } = buildWhereSql(status, undefined, dest_networks, src_address, dest_address, from_timestamp, to_timestamp)
+                sql = `SELECT dest_network, count(*) as total  
+                    FROM messages 
+                    WHERE ${conditions.join(' AND ')} 
+                    GROUP BY dest_network
+                    ORDER BY dest_network`
+                const destNetworkTotalRs = await pool.query(sql, values)
+                data.dest_networks = {}
+                destNetworkTotalRs.rows.forEach((n) => {
+                    data.dest_networks[n.dest_network] = { total: Number(n.total) }
+                })
+            }
+        }
     }
 
-    // query data
-    const totalRs = await pool.query(sql, values)
-    const total = Number(totalRs.rows[0].count)
-
     return {
-        data: {
-            total
-        }
+        data
     }
 }
 
