@@ -47,10 +47,10 @@ export default function Header({ showSearchBar, assets }) {
 
                 <Dropdown label="" dismissOnClick={false} renderTrigger={() => <Image className="hover:cursor-pointer" src={`/images/network-icon.png`} width={24} height={24} />}>
                     <Dropdown.Item>
-                        <a href={process.env.TESTNET_APP_URL}>Testnet</a>
+                        <a href={process.env.NEXT_PUBLIC_TESTNET_APP_URL}>Testnet</a>
                     </Dropdown.Item>
                     <Dropdown.Item>
-                        <a href={process.env.MAINNET_APP_URL}>Mainnet</a>
+                        <a href={process.env.NEXT_PUBLIC_MAINNET_APP_URL}>Mainnet</a>
                     </Dropdown.Item>
                 </Dropdown>
             </div>

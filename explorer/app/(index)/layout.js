@@ -1,14 +1,13 @@
 import '../globals.css'
-import Favicon from '../favicon.ico';
+import Favicon from '../favicon.ico'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import fetchData from '@/lib/fetch-data'
-import Script from 'next/script'
 
 export const metadata = {
     title: `xCallScan - ICON's General Message Passing Explorer`,
     description: `xCallScan is an explorer that allows users to look up relay messages and transactions being sent through ICON's General Message Passing (xCall).`,
-    icons: [{ rel: 'icon', url: Favicon.src }],
+    icons: [{ rel: 'icon', url: Favicon.src }]
 }
 
 export default async function RootLayout({ children }) {
@@ -26,9 +25,7 @@ export default async function RootLayout({ children }) {
 
     return (
         <html lang="en">
-            <head>
-                <Script>{`setInterval(()=>{ window.location = window.location.href;}, 30000);`}</Script>
-            </head>
+            <head></head>
             <body className="font-mono min-h-screen">
                 <Header showSearchBar={false} assets={assets} />
                 <div className="-z-20 h-72 w-full absolute hero"></div>

@@ -17,8 +17,7 @@ const getMessages = async (pageSize, pageNumber) => {
     const skip = parseInt(pageSize) * (parseInt(pageNumber) - 1)
     const limit = parseInt(pageSize)
 
-    // const res = await fetch(`${process.env.BASE_API_URL}/messages?skip=${skip}&limit=${limit}`, { cache: 'no-store' })
-    const res = await fetch(`${process.env.BASE_API_URL}/messages?skip=${skip}&limit=${limit}`, { cache: 'no-store' })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/messages?skip=${skip}&limit=${limit}`, { cache: 'no-store' })
 
     if (res.status !== 200) {
         throw new Error(`Status ${res.status}`)
@@ -27,7 +26,7 @@ const getMessages = async (pageSize, pageNumber) => {
 }
 
 const getMessageById = async (msgId) => {
-    const res = await fetch(`${process.env.BASE_API_URL}/messages/${msgId}`, { cache: 'no-store' })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/messages/${msgId}`, { cache: 'no-store' })
 
     if (res.status !== 200) {
         throw new Error(`Status ${res.status}`)
@@ -36,7 +35,7 @@ const getMessageById = async (msgId) => {
 }
 
 const search = async (value) => {
-    const res = await fetch(`${process.env.BASE_API_URL}/search?value=${value}`, { cache: 'no-store' })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/search?value=${value}`, { cache: 'no-store' })
 
     if (res.status !== 200) {
         throw new Error(`Status ${res.status}`)
@@ -44,9 +43,8 @@ const search = async (value) => {
     return res.json()
 }
 
-const getStatistic = async () => {
-    const res = await fetch(`${process.env.BASE_API_URL}/statistic`, { cache: 'no-store' })
-
+const getTotalMessages = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/statistics/total_messages`, { cache: 'no-store' })
     if (res.status !== 200) {
         throw new Error(`Status ${res.status}`)
     }
@@ -58,5 +56,5 @@ export default {
     getMessages,
     getMessageById,
     search,
-    getStatistic
+    getTotalMessages
 }

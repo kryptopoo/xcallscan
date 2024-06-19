@@ -18,7 +18,7 @@ function renderDestHashLink(item, meta) {
     if (item.rollback_tx_hash) {
         scanUrl = meta.urls.tx[item.src_network]
         networkImg = (
-            <div>
+            <div className="w-[3rem]">
                 <Image className="relative inline-block" alt={item.dest_network} src={`/images/network-${item.dest_network}.png`} width={24} height={24} />
                 <Image
                     className="relative inline-block -left-4 rounded-full bg-white"
