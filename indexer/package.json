@@ -8,7 +8,7 @@
     "dev": "ts-node-dev --exit-child indexer.ts",
     "start": "ts-node index.ts",
     "init-data": "ts-node cmd db init",
-    "docker-start": "tsc && ts-node cmd db init && ts-node index.ts"
+    "docker-start": "tsc && ts-node index.ts"
   },
   "keywords": [],
   "author": "",
