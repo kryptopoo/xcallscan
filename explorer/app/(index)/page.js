@@ -27,7 +27,7 @@ export default function Home() {
                     <SearchBar showFull={true} />
                 </div>
                 <div className="mt-4 xl:mt-0 xl:basis-4/12 flex flex-row-reverse items-end">
-                    <div className=" px-4 text-white rounded-md text-right  ">
+                    <div className=" px-4 text-white rounded-md text-right hidden md:block">
                         <div className="text-sm opacity-75">Total Messages</div>
                         <div className="text-3xl font-medium fade-in">{totalMsgRes.isLoading ? 0 : totalMsgRes.data?.data.total?.toLocaleString('en-US')}</div>
                     </div>

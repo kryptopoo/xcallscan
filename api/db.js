@@ -120,7 +120,8 @@ const getMessages = async (skip, limit, status, src_network, dest_network, src_a
                 total: Math.ceil(Number(totalRs.rows[0].count) / Number(limit)),
                 size: Number(limit),
                 number: Math.floor(Number(skip) / Number(limit)) + 1
-            }
+            },
+            time: Math.floor(Date.now() / 1000)
         }
     }
 }
