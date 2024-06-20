@@ -20,10 +20,7 @@ const nextConfig = {
         // your project has ESLint errors.
         ignoreDuringBuilds: true
     },
-    env: {
-        TESTNET_APP_URL: 'https://testnet.xcallscan.xyz',
-        MAINNET_APP_URL: 'https://xcallscan.xyz',
-    }
+    env: {}
 }
 
 module.exports = nextConfig

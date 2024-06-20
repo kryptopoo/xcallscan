@@ -51,15 +51,16 @@ const runCmd = async () => {
     }
     if (cmd == 'fetch') {
         const network = args[1]
-        const event = args[2].split(',')
+        const event = args[2]?.split(',')
         const flagNumber = args[3] ?? 0
+        const updateCounter = false
 
         let fetcher: IFetcher = new Fetcher(network)
 
         if (event) {
             let fetched = false
             while (!fetched) {
-                fetched = await fetcher.fetchEvents(event, flagNumber)
+                fetched = await fetcher.fetchEvents(event, flagNumber, updateCounter)
                 if (flagNumber > 0) fetched = true
             }
         } else {
@@ -74,7 +75,8 @@ const runCmd = async () => {
                         EVENT.CallMessage,
                         EVENT.CallExecuted
                     ],
-                    flagNumber
+                    flagNumber,
+                    updateCounter
                 )
 
                 if (flagNumber > 0) fetched = true
@@ -82,13 +84,27 @@ const runCmd = async () => {
         }
     }
     if (cmd == 'sync') {
-        const snFrom = args[1]
-        const snTo = args[2] ?? snFrom
-        const networks = args[3] ? args[3].split(',') : []
+        let snList = []
+        if (args[1].toString().indexOf(',') > 0) {
+            snList = args[1].split(',')
+        } else if (args[1].toString().indexOf('-') > 0) {
+            const snFromTo = args[1].split('-')
+            const snFrom = Number(snFromTo[0])
+            const snTo = Number(snFromTo[1])
+            for (let index = snFrom; index <= snTo; index++) {
+                const sn = index
+                snList.push(sn)
+            }
+        } else {
+            const sn = Number(args[1])
+            snList.push(sn)
+        }
+        const networks = args[2] ? args[2].split(',') : []
         const syncer = new Syncer(networks)
 
-        if (snFrom > 0 && snTo > 0) {
-            for (let sn = snFrom; sn <= snTo; sn++) {
+        if (snList.length > 0) {
+            for (let index = 0; index < snList.length; index++) {
+                const sn = Number(snList[index])
                 await syncer.syncMessage(sn)
             }
         } else {
