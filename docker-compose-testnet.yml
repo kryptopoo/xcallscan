@@ -3,9 +3,9 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: api-container
+    container_name: api-container-testnet
     networks:
-      - mynetwork
+      - mynetworktestnet
     depends_on:
       - indexer
 
@@ -13,9 +13,9 @@ services:
     build:
       context: ./indexer
       dockerfile: Dockerfile
-    container_name: indexer-container
+    container_name: indexer-container-testnet
     networks:
-      - mynetwork
+      - mynetworktestnet
     volumes:
       - ./indexer/data:/app/data
 
@@ -27,12 +27,13 @@ services:
       - ./explorer/.env
     ports:
       - "${TESTNET_EXPLORER_PORT}:${TESTNET_EXPLORER_PORT}"
-    container_name: explorer-container
+    container_name: explorer-container-testnet
     depends_on:
       - api
     networks:
-      - mynetwork
+      - mynetworktestnet
+    command: ["npm", "run", "docker-start-testnet"]
 
 networks:
-  mynetwork:
+  mynetworktestnet:
     driver: bridge

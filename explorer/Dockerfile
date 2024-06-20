@@ -9,4 +9,4 @@ COPY .env .
 RUN npm install
 
 # Specify the command to run your application
-CMD ["npm", "run", "docker-start"]
+# CMD ["npm", "run", "docker-start"]

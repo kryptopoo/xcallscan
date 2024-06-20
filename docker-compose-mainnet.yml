@@ -3,29 +3,21 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    env_file:
-      - ./api/.env
-    ports:
-      - "${API_PORT}:${API_PORT}"
-    container_name: api-container
+    container_name: api-container-mainnet
     networks:
-      - mynetwork
-    # depends_on:
-    #   - mongodb
+      - mynetworkmainnet
+    depends_on:
+      - indexer
 
   indexer:
     build:
       context: ./indexer
       dockerfile: Dockerfile
-    env_file:
-      - ./indexer/.env
-    ports:
-      - "${INDEXER_PORT}:${INDEXER_PORT}"
-    container_name: indexer-container
-    # depends_on:
-    #   - mongodb
+    container_name: indexer-container-mainnet
     networks:
-      - mynetwork
+      - mynetworkmainnet
+    volumes:
+      - ./indexer/data:/app/data
 
   explorer:
     build:
@@ -34,13 +26,14 @@ services:
     env_file:
       - ./explorer/.env
     ports:
-      - "${EXPLORER_PORT}:${EXPLORER_PORT}"
-    container_name: explorer-container
-    # depends_on:
-    #   - mongodb
+      - "${MAINNET_EXPLORER_PORT}:${MAINNET_EXPLORER_PORT}"
+    container_name: explorer-container-mainnet
+    depends_on:
+      - api
     networks:
-      - mynetwork
+      - mynetworkmainnet
+    command: ["npm", "run", "docker-start-mainnet"]
 
 networks:
-  mynetwork:
+  mynetworkmainnet:
     driver: bridge
