@@ -117,6 +117,16 @@ export class EvmScan implements IScan {
                             }
                         } catch (error) {}
 
+                        try {
+                            if (!log.eventData._decodedTo) {
+                                const sendCallInterface = new ethers.utils.Interface([
+                                    'function sendCall(string _to,bytes _data)'
+                                ])
+                                const decodedSendCall = sendCallInterface.decodeFunctionData('sendCall', tx.data)
+                                log.eventData._decodedTo = decodedSendCall[0]
+                            }
+                        } catch (error) {}
+
                         // Try decode from AssetManager contract
                         try {
                             if (!log.eventData._decodedTo) {
@@ -192,6 +202,11 @@ export class EvmScan implements IScan {
                                 }
                             }
                         } catch (error) {}
+
+                        // log missing decodedTo
+                        if (!log.eventData._decodedTo) {
+                            logger.error(`${this.network} cannot decode function sn:${log.eventData._sn} txHash:${log.txHash}`)
+                        }
 
                         break
                     case EVENT.ResponseMessage:
