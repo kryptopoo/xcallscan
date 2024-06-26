@@ -6,4 +6,5 @@ services:
     container_name: xcallscan-container-testnet-dev
     ports:
       - "3000:3000"
+      - "4000:4000"
 
