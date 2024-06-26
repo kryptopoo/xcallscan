@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "docker-start-mainnet": "next build && next start -p 3100",
-    "docker-start-testnet": "next build && next start"
+    "docker-start-testnet": "next build && next start",
+    "docker-start-testnet-dev": "next build && next dev"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.16",

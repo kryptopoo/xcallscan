@@ -5,6 +5,7 @@ const port = process.env.PORT || 4000
 const db = require('./db')
 const logger = require('./logger')
 const rateLimiter = require('./middlewares/rate-limiter')
+const cors = require('cors')
 
 app.use(bodyParser.json())
 app.use(
@@ -13,11 +14,14 @@ app.use(
     })
 )
 
-app.use(function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*')
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
-    next()
-})
+app.use(cors({
+    origin: 'http://localhost:3000'
+}))
+// app.use(function (req, res, next) {
+//     res.header('Access-Control-Allow-Origin', '*')
+//     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+//     next()
+// })
 
 app.use(rateLimiter)
 

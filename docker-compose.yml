@@ -1,0 +1,9 @@
+services:
+  xcallscan-testnet:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: xcallscan-container-testnet-dev
+    ports:
+      - "3000:3000"
+
