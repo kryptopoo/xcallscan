@@ -1,0 +1,12 @@
+services:
+  xcallscan-testnet:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: xcallscan-container-testnet-dev
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+
+    command: sh -c "tsc -p indexer/ && cd ./indexer/ && pm2 start 'npm run start' --name indexer && cd ../api && pm2 start 'npm run start' --name api && cd ../explorer && pm2 start 'npm run docker-start-testnet-dev' --name explorer && pm2 logs"
+

@@ -18,9 +18,6 @@ COPY ./indexer ./indexer
 COPY ./indexer/.env ./indexer
 RUN ls -la indexer/.env && cat indexer/.env
 
-# COPY . .
-# COPY .env .
-
 WORKDIR /app/api
 RUN npm install
 
@@ -33,7 +30,3 @@ RUN npm install
 WORKDIR /app
 RUN npm install -g typescript ts-node
 RUN npm install -g pm2
-
-CMD tsc -p indexer/ && cd ./indexer/ && pm2 start "npm run start" --name indexer && cd ../api && pm2 start "npm run start" --name api && cd ../explorer && pm2 start "npm run docker-start-testnet-dev" --name explorer && pm2 logs
-# Specify the command to run your application
-# CMD ["npm", "run", "start"]
