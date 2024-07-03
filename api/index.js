@@ -14,7 +14,12 @@ app.use(
     })
 )
 
-const allowedOrigins = ['http://localhost:3000','http://localhost:3100']
+const allowedOrigins = [
+'http://localhost:3000',
+'http://localhost:3100',
+'http://3.95.20.254:3100'
+'http://3.95.20.254:3000'
+]
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
