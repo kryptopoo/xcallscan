@@ -1,0 +1,12 @@
+services:
+  xcallscan-mainnet:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: xcallscan-container-mainnet
+    ports:
+      - "3100:3100"
+      - "4100:4000"
+
+    command: sh -c "tsc -p indexer/ && cd ./indexer/ && pm2 start 'npm run start' --name indexer && cd ../api && pm2 start 'npm run start' --name api && cd ../explorer && pm2 start 'npm run docker-start-mainnet' --name explorer && pm2 logs"
+

@@ -109,5 +109,9 @@ dist
 /indexer/.env.mainnet
 /api/.env.mainnet
 /api/.env.testnet
+
 /explorer/.env.mainnet
 /explorer/.env.testnet
+
+# Misc
+local

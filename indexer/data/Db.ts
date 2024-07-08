@@ -1,7 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import dotenv from 'dotenv'
-dotenv.config()
+import 'dotenv/config'
 import pg from 'pg'
 const Pool = pg.Pool
 import { MSG_STATUS } from '../common/constants'
