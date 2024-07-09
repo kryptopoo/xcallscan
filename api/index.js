@@ -18,7 +18,11 @@ const allowedOrigins = [
 'http://localhost:3000',
 'http://localhost:3100',
 'http://3.95.20.254:3100',
-'http://3.95.20.254:3000'
+'http://3.95.20.254:3000',
+'http://icongmp-testnet.icon.community',
+'https://icongmp-testnet.icon.community',
+'http://icongmp-mainnet.icon.community',
+'https://icongmp-mainnet.icon.community',
 ]
 const corsOptions = {
     origin: function (origin, callback) {
