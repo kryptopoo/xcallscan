@@ -14,26 +14,32 @@ app.use(
     })
 )
 
-const allowedOrigins = [
-'http://localhost:3000',
-'http://localhost:3100',
-'http://3.95.20.254:3100',
-'http://3.95.20.254:3000',
-'http://icongmp-testnet.icon.community',
-'https://icongmp-testnet.icon.community',
-'http://icongmp-mainnet.icon.community',
-'https://icongmp-mainnet.icon.community',
+const defaultAllowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3100',
+    'http://3.95.20.254:3100',
+    'http://3.95.20.254:3000',
+    'http://icongmp-testnet.icon.community',
+    'https://icongmp-testnet.icon.community',
+    'http://icongmp-mainnet.icon.community',
+    'https://icongmp-mainnet.icon.community',
+    'http://testnet.xcallscan.xyz',
+    'https://testnet.xcallscan.xyz',
+    'http://xcallscan.xyz',
+    'https://xcallscan.xyz'
 ]
+
+const allowedOrigins = defaultAllowedOrigins.concat(process.env.ALLOW_ORIGINS ? process.env.ALLOW_ORIGINS.split(';') : [])
+
 const corsOptions = {
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
+        if (!origin) return callback(null, true)
         if (allowedOrigins.indexOf(origin) === -1) {
-            var msg = 'The CORS policy for this site does not ' +
-                'allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+            var msg = 'The CORS policy for this site does not ' + 'allow access from the specified Origin.'
+            return callback(new Error(msg), false)
         }
 
-        return callback(null, true);
+        return callback(null, true)
     }
 }
 app.use(cors(corsOptions))
