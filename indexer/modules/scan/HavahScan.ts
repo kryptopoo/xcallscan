@@ -24,21 +24,14 @@ export class HavahScan implements IScan {
         return { data: [], totalSize: 0 }
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         const limit = 20
-
-        // // deprecated
-        // let scoreAddr = CONTRACT[this.network].dapp
-        // if ([EVENT.RollbackExecuted, EVENT.CallExecuted].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].xcall
-        // if ([EVENT.CallMessage, EVENT.ResponseMessage, EVENT.RollbackMessage].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].bmc
-        let scoreAddr = CONTRACT[this.network].xcall
-        if ([EVENT.CallMessage, EVENT.ResponseMessage, EVENT.RollbackMessage].indexOf(eventName) > -1) scoreAddr = CONTRACT[this.network].bmc
 
         let result: EventLog[] = []
 
         // always get lastest block of events
         const latestEventRes = await this.callApi(`${API_URL[this.network]}/score/eventLogList`, {
-            scoreAddr: scoreAddr,
+            scoreAddr: xcallAddress,
             page: 1,
             count: 1
         })
@@ -48,7 +41,7 @@ export class HavahScan implements IScan {
         if (lastPage <= 0) return { lastFlagNumber: flagNumber, eventLogs: result }
 
         const eventLogsRes = await this.callApi(`${API_URL[this.network]}/score/eventLogList`, {
-            scoreAddr: scoreAddr,
+            scoreAddr: xcallAddress,
             page: lastPage,
             count: limit
         })
@@ -60,9 +53,14 @@ export class HavahScan implements IScan {
             flagNumber = flagNumber + eventLogs.length
         }
 
-        if (eventLogs) {
-            for (let j = 0; j < eventLogs.length; j++) {
-                let eventLog = eventLogs[j]
+        let eventNames = [eventName]
+        if (!eventName) eventNames = Object.values(EVENT)
+
+        for (let j = 0; j < eventLogs.length; j++) {
+            let eventLog = eventLogs[j]
+
+            for (let index = 0; index < eventNames.length; index++) {
+                const eventName = eventNames[index]
 
                 // check event name correctly
                 if (eventLog.method.startsWith(`${eventName}(`)) {

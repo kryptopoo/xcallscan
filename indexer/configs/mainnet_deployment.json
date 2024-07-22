@@ -122,41 +122,41 @@
     },
     "contracts": {
         "icon": {
-            "bmc": "",
-            "xcall": "cxa07f426062a1384bdd762afa6a87d123fbc81c75"
+            "xcall": ["cxa07f426062a1384bdd762afa6a87d123fbc81c75"]
         },
         "bsc": {
-            "bmc": "",
-            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"
+            "xcall": ["0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"]
         },
         "eth2": {
-            "bmc": "",
-            "xcall": "0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"
+            "xcall": ["0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"]
         },
         "havah": {
-            "bmc": "cxcf2c8d58fd7bbd25866de0660b155f057ea489eb",
-            "xcall": "cx00104193d0a593c4b57fda544d1b7c88b8ed4fae"
+            "xcall": [
+                "cx00104193d0a593c4b57fda544d1b7c88b8ed4fae",
+                "cxcf2c8d58fd7bbd25866de0660b155f057ea489eb",
+                "cx9d6114d4187ee7ff7061a3faaf4dbc76b0c2c440"
+            ]
         },
         "ibc_archway": {
-            "xcall": "archway19hzhgd90etqc3z2qswumq80ag2d8het38r0al0r4ulrly72t20psdrpna6"
+            "xcall": ["archway19hzhgd90etqc3z2qswumq80ag2d8het38r0al0r4ulrly72t20psdrpna6"]
         },
         "ibc_neutron": {
-            "xcall": "neutron1g28ca6axwkar5fuhhfcgua2807njh795nvrz6qf75u3xpv805y7sugakf9"
+            "xcall": ["neutron1g28ca6axwkar5fuhhfcgua2807njh795nvrz6qf75u3xpv805y7sugakf9"]
         },
         "ibc_injective": {
-            "xcall": "inj177fx40l0g3jqmtmmuyl2zhrjvhr3knvthlr0ul"
+            "xcall": ["inj177fx40l0g3jqmtmmuyl2zhrjvhr3knvthlr0ul"]
         },
         "avax": {
-            "xcall": "0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"
+            "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         },
         "base": {
-            "xcall": "0x7fdde482956770D148E055f9d2893f84a1B6B00B"
+            "xcall": ["0x7fdde482956770D148E055f9d2893f84a1B6B00B"]
         },
         "arbitrum": {
-            "xcall": "0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"
+            "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         },
         "optimism": {
-            "xcall": "0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"
+            "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         }
     }
 }

@@ -1,4 +1,4 @@
-import { EVENT, NETWORK } from './common/constants'
+import { CONTRACT, EVENT, NETWORK } from './common/constants'
 import { Db } from './data/Db'
 import { IFetcher } from './interfaces/IFetcher'
 import { IScan } from './interfaces/IScan'
@@ -31,6 +31,7 @@ const runCmd = async () => {
         const network = args[1]
         const event = args[2]
         const flagNumber = args[3] ?? 0
+        const xcallAddress = args[4] ?? CONTRACT[network].xcall[0]
 
         if (network == NETWORK.ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX) {
             if (!event) {
@@ -41,19 +42,21 @@ const runCmd = async () => {
 
         let scan: IScan = ScanFactory.createScan(network)
 
-        const { lastFlagNumber, eventLogs } = await scan.getEventLogs(flagNumber, event)
+        const { lastFlagNumber, eventLogs } = await scan.getEventLogs(flagNumber, event, xcallAddress)
         console.log(
+            'eventLogs',
             eventLogs.map(function (item) {
                 delete item.txRaw
                 return item
             })
         )
+        console.log('lastFlagNumber', lastFlagNumber)
     }
     if (cmd == 'fetch') {
         const network = args[1]
         const event = args[2]?.split(',')
         const flagNumber = args[3] ?? 0
-        const updateCounter = false
+        const updateCounter = args[4] ? Boolean(args[4]) : false
 
         let fetcher: IFetcher = new Fetcher(network)
 

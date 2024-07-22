@@ -31,14 +31,14 @@ export class IconScan implements IScan {
         return { data: [], totalSize: 0, error: errorCode }
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 100
 
         // always get lastest block of events
         if (this.latestBlockNumber == 0) {
             const latestBlockRes = await this.callApi(`${API_URL[this.network]}/logs`, {
-                address: CONTRACT[this.network].xcall,
+                address: xcallAddress,
                 limit: 1,
                 skip: 0
             })
@@ -55,7 +55,7 @@ export class IconScan implements IScan {
         if (flagNumber == 0) {
             // for very first time
             const blockStartRes = await this.callApi(`${API_URL[this.network]}/logs`, {
-                address: CONTRACT[this.network].xcall,
+                address: xcallAddress,
                 limit: 1,
                 skip: this.totalCount - 1
             })
@@ -67,7 +67,7 @@ export class IconScan implements IScan {
         let blockEnd = blockStart + limit * 5
 
         const eventLogsRes = await this.callApi(`${API_URL[this.network]}/logs`, {
-            address: CONTRACT[this.network].xcall,
+            address: xcallAddress,
             method: eventName,
             block_start: blockStart,
             block_end: blockEnd,

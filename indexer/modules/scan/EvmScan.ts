@@ -34,14 +34,14 @@ export class EvmScan implements IScan {
         return []
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         const limit = 20
         let lastBlockNumber = flagNumber
         let result: EventLog[] = []
         let eventLogs = await this.callApi(API_URL[this.network], {
             module: 'logs',
             action: 'getLogs',
-            address: CONTRACT[this.network].xcall,
+            address: xcallAddress,
             fromBlock: flagNumber + 1,
             toBlock: 'latest',
             topic0: xcallInterface.getEventTopic(eventName),
@@ -119,9 +119,7 @@ export class EvmScan implements IScan {
 
                         try {
                             if (!log.eventData._decodedTo) {
-                                const sendCallInterface = new ethers.utils.Interface([
-                                    'function sendCall(string _to,bytes _data)'
-                                ])
+                                const sendCallInterface = new ethers.utils.Interface(['function sendCall(string _to,bytes _data)'])
                                 const decodedSendCall = sendCallInterface.decodeFunctionData('sendCall', tx.data)
                                 log.eventData._decodedTo = decodedSendCall[0]
                             }
@@ -156,7 +154,6 @@ export class EvmScan implements IScan {
                                     )
 
                                 if (decodedData) {
-                                    // const encodedTo = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`${BTP_NETWORK_ID[NETWORK.ICON]}/${CONTRACT[NETWORK.ICON].asset_manager}`))
                                     const assetManagerAddr = log.txTo
                                     const assetManagerContract = new ethers.Contract(assetManagerAddr, assetManagerAbi, this.provider)
                                     const iconAssetManagerAddr = await assetManagerContract.iconAssetManager()
