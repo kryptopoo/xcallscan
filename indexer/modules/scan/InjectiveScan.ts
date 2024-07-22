@@ -24,14 +24,14 @@ export class InjectiveScan implements IScan {
         }
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
         let scanCount = flagNumber
 
         // only fetch total in first time
         if (this.totalCount == 0) {
-            const countRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${CONTRACT[this.network].xcall}`, {
+            const countRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${xcallAddress}`, {
                 limit: 1,
                 skip: 0
             })
@@ -42,7 +42,7 @@ export class InjectiveScan implements IScan {
             const totalPages = Math.ceil(this.totalCount / limit)
             const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
             const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
-            const txsRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${CONTRACT[this.network].xcall}`, {
+            const txsRes = await this.callApi(`${API_URL[this.network]}/contractTxs/${xcallAddress}`, {
                 limit: limit,
                 skip: offset
             })

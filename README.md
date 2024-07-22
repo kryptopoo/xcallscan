@@ -48,9 +48,9 @@ xCallScan is typically made of:
 
 - Command
     ```bash
-    ts-node cmd scan <network> <event>
-    ts-node cmd fetch <network>
-    ts-node cmd sync <from_sn> <to_sn> <networks_separated_by_comma>
+    ts-node cmd scan <network> <event> <flag_number> <xcall_address>
+    ts-node cmd fetch <network> <event> <flag_number> <update_counter>
+    ts-node cmd sync <from_sn><comma_or_hyphen><to_sn> <networks_separated_by_comma>
     ```
 
 ### Api

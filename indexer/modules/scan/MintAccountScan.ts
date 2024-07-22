@@ -34,7 +34,7 @@ export class MintAccountScan implements IScan {
         return []
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
 
         const offsetTimestamp = 86400
@@ -43,7 +43,7 @@ export class MintAccountScan implements IScan {
         let lastBlockTimestamp = flagNumber == 0 ? SCAN_FROM_FLAG_NUMBER[this.network] : flagNumber
         const startTimestamp = toDateString(lastBlockTimestamp + 1)
         const endTimestamp = toDateString(lastBlockTimestamp + offsetTimestamp)
-        const baseUrl = `${API_URL[this.network]}/account/${CONTRACT[this.network].xcall}/txs`
+        const baseUrl = `${API_URL[this.network]}/account/${xcallAddress}/txs`
         let url = `${baseUrl}?searchType=${executeContractType}&limit=${limit}&startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`
 
         let txs: any[] = []

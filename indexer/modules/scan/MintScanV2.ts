@@ -29,7 +29,7 @@ export class MintScanV2 implements IScan {
         return undefined
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
 
@@ -45,9 +45,9 @@ export class MintScanV2 implements IScan {
 
         do {
             txsRes = await this.callApi(
-                `${API_URL[this.network]}/accounts/${
-                    CONTRACT[this.network].xcall
-                }/transactions?take=${limit}&messageTypes[0]=/cosmwasm.wasm.v1.MsgExecuteContract&fromDateTime=${fromDateTime}&toDateTime=${toDateTime}`,
+                `${
+                    API_URL[this.network]
+                }/accounts/${xcallAddress}/transactions?take=${limit}&messageTypes[0]=/cosmwasm.wasm.v1.MsgExecuteContract&fromDateTime=${fromDateTime}&toDateTime=${toDateTime}`,
                 searchAfter != undefined ? { searchAfter: searchAfter } : {}
             )
             searchAfter = txsRes.pagination.searchAfter

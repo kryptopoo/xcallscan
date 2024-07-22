@@ -34,14 +34,14 @@ export class MintContractScan implements IScan {
         return undefined
     }
 
-    async getEventLogs(flagNumber: number, eventName: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
         let scanCount = flagNumber
 
         // only fetch total in first time
         if (this.totalCount == 0) {
-            const countRes = await this.callApi(`${API_URL[this.network]}/wasm/contracts/${CONTRACT[this.network].xcall}`, {})
+            const countRes = await this.callApi(`${API_URL[this.network]}/wasm/contracts/${xcallAddress}`, {})
             this.totalCount = countRes.contract.executed_count
         }
 
@@ -49,10 +49,7 @@ export class MintContractScan implements IScan {
             const totalPages = Math.ceil(this.totalCount / limit)
             const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
             const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
-            const txsRes = await this.callApi(
-                `${API_URL[this.network]}/wasm/contracts/${CONTRACT[this.network].xcall}/txs?limit=${limit}&offset=${offset}`,
-                {}
-            )
+            const txsRes = await this.callApi(`${API_URL[this.network]}/wasm/contracts/${xcallAddress}/txs?limit=${limit}&offset=${offset}`, {})
 
             let txs = txsRes.txs as any[]
             txs = txs.sort((a, b) => {

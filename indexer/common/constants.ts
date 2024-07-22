@@ -94,55 +94,44 @@ const SERVICE_API_KEY = {
     SCRAPING_ANT: process.env.SCRAPING_ANT_API_KEY ?? ''
 }
 
-const CONTRACT: { [network: string]: { xcall: string; bmc: string } } = {
+const CONTRACT: { [network: string]: { xcall: string[] } } = {
     [NETWORK.ICON]: {
-        xcall: CONFIG_CONTRACTS.icon.xcall,
-        bmc: CONFIG_CONTRACTS.icon.bmc
+        xcall: CONFIG_CONTRACTS.icon.xcall
     },
     [NETWORK.BSC]: {
-        xcall: CONFIG_CONTRACTS.bsc.xcall,
-        bmc: CONFIG_CONTRACTS.bsc.bmc
+        xcall: CONFIG_CONTRACTS.bsc.xcall
     },
     [NETWORK.ETH2]: {
-        xcall: CONFIG_CONTRACTS.eth2.xcall,
-        bmc: CONFIG_CONTRACTS.eth2.bmc
+        xcall: CONFIG_CONTRACTS.eth2.xcall
     },
     [NETWORK.HAVAH]: {
-        xcall: CONFIG_CONTRACTS.havah.xcall,
-        bmc: CONFIG_CONTRACTS.havah.bmc
+        xcall: CONFIG_CONTRACTS.havah.xcall
     },
 
     // IBC
     [NETWORK.IBC_ARCHWAY]: {
-        xcall: CONFIG_CONTRACTS.ibc_archway.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.ibc_archway.xcall
     },
     [NETWORK.IBC_NEUTRON]: {
-        xcall: CONFIG_CONTRACTS.ibc_neutron.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.ibc_neutron.xcall
     },
     [NETWORK.IBC_INJECTIVE]: {
-        xcall: CONFIG_CONTRACTS.ibc_injective.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.ibc_injective.xcall
     },
 
     // AVAX
     [NETWORK.AVAX]: {
-        xcall: CONFIG_CONTRACTS.avax.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.avax.xcall
     },
 
     [NETWORK.BASE]: {
-        xcall: CONFIG_CONTRACTS.base.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.base.xcall
     },
     [NETWORK.ARBITRUM]: {
-        xcall: CONFIG_CONTRACTS.arbitrum.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.arbitrum.xcall
     },
     [NETWORK.OPTIMISM]: {
-        xcall: CONFIG_CONTRACTS.optimism.xcall,
-        bmc: ''
+        xcall: CONFIG_CONTRACTS.optimism.xcall
     }
 }
 

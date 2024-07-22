@@ -6,6 +6,7 @@ import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { EventModel } from '../../types/DataModels'
 import { ScanFactory } from '../scan/ScanFactory'
+import { shortAddress } from '../../common/helper'
 
 export class Fetcher implements IFetcher {
     private _db = new Db()
@@ -69,22 +70,49 @@ export class Fetcher implements IFetcher {
         await this._db.insertEvent(this.scan.network, eventModel)
     }
 
-    private async getCounter(eventName: string) {
+    private async getCounter(xcallAddress: string, eventName: string) {
         let flagName = this.scan.countName
-        // if (this.scan.network == NETWORK.HAVAH) flagName = 'CountNumber'
-        // if (this.scan.network == NETWORK.IBC_ARCHWAY) flagName = 'BlockTimestamp'
-        // if (this.scan.network == NETWORK.IBC_NEUTRON || this.scan.network == NETWORK.IBC_INJECTIVE) flagName = 'CountNumber'
 
-        let counterName = `${this.scan.network}_${eventName}_${flagName}`
+        let counterName =
+            CONTRACT[this.scan.network].xcall.length <= 1
+                ? `${this.scan.network}_${eventName}_${flagName}`
+                : `${this.scan.network}_${shortAddress(xcallAddress, '_')}_${eventName}_${flagName}`
         let counter = await this._db.getCounterByName(counterName)
         return counter
     }
 
     async fetchEvents(eventNames: string[], flagNumber: number = 0, updateCounter: boolean = true) {
+        // fetch each xcall address
+        const _this = this
+        let fetchTasks = []
+        for (let index = 0; index < CONTRACT[this.scan.network].xcall.length; index++) {
+            const xcallAddress = CONTRACT[this.scan.network].xcall[index]
+
+            fetchTasks.push(
+                new Promise(async function (resolve) {
+                    // await new Promise((res) => setTimeout(res, delay))
+                    let result = await _this.fetchEventsByAddress(xcallAddress, eventNames, flagNumber, updateCounter)
+                    resolve(result)
+                })
+            )
+        }
+
+        const results = await Promise.all(fetchTasks)
+        const finished = results.every((r) => r == true)
+
+        return finished
+    }
+
+    private async fetchEventsByAddress(xcallAddress: string, eventNames: string[], flagNumber: number = 0, updateCounter: boolean = true) {
         // fetch all events once
-        if (this.network == NETWORK.IBC_ARCHWAY || this.network == NETWORK.IBC_NEUTRON || this.network == NETWORK.IBC_INJECTIVE) {
+        if (
+            this.network == NETWORK.HAVAH ||
+            this.network == NETWORK.IBC_ARCHWAY ||
+            this.network == NETWORK.IBC_NEUTRON ||
+            this.network == NETWORK.IBC_INJECTIVE
+        ) {
             let finished = true
-            finished &&= await this.fetchEvent('', flagNumber, updateCounter)
+            finished &&= await this.fetchEventByAddress(xcallAddress, '', flagNumber, updateCounter)
             return finished
         } else {
             // fetch each event
@@ -98,7 +126,7 @@ export class Fetcher implements IFetcher {
                 promiseTasks.push(
                     new Promise(async function (resolve) {
                         await new Promise((res) => setTimeout(res, delay))
-                        let result = await _this.fetchEvent(eventNames[i], flagNumber, updateCounter)
+                        let result = await _this.fetchEventByAddress(xcallAddress, eventNames[i], flagNumber, updateCounter)
                         resolve(result)
                     })
                 )
@@ -113,19 +141,19 @@ export class Fetcher implements IFetcher {
         }
     }
 
-    private async fetchEvent(eventName: string, flagNumber: number = 0, updateCounter: boolean = true) {
+    private async fetchEventByAddress(xcallAddress: string, eventName: string, flagNumber: number = 0, updateCounter: boolean = true) {
         // skip if contract address is not configured
-        if (CONTRACT[this.scan.network].xcall == '0x0' || CONTRACT[this.scan.network].xcall == '') {
+        if (xcallAddress == '0x0' || xcallAddress == '') {
             logger.info(`${this.scan.network} skip fetching because xcall contract is not configured`)
             return true
         }
 
-        const counter = await this.getCounter(eventName)
+        const counter = await this.getCounter(xcallAddress, eventName)
         let fromFlagNumber = flagNumber > 0 ? flagNumber : counter.value
 
         logger.info(`${this.scan.network} fetching events ${counter.name} ${fromFlagNumber}`)
 
-        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName)
+        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName, xcallAddress)
 
         for (let i = 0; i < eventLogs.length; i++) {
             let eventLog = eventLogs[i]

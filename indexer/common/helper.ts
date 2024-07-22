@@ -26,4 +26,9 @@ const sleep = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export { nowTimestamp, lastWeekTimestamp, lastDaysTimestamp, toDateString, toTimestamp, sleep }
+const shortAddress = (address: string, betweenString: string = '...') => {
+    const shortAddr = `${address.substring(0, 5)}${betweenString}${address.substring(address.length - 4)}`
+    return shortAddr
+}
+
+export { nowTimestamp, lastWeekTimestamp, lastDaysTimestamp, toDateString, toTimestamp, sleep, shortAddress }

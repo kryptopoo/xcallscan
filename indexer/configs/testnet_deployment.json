@@ -87,42 +87,37 @@
     },
     "contracts": {
         "icon": {
-            "bmc": "",
-            "xcall": "cx15a339fa60bd86225050b22ea8cd4a9d7cd8bb83"
+            "xcall": ["cx15a339fa60bd86225050b22ea8cd4a9d7cd8bb83"]
         },
         "bsc": {
-            "bmc": "",
-            "xcall": "0xD59C71E42a1Fc070e4c2c94f0eAE0840043681D0"
+            "xcall": ["0xD59C71E42a1Fc070e4c2c94f0eAE0840043681D0"]
         },
         "eth2": {
-            "bmc": "",
-            "xcall": "0xB7039f15fFa33A6f44cA4913f33cE2adC0dbe71D"
+            "xcall": ["0xB7039f15fFa33A6f44cA4913f33cE2adC0dbe71D"]
         },
-
         "havah": {
-            "bmc": "cxbc156dbb9ce60e64d9ff02e5b95e206980b5cf5f",
-            "xcall": "cxd34a83458cb4adb49f48e411105f69ec35e3c3d5"
+            "xcall": ["cxd34a83458cb4adb49f48e411105f69ec35e3c3d5", "cxbc156dbb9ce60e64d9ff02e5b95e206980b5cf5f"]
         },
         "ibc_archway": {
-            "xcall": "archway1h04c8eqr99dnsw6wqx80juj2vtuxth70eh65cf6pnj4zan6ms4jqshc5wk"
+            "xcall": ["archway1h04c8eqr99dnsw6wqx80juj2vtuxth70eh65cf6pnj4zan6ms4jqshc5wk"]
         },
         "ibc_neutron": {
-            "xcall": "neutron164uehrt5zp6y9atz3x595zwad2vtk7gr5tpvmnj8nqqlc9a0g4xs4sqg0m"
+            "xcall": ["neutron164uehrt5zp6y9atz3x595zwad2vtk7gr5tpvmnj8nqqlc9a0g4xs4sqg0m"]
         },
         "ibc_injective": {
-            "xcall": "inj1mxqp64mphz2t79hz7dr4xl9593v7mrpy3srehm"
+            "xcall": ["inj1mxqp64mphz2t79hz7dr4xl9593v7mrpy3srehm"]
         },
         "avax": {
-            "xcall": "0x28ecb198e86a7FcA1cf51032635967fc26cDDAaD"
+            "xcall": ["0x28ecb198e86a7FcA1cf51032635967fc26cDDAaD"]
         },
         "base": {
-            "xcall": "0x0B59764C48297E768c135b8D072F9884a37EB84c"
+            "xcall": ["0x0B59764C48297E768c135b8D072F9884a37EB84c"]
         },
         "arbitrum": {
-            "xcall": "0x52eC9a532439AAB34FbbD20aFb3D2351fA982583"
+            "xcall": ["0x52eC9a532439AAB34FbbD20aFb3D2351fA982583"]
         },
         "optimism": {
-            "xcall": "0x9835d02616f76Dc5f92E689F49b08566CFAFafcA"
+            "xcall": ["0x9835d02616f76Dc5f92E689F49b08566CFAFafcA"]
         }
     }
 }
