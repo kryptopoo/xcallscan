@@ -26,10 +26,12 @@ export class Ws {
 
         // Creating connection using websocket
         this.wss.on('connection', (ws) => {
+            logger.info(`ws: new client connected`)
+
             // handling close connection
-            ws.on('close', () => {
-                logger.info(`ws: close connection`)
-            })
+            ws.onclose = function () {
+                logger.info(`ws: client closed connection`)
+            }
 
             // handling client connection error
             ws.onerror = function (error) {
