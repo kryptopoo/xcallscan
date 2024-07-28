@@ -18,7 +18,8 @@ const NETWORK = {
     AVAX: 'avax',
     BASE: 'base',
     ARBITRUM: 'arbitrum',
-    OPTIMISM: 'optimism'
+    OPTIMISM: 'optimism',
+    SUI: 'sui'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -56,7 +57,9 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.api,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -132,6 +135,10 @@ const CONTRACT: { [network: string]: { xcall: string[] } } = {
     },
     [NETWORK.OPTIMISM]: {
         xcall: CONFIG_CONTRACTS.optimism.xcall
+    },
+
+    [NETWORK.SUI]: {
+        xcall: CONFIG_CONTRACTS.sui.xcall
     }
 }
 

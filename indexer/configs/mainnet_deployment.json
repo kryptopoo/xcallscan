@@ -118,6 +118,14 @@
             "btp_network_id": "0xa.optimism",
             "block_height": 0,
             "block_timestamp": 0
+        },
+        "sui": {
+            "api": "https://suiscan.xyz/api/sui-backend/testnet-wave-3/api",
+            "uri": "",
+            "uris": [],
+            "btp_network_id": "",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -157,6 +165,9 @@
         },
         "optimism": {
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
+        },
+        "sui": {
+            "xcall": ["0x25f664e39077e1e7815f06a82290f2aa488d7f5139913886ad8948730a98977d"]
         }
     }
 }
