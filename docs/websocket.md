@@ -2,24 +2,30 @@
 
 xCallScan enables one-way socket connections, allow the client side to subscribe to new messages in real time.
 
+## URLs
+- `Mainnet`: wss://xcallscan.xyz/ws
+- `Testnet`: wss://testnet.xcallscan.xyz/ws
 
-### Html example
+
+## Examples
+
+### Html
 
 ```javascript
-const ws = new WebSocket("ws://localhost:8080");
+const ws = new WebSocket('wss://xcallscan.xyz/ws')
 ws.addEventListener('message', function (event) {
-    console.log(event.data);
-});
+    console.log(event.data)
+})
 ```
 
-### Nodejs example
+### Nodejs
 
 https://www.npmjs.com/package/ws
 
 ```javascript
-import WebSocket from 'ws';
-const ws = new WebSocket('ws://localhost:8080');
+import WebSocket from 'ws'
+const ws = new WebSocket('wss://xcallscan.xyz/ws')
 ws.on('message', function message(data) {
-  console.log('received: %s', data);
-});
+    console.log('received', JSON.parse(data.toString()))
+})
 ```
