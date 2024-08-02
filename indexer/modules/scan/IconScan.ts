@@ -31,8 +31,8 @@ export class IconScan implements IScan {
         return { data: [], totalSize: 0, error: errorCode }
     }
 
-    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
-        let convertFlagNumberToNumber = Number(flagNumber)
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
+        let flagNumber = Number(flag)
         let result: EventLog[] = []
         const limit = 100
 
@@ -45,15 +45,15 @@ export class IconScan implements IScan {
             })
 
             // do nothing if error
-            if (latestBlockRes.error) return { lastFlagNumber: convertFlagNumberToNumber.toString(), eventLogs: [] }
+            if (latestBlockRes.error) return { lastFlag: flagNumber.toString(), eventLogs: [] }
 
             this.latestBlockNumber = latestBlockRes.data[0]?.block_number ?? 0
             this.totalCount = parseInt(latestBlockRes.headers['x-total-count'])
         }
 
         // set blockStart, blockEnd
-        let blockStart = convertFlagNumberToNumber
-        if (convertFlagNumberToNumber == 0) {
+        let blockStart = flagNumber
+        if (flagNumber == 0) {
             // for very first time
             const blockStartRes = await this.callApi(`${API_URL[this.network]}/logs`, {
                 address: xcallAddress,
@@ -76,7 +76,7 @@ export class IconScan implements IScan {
         })
 
         // do nothing if error
-        if (eventLogsRes.error) return { lastFlagNumber: convertFlagNumberToNumber.toString(), eventLogs: [] }
+        if (eventLogsRes.error) return { lastFlag: flagNumber.toString(), eventLogs: [] }
 
         const eventLogs = eventLogsRes.data
         if (eventLogs) {
@@ -115,7 +115,7 @@ export class IconScan implements IScan {
             }
         }
 
-        return { lastFlagNumber: blockEnd > this.latestBlockNumber ? this.latestBlockNumber.toString() : blockEnd.toString(), eventLogs: result }
+        return { lastFlag: blockEnd > this.latestBlockNumber ? this.latestBlockNumber.toString() : blockEnd.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLog: any, eventName: string) {

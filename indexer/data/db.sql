@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.messages
     "status" varchar(20),
 
     src_network varchar(20),
-    src_block_number varchar(50),
+    src_block_number bigint,
     src_block_timestamp bigint,
     src_tx_hash varchar(100),
     src_app varchar(100),
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.icon_events
     from_decoded varchar(200),
     to_decoded varchar(200),
 
-    block_number varchar(50),
+    block_number bigint,
     block_timestamp bigint,
     tx_hash varchar(100),
     tx_from varchar(100),
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS public.eth2_events
     from_decoded varchar(200),
     to_decoded varchar(200),
 
-    block_number varchar(50),
+    block_number bigint,
     block_timestamp bigint,
     tx_hash varchar(100),
     tx_from varchar(100),
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS public.bsc_events
     from_decoded varchar(200),
     to_decoded varchar(200),
 
-    block_number varchar(50),
+    block_number bigint,
     block_timestamp bigint,
     tx_hash varchar(100),
     tx_from varchar(100),
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS public.havah_events
     from_decoded varchar(200),
     to_decoded varchar(200),
 
-    block_number varchar(50),
+    block_number bigint,
     block_timestamp bigint,
     tx_hash varchar(100),
     tx_from varchar(100),
@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS public.sui_events
     from_decoded varchar(200),
     to_decoded varchar(200),
 
-    block_number varchar(50),
+    block_number bigint,
     block_timestamp bigint,
     tx_hash varchar(100),
     tx_from varchar(100),

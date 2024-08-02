@@ -34,15 +34,16 @@ export class EvmScan implements IScan {
         return []
     }
 
-    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         const limit = 20
-        let lastBlockNumber = Number(flagNumber)
+        let flagNumber: number = Number(flag)
+        let lastBlockNumber = flagNumber
         let result: EventLog[] = []
         let eventLogs = await this.callApi(API_URL[this.network], {
             module: 'logs',
             action: 'getLogs',
             address: xcallAddress,
-            fromBlock: Number(flagNumber) + 1,
+            fromBlock: flagNumber + 1,
             toBlock: 'latest',
             topic0: xcallInterface.getEventTopic(eventName),
             page: 1,
@@ -71,7 +72,7 @@ export class EvmScan implements IScan {
 
                 let log: EventLog = {
                     txRaw: tx,
-                    blockNumber: eventLog.blockNumber,
+                    blockNumber: ethers.BigNumber.from(eventLog.blockNumber).toNumber(),
                     blockTimestamp: ethers.BigNumber.from(eventLog.timeStamp).toNumber(),
                     txHash: eventLog.transactionHash,
                     txFrom: tx.from,
@@ -264,7 +265,7 @@ export class EvmScan implements IScan {
             }
         }
 
-        return { lastFlagNumber: lastBlockNumber.toString(), eventLogs: result }
+        return { lastFlag: lastBlockNumber.toString(), eventLogs: result }
     }
 
     private async decodeFunction(abi: any, funcName: string, data: string) {

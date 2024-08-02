@@ -26,10 +26,11 @@ export class CelatoneScan implements IScan {
         return { items: [], count: 0 }
     }
 
-    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
-        let scanCount = Number(flagNumber)
+        const flagNumber: number = Number(flag)
+        let scanCount = flagNumber
 
         // only fetch total in first time
         if (this.totalCount == 0) {
@@ -42,7 +43,7 @@ export class CelatoneScan implements IScan {
 
         if (scanCount < this.totalCount) {
             const totalPages = Math.ceil(this.totalCount / limit)
-            const flagPageIndex = totalPages - Math.ceil(Number(flagNumber) / limit) - 1
+            const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
             const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
             const txsRes = await this.callApi(`${API_URL[this.network]}/accounts/${xcallAddress}/txs`, {
                 limit: limit,
@@ -80,7 +81,7 @@ export class CelatoneScan implements IScan {
                     if (decodeEventLog) {
                         let log: EventLog = {
                             txRaw: txDetail.raw_log,
-                            blockNumber: txDetail.height,
+                            blockNumber: Number(txDetail.height),
                             blockTimestamp: Math.floor(new Date(txDetail.timestamp).getTime() / 1000),
                             txHash: txDetail.txhash,
                             txFrom: msgExecuteContract.sender,
@@ -101,7 +102,7 @@ export class CelatoneScan implements IScan {
             if (scanCount > this.totalCount) scanCount = this.totalCount
         }
 
-        return { lastFlagNumber: scanCount.toString(), eventLogs: result }
+        return { lastFlag: scanCount.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLogs: any[], eventName: string) {

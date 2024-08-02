@@ -24,8 +24,8 @@ export class HavahScan implements IScan {
         return { data: [], totalSize: 0 }
     }
 
-    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
-        let convertFlagNumberToNumber = Number(flagNumber)
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
+        let flagNumber = Number(flag)
         const limit = 20
 
         let result: EventLog[] = []
@@ -38,8 +38,8 @@ export class HavahScan implements IScan {
         })
 
         const totalCount = Number(latestEventRes.totalSize)
-        const lastPage = Math.ceil((totalCount - convertFlagNumberToNumber) / limit)
-        if (lastPage <= 0) return { lastFlagNumber: convertFlagNumberToNumber.toString(), eventLogs: result }
+        const lastPage = Math.ceil((totalCount - flagNumber) / limit)
+        if (lastPage <= 0) return { lastFlag: flagNumber.toString(), eventLogs: result }
 
         const eventLogsRes = await this.callApi(`${API_URL[this.network]}/score/eventLogList`, {
             scoreAddr: xcallAddress,
@@ -48,10 +48,10 @@ export class HavahScan implements IScan {
         })
 
         const eventLogs = eventLogsRes.data
-        if (convertFlagNumberToNumber + eventLogs.length > totalCount) {
-            convertFlagNumberToNumber = totalCount
+        if (flagNumber + eventLogs.length > totalCount) {
+            flagNumber = totalCount
         } else {
-            convertFlagNumberToNumber = convertFlagNumberToNumber + eventLogs.length
+            flagNumber = flagNumber + eventLogs.length
         }
 
         let eventNames = [eventName]
@@ -93,7 +93,7 @@ export class HavahScan implements IScan {
             }
         }
 
-        return { lastFlagNumber: convertFlagNumberToNumber.toString(), eventLogs: result }
+        return { lastFlag: flagNumber.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLog: string, eventName: string) {

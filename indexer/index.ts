@@ -10,9 +10,6 @@ async function run() {
     const syncer = new Syncer(networks)
     logger.info('start indexing networks', networks)
 
-    // fetch SUI networks
-    await fetch(NETWORK.SUI)
-
     // fetch data between networks
     // fetch ICON networks
     cron.schedule(`*/30 * * * * *`, async () => {

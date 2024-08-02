@@ -34,10 +34,11 @@ export class MintContractScan implements IScan {
         return undefined
     }
 
-    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
-        let scanCount = Number(flagNumber)
+        let flagNumber: number = Number(flag)
+        let scanCount = flagNumber
 
         // only fetch total in first time
         if (this.totalCount == 0) {
@@ -47,7 +48,7 @@ export class MintContractScan implements IScan {
 
         if (scanCount < this.totalCount) {
             const totalPages = Math.ceil(this.totalCount / limit)
-            const flagPageIndex = totalPages - Math.ceil(Number(flagNumber) / limit) - 1
+            const flagPageIndex = totalPages - Math.ceil(flagNumber / limit) - 1
             const offset = (flagPageIndex > 0 ? flagPageIndex : 0) * limit
             const txsRes = await this.callApi(`${API_URL[this.network]}/wasm/contracts/${xcallAddress}/txs?limit=${limit}&offset=${offset}`, {})
 
@@ -72,7 +73,7 @@ export class MintContractScan implements IScan {
                     if (decodeEventLog) {
                         let log: EventLog = {
                             txRaw: tx.data.raw_log,
-                            blockNumber: tx.data.height,
+                            blockNumber: Number(tx.data.height),
                             blockTimestamp: Math.floor(new Date(tx.data.timestamp).getTime() / 1000),
                             txHash: tx.data.txhash,
                             txFrom: msgExecuteContract.sender,
@@ -93,7 +94,7 @@ export class MintContractScan implements IScan {
             if (scanCount > this.totalCount) scanCount = this.totalCount
         }
 
-        return { lastFlagNumber: scanCount.toString(), eventLogs: result }
+        return { lastFlag: scanCount.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLogs: any[], eventName: string) {

@@ -5,7 +5,7 @@ export type EventLog = {
     decodedFrom?: string
     decodedTo?: string
 
-    blockNumber: string
+    blockNumber: number
     blockTimestamp: number
     txHash: string
     txFrom: string

@@ -26,11 +26,11 @@ export class SuiScan implements IScan {
         return { data: [] }
     }
 
-    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let results: EventLog[] = []
 
         let isNextPage: boolean = false
-        let nextCursor: string = flagNumber
+        let nextCursor: string = flag
         do {
             const params: any = {
                 orderBy: 'ASC',
@@ -66,11 +66,11 @@ export class SuiScan implements IScan {
                             const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
 
                             const log: EventLog = {
-                                blockNumber: txDetail.rawTransaction.result.checkpoint,
+                                blockNumber: Number(txDetail.rawTransaction.result.checkpoint),
                                 blockTimestamp: Math.floor(new Date(Number(txDetail.rawTransaction.result.timestampMs)).getTime() / 1000),
                                 txHash: txDetail.activityMetadata[0].activityWith[0].hash,
-                                txFrom: decodeEventLog._from,
-                                txTo: decodeEventLog._to,
+                                txFrom: decodeEventLog?._from,
+                                txTo: decodeEventLog?._to,
                                 eventName: eventName,
                                 eventData: decodeEventLog
                             }
@@ -82,7 +82,7 @@ export class SuiScan implements IScan {
             }
         } while (isNextPage)
 
-        return { lastFlagNumber: nextCursor, eventLogs: results }
+        return { lastFlag: nextCursor, eventLogs: results }
     }
 
     private async getTransactionDetail(txHash: string) {

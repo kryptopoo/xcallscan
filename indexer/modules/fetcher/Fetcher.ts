@@ -153,7 +153,7 @@ export class Fetcher implements IFetcher {
 
         logger.info(`${this.scan.network} fetching events ${counter.name} ${fromFlagNumber}`)
 
-        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName, xcallAddress)
+        let { lastFlag, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName, xcallAddress)
 
         for (let i = 0; i < eventLogs.length; i++) {
             let eventLog = eventLogs[i]
@@ -169,8 +169,8 @@ export class Fetcher implements IFetcher {
             }
         }
 
-        const finished = lastFlagNumber == counter.value
-        if (!finished && updateCounter) await this._db.updateCounter(counter.name, lastFlagNumber)
+        const finished = lastFlag == counter.value
+        if (!finished && updateCounter) await this._db.updateCounter(counter.name, lastFlag)
 
         return finished
     }
