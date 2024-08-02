@@ -1,3 +1,3 @@
 export interface IFetcher {
-    fetchEvents(eventNames: string[], blockNumber: number, updateCounter: boolean): Promise<boolean>
+    fetchEvents(eventNames: string[], blockNumber: string, updateCounter: boolean): Promise<boolean>
 }

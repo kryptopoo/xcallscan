@@ -11,7 +11,7 @@ export type EventModel = {
     from_decoded?: string
     to_decoded?: string
 
-    block_number: number
+    block_number: string
     block_timestamp: number
     tx_hash: string
     tx_from?: string
@@ -26,7 +26,7 @@ export type MessageModel = {
     status?: string
 
     src_network?: string
-    src_block_number?: number
+    src_block_number?: string
     src_block_timestamp?: number
     src_tx_hash?: string
     src_app?: string

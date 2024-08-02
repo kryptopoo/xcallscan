@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 
-import { API_URL } from '../../common/constants'
+import { API_URL, EVENT } from '../../common/constants'
 import { sleep } from '../../common/helper'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
@@ -8,7 +8,7 @@ import logger from '../logger/logger'
 import AxiosCustomInstance from './AxiosCustomInstance'
 
 export class SuiScan implements IScan {
-    countName: string = 'CountNumber'
+    countName: string = 'NextCursor'
 
     constructor(public network: string) {}
 
@@ -26,11 +26,11 @@ export class SuiScan implements IScan {
         return { data: [] }
     }
 
-    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flagNumber: string, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: string; eventLogs: EventLog[] }> {
         let results: EventLog[] = []
 
         let isNextPage: boolean = false
-        let nextCursor: string | null = null
+        let nextCursor: string = flagNumber
         do {
             const params: any = {
                 orderBy: 'ASC',
@@ -56,35 +56,33 @@ export class SuiScan implements IScan {
 
                     if (txDetail) {
                         const eventsOfTxDetail: any[] = txDetail.rawTransaction.result.events
-                        for (let y = 0; y < eventsOfTxDetail.length; y++) {
-                            const eventOfTxDetail = eventsOfTxDetail[y]
 
-                            // e.g: eventOfTxDetail.type = 0x25f664e39077e1e7815f06a82290f2aa488d7f5139913886ad8948730a98977d::main::CallMessage
-                            const eventNameOfTx = eventOfTxDetail.type.split('::')[2]
-                            if (eventName === eventNameOfTx) {
-                                const decodeEventLog = this.decodeEventLog(eventOfTxDetail)
+                        let eventNames = [eventName]
+                        if (!eventName) eventNames = Object.values(EVENT)
 
-                                const log: EventLog = {
-                                    txRaw: '',
-                                    blockNumber: 0,
-                                    blockTimestamp: Math.floor(new Date(Number(txDetail.rawTransaction.result.timestampMs)).getTime() / 1000),
-                                    txHash: txDetail.activityMetadata[0].activityWith[0].hash,
-                                    txFrom: decodeEventLog._from,
-                                    txTo: decodeEventLog._to,
+                        for (let z = 0; z < eventNames.length; z++) {
+                            const eventName = eventNames[z]
 
-                                    eventName: eventName,
-                                    eventData: decodeEventLog
-                                }
+                            const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
 
-                                results.push(log)
+                            const log: EventLog = {
+                                blockNumber: txDetail.rawTransaction.result.checkpoint,
+                                blockTimestamp: Math.floor(new Date(Number(txDetail.rawTransaction.result.timestampMs)).getTime() / 1000),
+                                txHash: txDetail.activityMetadata[0].activityWith[0].hash,
+                                txFrom: decodeEventLog._from,
+                                txTo: decodeEventLog._to,
+                                eventName: eventName,
+                                eventData: decodeEventLog
                             }
+
+                            results.push(log)
                         }
                     }
                 }
             }
         } while (isNextPage)
 
-        return { lastFlagNumber: 0, eventLogs: results }
+        return { lastFlagNumber: nextCursor, eventLogs: results }
     }
 
     private async getTransactionDetail(txHash: string) {
@@ -104,31 +102,42 @@ export class SuiScan implements IScan {
         }
     }
 
-    private decodeEventLog(eventOfTxDetail: any) {
-        let rs: any = {}
+    private decodeEventLog(eventsOfTxDetail: any[], eventName: string) {
+        const eventLog: any = eventsOfTxDetail.find((e) => {
+            // e.g: e.type = 0x25f664e39077e1e7815f06a82290f2aa488d7f5139913886ad8948730a98977d::main::CallMessage
+            const eventNameOfTx = e.type.split('::')[2]
 
-        rs._sn = Number(eventOfTxDetail.parsedJson.sn)
-        rs._from = eventOfTxDetail.sender
-        rs._decodedFrom = eventOfTxDetail.sender
-        rs._to = eventOfTxDetail.parsedJson?.to
-        rs._decodedTo = eventOfTxDetail.parsedJson?.to
-        rs._reqId = eventOfTxDetail.parsedJson?.req_id
+            return eventName === eventNameOfTx
+        })
 
-        const data = eventOfTxDetail.parsedJson?.data
+        if (eventLog) {
+            let rs: any = {}
 
-        if (data) {
-            if (data.toString().startsWith('[') && data.toString().endsWith(']')) {
-                const bytesArr = data
-                    .replace(/[\[\]]/g, '')
-                    .split(',')
-                    .map((x: any) => Number(x))
-                const dataHex = ethers.utils.hexlify(bytesArr)
-                rs._data = dataHex
-            } else {
-                rs._data = data
+            rs._sn = Number(eventLog.parsedJson.sn)
+            rs._from = eventLog.sender
+            rs._decodedFrom = eventLog.sender
+            rs._to = eventLog.parsedJson?.to
+            rs._decodedTo = eventLog.parsedJson?.to
+            rs._reqId = eventLog.parsedJson?.req_id
+
+            const data = eventLog.parsedJson?.data
+
+            if (data) {
+                if (data.toString().startsWith('[') && data.toString().endsWith(']')) {
+                    const bytesArr = data
+                        .replace(/[\[\]]/g, '')
+                        .split(',')
+                        .map((x: any) => Number(x))
+                    const dataHex = ethers.utils.hexlify(bytesArr)
+                    rs._data = dataHex
+                } else {
+                    rs._data = data
+                }
             }
+
+            return rs
         }
 
-        return rs
+        return undefined
     }
 }

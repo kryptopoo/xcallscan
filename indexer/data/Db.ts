@@ -38,18 +38,18 @@ class Db {
     }
 
     async getCounterByName(name: string) {
-        let result = { name: name, value: 0 }
+        let result = { name: name, value: '0' }
         const counterRs = await this.pool.query('SELECT * FROM counter where name = $1', [name])
 
         if (counterRs && counterRs.rows.length > 0) {
             result.name = counterRs.rows[0].name.trim().toString()
-            result.value = parseInt(counterRs.rows[0].value)
+            result.value = counterRs.rows[0].value
         }
 
         return result
     }
 
-    async updateCounter(name: string, value: number) {
+    async updateCounter(name: string, value: string) {
         const counterRs = await this.pool.query('SELECT * FROM counter where name = $1', [name])
         if (counterRs && counterRs.rows.length > 0) {
             // value = value > counterRs.rows[0].value ? value : counterRs.rows[0].value
@@ -246,7 +246,7 @@ class Db {
         src_network: string,
         dest_network: string,
         src_app: string,
-        dest_block_number: number,
+        dest_block_number: string,
         dest_block_timestamp: number,
         dest_tx_hash: string,
         status: string
@@ -272,7 +272,7 @@ class Db {
         src_network: string,
         dest_network: string,
         src_app: string,
-        rollback_block_number: number,
+        rollback_block_number: string,
         rollback_block_timestamp: number,
         rollback_tx_hash: string,
         rollback_error: string | undefined,
@@ -310,7 +310,7 @@ class Db {
         src_network: string,
         dest_network: string,
         src_app: string,
-        response_block_number: number,
+        response_block_number: string,
         response_block_timestamp: number,
         response_tx_hash: string,
         rollback_error: string | undefined,
@@ -349,7 +349,7 @@ class Db {
         dest_network: string,
         src_app: string,
         src_error: string | undefined,
-        dest_block_number: number,
+        dest_block_number: string,
         dest_block_timestamp: number,
         dest_tx_hash: string,
         dest_error: string | undefined,
