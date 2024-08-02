@@ -41,13 +41,15 @@ export class Ws {
         })
 
         const broadcast = (data: any) => {
-            logger.info(`[ws] broadcast to ${wss.clients.size} clients`)
+            if (wss.clients.size == 0) {
+                logger.info(`[ws] broadcast: no client connected`)
+            }
             let clientIndex = 0
             wss.clients.forEach((client) => {
                 clientIndex += 1
                 if (client.readyState === client.OPEN) {
                     client.send(JSON.stringify(data))
-                    logger.info(`[ws] send client ${clientIndex} ${JSON.stringify(data)}`)
+                    logger.info(`[ws] broadcast: client ${clientIndex} ${JSON.stringify(data)}`)
                 }
             })
         }
