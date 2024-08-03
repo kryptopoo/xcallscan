@@ -21,7 +21,8 @@ export class ScanFactory {
             network == NETWORK.ETH2 ||
             network == NETWORK.BASE ||
             network == NETWORK.ARBITRUM ||
-            network == NETWORK.OPTIMISM
+            network == NETWORK.OPTIMISM ||
+            network == NETWORK.POLYGON
         ) {
             scan = new EvmScan(network)
         }

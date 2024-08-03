@@ -19,7 +19,8 @@ const NETWORK = {
     BASE: 'base',
     ARBITRUM: 'arbitrum',
     OPTIMISM: 'optimism',
-    SUI: 'sui'
+    SUI: 'sui',
+    POLYGON: 'polygon',
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -30,7 +31,9 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uri,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.uri,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri,
+
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri,
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -41,7 +44,9 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uris,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uris,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
+
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
 }
 
 const API_URL: { [network: string]: string } = {
@@ -59,7 +64,8 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api,
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -90,7 +96,9 @@ const API_KEY: { [network: string]: string } = {
 
     [NETWORK.BASE]: process.env.SCAN_BASE_API_KEY ?? '',
     [NETWORK.ARBITRUM]: process.env.SCAN_ARBITRUM_API_KEY ?? '',
-    [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? ''
+    [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? '',
+
+    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? '',
 }
 
 const SERVICE_API_KEY = {
@@ -139,6 +147,9 @@ const CONTRACT: { [network: string]: { xcall: string[] } } = {
 
     [NETWORK.SUI]: {
         xcall: CONFIG_CONTRACTS.sui.xcall
+    },
+    [NETWORK.POLYGON]: {
+        xcall: CONFIG_CONTRACTS.polygon.xcall
     }
 }
 

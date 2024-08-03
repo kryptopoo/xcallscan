@@ -91,6 +91,14 @@
             "btp_network_id": "",
             "block_height": 0,
             "block_timestamp": 0
+        },
+        "polygon": {
+            "api": "https://api-amoy.polygonscan.com/api",
+            "uri": "https://rpc-amoy.polygon.technology",
+            "uris": [],
+            "btp_network_id": "0x13882.polygon",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -129,6 +137,9 @@
         },
         "sui": {
             "xcall": ["0x25f664e39077e1e7815f06a82290f2aa488d7f5139913886ad8948730a98977d"]
+        },
+        "polygon": {
+            "xcall": ["0x0B59764C48297E768c135b8D072F9884a37EB84c"]
         }
     }
 }
