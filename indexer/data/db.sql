@@ -51,7 +51,7 @@ DROP TABLE IF EXISTS public.counter;
 CREATE TABLE IF NOT EXISTS public.counter
 (
     "name" varchar(50) NOT NULL,
-    "value" bigint,
+    "value" varchar(50),
     CONSTRAINT counter_pkey PRIMARY KEY (name)
 );
 

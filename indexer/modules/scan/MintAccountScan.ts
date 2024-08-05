@@ -34,8 +34,9 @@ export class MintAccountScan implements IScan {
         return []
     }
 
-    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
+        let flagNumber: number = Number(flag)
 
         const offsetTimestamp = 86400
         const limit = 20
@@ -97,7 +98,7 @@ export class MintAccountScan implements IScan {
 
         if (lastBlockTimestamp + offsetTimestamp < nowTimestamp()) lastBlockTimestamp += offsetTimestamp
 
-        return { lastFlagNumber: lastBlockTimestamp, eventLogs: result }
+        return { lastFlag: lastBlockTimestamp.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLogs: any[], eventName: string) {

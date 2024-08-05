@@ -116,9 +116,9 @@ export class Syncer {
                     logger.info(`${destNetwork} try fetching events ${EVENT.CallExecuted} sn:${sn}`)
 
                     try {
-                        const fromBlockNumber = Number(destEvents[0].block_number)
+                        const fromBlockNumber = destEvents[0].block_number
                         const fetcher = new Fetcher(destNetwork)
-                        await fetcher.fetchEvents([EVENT.CallExecuted], fromBlockNumber, false)
+                        await fetcher.fetchEvents([EVENT.CallExecuted], fromBlockNumber.toString(), false)
                     } catch (error: any) {
                         logger.error(`${destNetwork} try fetching events sn:${sn} failed ${error.message}`)
                     }

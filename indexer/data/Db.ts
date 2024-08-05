@@ -38,18 +38,18 @@ class Db {
     }
 
     async getCounterByName(name: string) {
-        let result = { name: name, value: 0 }
+        let result = { name: name, value: '0' }
         const counterRs = await this.pool.query('SELECT * FROM counter where name = $1', [name])
 
         if (counterRs && counterRs.rows.length > 0) {
             result.name = counterRs.rows[0].name.trim().toString()
-            result.value = parseInt(counterRs.rows[0].value)
+            result.value = counterRs.rows[0].value
         }
 
         return result
     }
 
-    async updateCounter(name: string, value: number) {
+    async updateCounter(name: string, value: string) {
         const counterRs = await this.pool.query('SELECT * FROM counter where name = $1', [name])
         if (counterRs && counterRs.rows.length > 0) {
             // value = value > counterRs.rows[0].value ? value : counterRs.rows[0].value

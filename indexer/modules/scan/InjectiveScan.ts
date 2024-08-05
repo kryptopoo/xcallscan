@@ -24,9 +24,10 @@ export class InjectiveScan implements IScan {
         }
     }
 
-    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
+        let flagNumber: number = Number(flag)
         let scanCount = flagNumber
 
         // only fetch total in first time
@@ -92,7 +93,7 @@ export class InjectiveScan implements IScan {
             if (scanCount > this.totalCount) scanCount = this.totalCount
         }
 
-        return { lastFlagNumber: scanCount, eventLogs: result }
+        return { lastFlag: scanCount.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLogs: any[], eventName: string) {

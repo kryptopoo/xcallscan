@@ -118,6 +118,27 @@
             "btp_network_id": "0xa.optimism",
             "block_height": 0,
             "block_timestamp": 0
+        },
+        "sui": {
+            "api": "https://suiscan.xyz/api/sui-backend/testnet-wave-3/api",
+            "uri": "",
+            "uris": [],
+            "btp_network_id": "",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "polygon": {
+            "api": "https://api-amoy.polygonscan.com/api",
+            "uri": "https://polygon.llamarpc.com",
+            "uris": [
+                "https://polygon.llamarpc.com",
+                "https://rpc-mainnet.matic.quiknode.pro",
+                "https://polygon.blockpi.network/v1/rpc/public",
+                "https://rpc-mainnet.matic.quiknode.pro"
+            ],
+            "btp_network_id": "0x89.polygon",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -156,6 +177,12 @@
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         },
         "optimism": {
+            "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
+        },
+        "sui": {
+            "xcall": [""]
+        },
+        "polygon": {
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         }
     }

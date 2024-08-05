@@ -30,10 +30,10 @@ const runCmd = async () => {
     if (cmd == 'scan') {
         const network = args[1]
         const event = args[2]
-        const flagNumber = args[3] ?? 0
+        const flagNumber = args[3] ?? '0'
         const xcallAddress = args[4] ?? CONTRACT[network].xcall[0]
 
-        if (network == NETWORK.ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX) {
+        if (network == NETWORK.ICON || network == NETWORK.ETH2 || network == NETWORK.BSC || network == NETWORK.AVAX || network == NETWORK.POLYGON) {
             if (!event) {
                 console.log('eventName is required')
                 return
@@ -42,7 +42,7 @@ const runCmd = async () => {
 
         let scan: IScan = ScanFactory.createScan(network)
 
-        const { lastFlagNumber, eventLogs } = await scan.getEventLogs(flagNumber, event, xcallAddress)
+        const { lastFlag, eventLogs } = await scan.getEventLogs(flagNumber, event, xcallAddress)
         console.log(
             'eventLogs',
             eventLogs.map(function (item) {
@@ -50,7 +50,7 @@ const runCmd = async () => {
                 return item
             })
         )
-        console.log('lastFlagNumber', lastFlagNumber)
+        console.log('lastFlag', lastFlag)
     }
     if (cmd == 'fetch') {
         const network = args[1]

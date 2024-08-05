@@ -81,7 +81,7 @@ export class Fetcher implements IFetcher {
         return counter
     }
 
-    async fetchEvents(eventNames: string[], flagNumber: number = 0, updateCounter: boolean = true) {
+    async fetchEvents(eventNames: string[], flagNumber: string = '0', updateCounter: boolean = true) {
         // fetch each xcall address
         const _this = this
         let fetchTasks = []
@@ -103,7 +103,7 @@ export class Fetcher implements IFetcher {
         return finished
     }
 
-    private async fetchEventsByAddress(xcallAddress: string, eventNames: string[], flagNumber: number = 0, updateCounter: boolean = true) {
+    private async fetchEventsByAddress(xcallAddress: string, eventNames: string[], flagNumber: string = '0', updateCounter: boolean = true) {
         // fetch all events once
         if (
             this.network == NETWORK.HAVAH ||
@@ -141,7 +141,7 @@ export class Fetcher implements IFetcher {
         }
     }
 
-    private async fetchEventByAddress(xcallAddress: string, eventName: string, flagNumber: number = 0, updateCounter: boolean = true) {
+    private async fetchEventByAddress(xcallAddress: string, eventName: string, flagNumber: string = '0', updateCounter: boolean = true) {
         // skip if contract address is not configured
         if (xcallAddress == '0x0' || xcallAddress == '') {
             logger.info(`${this.scan.network} skip fetching because xcall contract is not configured`)
@@ -149,11 +149,11 @@ export class Fetcher implements IFetcher {
         }
 
         const counter = await this.getCounter(xcallAddress, eventName)
-        let fromFlagNumber = flagNumber > 0 ? flagNumber : counter.value
+        let fromFlagNumber = flagNumber !== '0' ? flagNumber : counter.value
 
         logger.info(`${this.scan.network} fetching events ${counter.name} ${fromFlagNumber}`)
 
-        let { lastFlagNumber, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName, xcallAddress)
+        let { lastFlag, eventLogs } = await this.scan.getEventLogs(fromFlagNumber, eventName, xcallAddress)
 
         for (let i = 0; i < eventLogs.length; i++) {
             let eventLog = eventLogs[i]
@@ -169,8 +169,8 @@ export class Fetcher implements IFetcher {
             }
         }
 
-        const finished = lastFlagNumber == counter.value
-        if (!finished && updateCounter) await this._db.updateCounter(counter.name, lastFlagNumber)
+        const finished = lastFlag == counter.value
+        if (!finished && updateCounter) await this._db.updateCounter(counter.name, lastFlag)
 
         return finished
     }

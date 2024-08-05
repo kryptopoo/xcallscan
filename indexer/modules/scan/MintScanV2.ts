@@ -29,9 +29,10 @@ export class MintScanV2 implements IScan {
         return undefined
     }
 
-    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let result: EventLog[] = []
         const limit = 20
+        let flagNumber: number = Number(flag)
 
         const offsetTimestamp = 86400
         let lastBlockTimestamp = flagNumber == 0 ? SCAN_FROM_FLAG_NUMBER[this.network] : flagNumber
@@ -101,7 +102,7 @@ export class MintScanV2 implements IScan {
             lastBlockTimestamp = maxBlockTimestamp
         }
 
-        return { lastFlagNumber: lastBlockTimestamp, eventLogs: result }
+        return { lastFlag: lastBlockTimestamp.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLogs: any[], eventName: string) {

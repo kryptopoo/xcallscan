@@ -5,5 +5,5 @@ export interface IScan {
     countName: string
 
     callApi(apiUrl: string, params: any): Promise<any>
-    getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }>
+    getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }>
 }

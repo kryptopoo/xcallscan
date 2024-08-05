@@ -7,6 +7,7 @@ import { IconScan } from './IconScan'
 import { InjectiveScan } from './InjectiveScan'
 import { MintAccountScan } from './MintAccountScan'
 import { MintScanV2 } from './MintScanV2'
+import { SuiScan } from './SuiScan'
 
 export class ScanFactory {
     static createScan(network: string) {
@@ -20,7 +21,8 @@ export class ScanFactory {
             network == NETWORK.ETH2 ||
             network == NETWORK.BASE ||
             network == NETWORK.ARBITRUM ||
-            network == NETWORK.OPTIMISM
+            network == NETWORK.OPTIMISM ||
+            network == NETWORK.POLYGON
         ) {
             scan = new EvmScan(network)
         }
@@ -36,6 +38,9 @@ export class ScanFactory {
         }
         if (network == NETWORK.AVAX) {
             scan = new EvmScan(network)
+        }
+        if (network == NETWORK.SUI) {
+            scan = new SuiScan(network)
         }
 
         return scan

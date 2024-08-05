@@ -24,7 +24,8 @@ export class HavahScan implements IScan {
         return { data: [], totalSize: 0 }
     }
 
-    async getEventLogs(flagNumber: number, eventName: string, xcallAddress: string): Promise<{ lastFlagNumber: number; eventLogs: EventLog[] }> {
+    async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
+        let flagNumber = Number(flag)
         const limit = 20
 
         let result: EventLog[] = []
@@ -38,7 +39,7 @@ export class HavahScan implements IScan {
 
         const totalCount = Number(latestEventRes.totalSize)
         const lastPage = Math.ceil((totalCount - flagNumber) / limit)
-        if (lastPage <= 0) return { lastFlagNumber: flagNumber, eventLogs: result }
+        if (lastPage <= 0) return { lastFlag: flagNumber.toString(), eventLogs: result }
 
         const eventLogsRes = await this.callApi(`${API_URL[this.network]}/score/eventLogList`, {
             scoreAddr: xcallAddress,
@@ -92,7 +93,7 @@ export class HavahScan implements IScan {
             }
         }
 
-        return { lastFlagNumber: flagNumber, eventLogs: result }
+        return { lastFlag: flagNumber.toString(), eventLogs: result }
     }
 
     private decodeEventLog(eventLog: string, eventName: string) {
