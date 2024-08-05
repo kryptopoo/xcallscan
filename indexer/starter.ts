@@ -39,7 +39,7 @@ const startIndexer = async () => {
     // fetch evm networks
     cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
-            [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2, NETWORK.HAVAH].map((network) => {
+            [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2, NETWORK.HAVAH, NETWORK.POLYGON].map((network) => {
                 return fetch(network)
             })
         )
