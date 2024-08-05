@@ -129,9 +129,14 @@
         },
         "polygon": {
             "api": "https://api-amoy.polygonscan.com/api",
-            "uri": "https://rpc-amoy.polygon.technology",
-            "uris": [],
-            "btp_network_id": "",
+            "uri": "https://polygon.llamarpc.com",
+            "uris": [
+                "https://polygon.llamarpc.com",
+                "https://rpc-mainnet.matic.quiknode.pro",
+                "https://polygon.blockpi.network/v1/rpc/public",
+                "https://rpc-mainnet.matic.quiknode.pro"
+            ],
+            "btp_network_id": "0x89.polygon",
             "block_height": 0,
             "block_timestamp": 0
         }
@@ -178,7 +183,7 @@
             "xcall": [""]
         },
         "polygon": {
-            "xcall": [""]
+            "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         }
     }
 }

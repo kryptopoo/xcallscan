@@ -9,7 +9,9 @@ const NETWORK = {
     AVAX: 'avax',
     BASE: 'base',
     ARBITRUM: 'arbitrum',
-    OPTIMISM: 'optimism'
+    OPTIMISM: 'optimism',
+    SUI: 'sui',
+    POLYGON: 'polygon'
 }
 
 const NATIVE_ASSET = {
@@ -23,7 +25,9 @@ const NATIVE_ASSET = {
     [NETWORK.AVAX]: 'AVAX',
     [NETWORK.BASE]: 'ETH',
     [NETWORK.ARBITRUM]: 'ETH',
-    [NETWORK.OPTIMISM]: 'ETH'
+    [NETWORK.OPTIMISM]: 'ETH',
+    [NETWORK.SUI]: 'SUI',
+    [NETWORK.POLYGON]: 'MATIC',
 }
 
 const getNativeAsset = (network) => {

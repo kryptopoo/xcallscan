@@ -27,7 +27,9 @@ const NETWORK = {
     AVAX: 'avax',
     BASE: 'base',
     ARBITRUM: 'arbitrum',
-    OPTIMISM: 'optimism'
+    OPTIMISM: 'optimism',
+    SUI: 'sui',
+    POLYGON: 'polygon'
 }
 
 const metaUrls = {
@@ -44,7 +46,9 @@ const metaUrls = {
         [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/tx/' : 'https://testnet.snowtrace.io/tx/',
         [NETWORK.BASE]: useMainnet ? 'https://basescan.org/tx/' : 'https://sepolia.basescan.org/tx/',
         [NETWORK.ARBITRUM]: useMainnet ? 'https://arbiscan.io/tx/' : 'https://sepolia.arbiscan.io/tx/',
-        [NETWORK.OPTIMISM]: useMainnet ? 'https://optimistic.etherscan.io/tx/' : 'https://sepolia-optimism.etherscan.io/tx/'
+        [NETWORK.OPTIMISM]: useMainnet ? 'https://optimistic.etherscan.io/tx/' : 'https://sepolia-optimism.etherscan.io/tx/',
+        [NETWORK.SUI]: useMainnet ? 'https://suiscan.xyz/mainnet/tx/' : 'https://suiscan.xyz/testnet/tx/',
+        [NETWORK.POLYGON]: useMainnet ? 'https://polygonscan.com/tx/' : 'https://amoy.polygonscan.com/tx/'
     }
 }
 

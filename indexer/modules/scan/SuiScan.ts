@@ -31,40 +31,34 @@ export class SuiScan implements IScan {
 
         let isNextPage: boolean = false
         let nextCursor: string = flag
-        do {
-            const params: any = {
-                orderBy: 'ASC',
-                size: 20,
-                objectSourceType: 'INPUT_OBJECT'
-            }
-            if (nextCursor) {
-                params['nextCursor'] = nextCursor
-            }
+        const params: any = {
+            orderBy: 'ASC',
+            size: 20,
+            objectSourceType: 'INPUT_OBJECT'
+        }
+        if (nextCursor) {
+            params['nextCursor'] = nextCursor
+        }
 
-            const eventLogsRes = await this.callApi(`${API_URL[this.network]}/objects/${xcallAddress}/transactions`, params)
+        const eventLogsRes = await this.callApi(`${API_URL[this.network]}/objects/${xcallAddress}/transactions`, params)
+        const eventLogs = eventLogsRes.content
+        const lastFlag = eventLogsRes.nextCursor
+        if (eventLogs) {
+            for (let i = 0; i < eventLogs.length; i++) {
+                const eventLog = eventLogs[i]
+                const txDetail = await this.getTransactionDetail(eventLog.hash)
+                if (txDetail) {
+                    const eventsOfTxDetail: any[] = txDetail.rawTransaction.result.events
 
-            isNextPage = eventLogsRes.hasNextPage
-            nextCursor = eventLogsRes.nextCursor
+                    let eventNames = [eventName]
+                    if (!eventName) eventNames = Object.values(EVENT)
 
-            const eventLogs = eventLogsRes.content
+                    for (let z = 0; z < eventNames.length; z++) {
+                        const eventName = eventNames[z]
 
-            if (eventLogs) {
-                for (let i = 0; i < eventLogs.length; i++) {
-                    const eventLog = eventLogs[i]
+                        const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
 
-                    const txDetail = await this.getTransactionDetail(eventLog.hash)
-
-                    if (txDetail) {
-                        const eventsOfTxDetail: any[] = txDetail.rawTransaction.result.events
-
-                        let eventNames = [eventName]
-                        if (!eventName) eventNames = Object.values(EVENT)
-
-                        for (let z = 0; z < eventNames.length; z++) {
-                            const eventName = eventNames[z]
-
-                            const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
-
+                        if (decodeEventLog) {
                             const log: EventLog = {
                                 blockNumber: Number(txDetail.rawTransaction.result.checkpoint),
                                 blockTimestamp: Math.floor(new Date(Number(txDetail.rawTransaction.result.timestampMs)).getTime() / 1000),
@@ -80,9 +74,9 @@ export class SuiScan implements IScan {
                     }
                 }
             }
-        } while (isNextPage)
+        }
 
-        return { lastFlag: nextCursor, eventLogs: results }
+        return { lastFlag: lastFlag, eventLogs: results }
     }
 
     private async getTransactionDetail(txHash: string) {
@@ -105,34 +99,82 @@ export class SuiScan implements IScan {
     private decodeEventLog(eventsOfTxDetail: any[], eventName: string) {
         const eventLog: any = eventsOfTxDetail.find((e) => {
             // e.g: e.type = 0x25f664e39077e1e7815f06a82290f2aa488d7f5139913886ad8948730a98977d::main::CallMessage
-            const eventNameOfTx = e.type.split('::')[2]
-
+            const eventNameOfTx = e.type.split('::').pop()
             return eventName === eventNameOfTx
         })
 
         if (eventLog) {
             let rs: any = {}
+            switch (eventName) {
+                case EVENT.CallMessageSent:
+                    console.log(eventName, eventLog.parsedJson)
 
-            rs._sn = Number(eventLog.parsedJson.sn)
-            rs._from = eventLog.sender
-            rs._decodedFrom = eventLog.sender
-            rs._to = eventLog.parsedJson?.to
-            rs._decodedTo = eventLog.parsedJson?.to
-            rs._reqId = eventLog.parsedJson?.req_id
+                    // // TODO: parse here
+                    // rs._from =
+                    // rs._to =
+                    // rs._sn =
+                    // rs._nsn =
+                    // rs._decodedFrom =
+                    // rs._decodedTo =
 
-            const data = eventLog.parsedJson?.data
+                    break
+                case EVENT.ResponseMessage:
+                    rs._sn = Number(eventLog.parsedJson.sn)
+                    rs._code = eventLog.parsedJson?.response_code
 
-            if (data) {
-                if (data.toString().startsWith('[') && data.toString().endsWith(']')) {
-                    const bytesArr = data
-                        .replace(/[\[\]]/g, '')
-                        .split(',')
-                        .map((x: any) => Number(x))
-                    const dataHex = ethers.utils.hexlify(bytesArr)
-                    rs._data = dataHex
-                } else {
-                    rs._data = data
-                }
+                    break
+                case EVENT.RollbackMessage:
+                    rs._sn = Number(eventLog.parsedJson.sn)
+                    if (eventLog?.parsedJson?.data) {
+                        const dataHex = ethers.utils.hexlify(eventLog?.parsedJson?.data)
+                        rs._data = dataHex
+                    }
+
+                    break
+                case EVENT.RollbackExecuted:
+                    console.log(eventName, eventLog.parsedJson)
+
+                    // // TODO: parse here
+                    // rs._sn =
+                    // rs._code =
+                    // rs._msg =
+
+                    break
+                case EVENT.MessageReceived:
+                    console.log(eventName, eventLog.parsedJson)
+
+                    // // TODO: parse here
+                    // rs._from =
+                    // rs._data =
+                    // rs._decodedFrom =
+
+                    break
+                case EVENT.CallMessage:
+                    rs._sn = Number(eventLog.parsedJson.sn)
+                    rs._from = eventLog.parsedJson?.from ? `${eventLog.parsedJson?.from.net_id}/${eventLog.parsedJson?.from.addr}` : undefined
+                    rs._decodedFrom = rs._from
+                    rs._to = eventLog?.parsedJson?.to
+                    rs._decodedTo = eventLog?.parsedJson?.to
+                    rs._reqId = Number(eventLog?.parsedJson?.req_id)
+
+                    const data = eventLog?.parsedJson?.data
+                    if (data) {
+                        const dataHex = ethers.utils.hexlify(data)
+                        rs._data = dataHex
+                    }
+                    break
+
+                case EVENT.CallExecuted:
+                    console.log(eventName, eventLog.parsedJson)
+
+                    // // TODO parse here
+                    // rs._reqId =
+                    // rs._code =
+                    // rs._msg =
+
+                    break
+                default:
+                    break
             }
 
             return rs
