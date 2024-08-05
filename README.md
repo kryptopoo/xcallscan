@@ -43,7 +43,12 @@ xCallScan is typically made of:
 
 - Start indexer
     ```bash
-    npm start
+    npm run indexer
+    ```
+
+- Start web socket
+    ```bash
+    npm run ws
     ```
 
 - Command
