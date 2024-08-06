@@ -22,7 +22,9 @@ export class Ws {
         this.wss = new WebSocketServer({ noServer: true })
 
         // init server
-        this.server = createServer()
+        this.server = createServer((req, res) => {
+            res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,**Authorization**');
+        })
     }
 
     async start() {
