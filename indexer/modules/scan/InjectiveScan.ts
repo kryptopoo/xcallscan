@@ -63,7 +63,12 @@ export class InjectiveScan implements IScan {
                 if (!tx.logs || tx.logs.length == 0) continue
 
                 const eventLogs: any[] = tx.logs[0].events
-                const msgExecuteContract = tx.messages.find((t: any) => t.type == '/cosmwasm.wasm.v1.MsgExecuteContract')
+                let msgExecuteContract = tx.messages.find((t: any) => t.type == '/cosmwasm.wasm.v1.MsgExecuteContract')
+
+                // try get in another type
+                if (!msgExecuteContract) {
+                    msgExecuteContract = tx.messages.find((t: any) => t.type == '/injective.wasmx.v1.MsgExecuteContractCompat')
+                }
 
                 for (let index = 0; index < eventNames.length; index++) {
                     const eventName = eventNames[index]
