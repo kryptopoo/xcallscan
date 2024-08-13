@@ -176,6 +176,20 @@ class Db {
     }
 
     // MESSAGE
+    async getMessage(fromNetwork: string, toNetwork: string, sn: number) {
+        const rs = await this.pool.query(`SELECT * FROM messages WHERE src_network = $1 AND dest_network = $2 AND sn = $3`, [
+            fromNetwork,
+            toNetwork,
+            sn
+        ])
+        return rs.rowCount == 0 ? undefined : rs.rows[0]
+    }
+
+    async getMessageBySn(sn: number) {
+        const rs = await this.pool.query(`SELECT * FROM messages WHERE sn = $1`, [sn])
+        return rs.rows
+    }
+
     async insertMessage(message: MessageModel) {
         const existedTxs = await this.pool.query(`SELECT 1 FROM messages where sn = $1 and src_network = $2 and dest_network = $3`, [
             message.sn,
