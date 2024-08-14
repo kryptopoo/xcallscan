@@ -1,26 +1,9 @@
-import path from 'path'
-import dotenv from 'dotenv'
-import fs from 'fs'
-
-function getAppRootDir() {
-    let currentDir = __dirname
-    while (!fs.existsSync(path.join(currentDir, 'package.json'))) {
-        currentDir = path.join(currentDir, '..')
-    }
-    return currentDir
-}
-
-const envPath = path.resolve(getAppRootDir(), '.env')
-console.log('envPath', envPath)
-dotenv.config({ path: envPath })
-
 import logger from '../logger/logger'
 import { ethers } from 'ethers'
-import axios, { AxiosInstance } from 'axios'
+import axios from 'axios'
 import { API_KEY, API_URL, NETWORK, RPC_URL, RPC_URLS, USE_MAINNET } from '../../common/constants'
 import { cosmosAddress, sleep } from '../../common/helper'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
-import { Db } from '../../data/Db'
 
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
