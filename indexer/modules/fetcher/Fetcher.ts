@@ -106,6 +106,7 @@ export class Fetcher implements IFetcher {
     private async fetchEventsByAddress(xcallAddress: string, eventNames: string[], flagNumber: string = '0', updateCounter: boolean = true) {
         // fetch all events once
         if (
+            this.network == NETWORK.SUI ||
             this.network == NETWORK.HAVAH ||
             this.network == NETWORK.IBC_ARCHWAY ||
             this.network == NETWORK.IBC_NEUTRON ||

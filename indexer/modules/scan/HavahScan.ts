@@ -4,7 +4,7 @@ import { API_URL, EVENT, NETWORK, CONTRACT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import AxiosCustomInstance from './AxiosCustomInstance'
-import { sleep } from '../../common/helper'
+import { localDateToTimestamp, sleep } from '../../common/helper'
 
 export class HavahScan implements IScan {
     countName: string = 'CountNumber'
@@ -76,7 +76,8 @@ export class HavahScan implements IScan {
                     let log: EventLog = {
                         txRaw: tx,
                         blockNumber: eventLog.height,
-                        blockTimestamp: Math.floor(new Date(eventLog.timestamp).getTime() / 1000),
+                        // blockTimestamp: Math.floor(new Date(eventLog.timestamp).getTime() / 1000),
+                        blockTimestamp: localDateToTimestamp(eventLog.timestamp), // havah always return local time
                         txHash: eventLog.txHash,
                         txFrom: tx.fromAddr,
                         txTo: tx.toAddr,

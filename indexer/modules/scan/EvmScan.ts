@@ -26,7 +26,7 @@ export class EvmScan implements IScan {
                 params: params
             })
 
-            if (res.data.result) return res.data.result as any[]
+            if (res.data.message == 'OK' && res.data.result) return res.data.result as any[]
         } catch (error: any) {
             logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
@@ -59,7 +59,7 @@ export class EvmScan implements IScan {
             try {
                 decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
             } catch (error: any) {
-                logger.error(`${this.network} ${eventName} decodeEventLog error ${error.code}`)
+                logger.error(`${this.network} ${eventName} decodeEventLog error ${error?.code}`)
             }
 
             if (decodeEventLog) {

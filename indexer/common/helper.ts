@@ -22,6 +22,18 @@ const toTimestamp = (date: Date) => {
     return timestamp
 }
 
+const localDateToTimestamp = (localDateStr: string) => {
+    const localDate = new Date(localDateStr)
+    const offset = new Date().getTimezoneOffset()
+    if (offset != 0) {
+        const utcDate = new Date()
+        utcDate.setTime(localDate.getTime() - offset * 60 * 1000)
+        return toTimestamp(utcDate)
+    }
+
+    return toTimestamp(localDate)
+}
+
 const sleep = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -31,4 +43,4 @@ const shortAddress = (address: string, betweenString: string = '...') => {
     return shortAddr
 }
 
-export { nowTimestamp, lastWeekTimestamp, lastDaysTimestamp, toDateString, toTimestamp, sleep, shortAddress }
+export { nowTimestamp, lastWeekTimestamp, lastDaysTimestamp, toDateString, toTimestamp, localDateToTimestamp, sleep, shortAddress }

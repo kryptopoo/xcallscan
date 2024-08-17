@@ -120,10 +120,10 @@
             "block_timestamp": 0
         },
         "sui": {
-            "api": "https://suiscan.xyz/api/sui-backend/testnet-wave-3/api",
+            "api": "https://suiscan.xyz/api/sui-backend/mainnet/api",
             "uri": "",
             "uris": [],
-            "btp_network_id": "",
+            "btp_network_id": "sui",
             "block_height": 0,
             "block_timestamp": 0
         },
@@ -180,7 +180,7 @@
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
         },
         "sui": {
-            "xcall": [""]
+            "xcall": ["0x522db921ec57618419eff7c403d430ef886a45e9d9551009ac4babdb330e0e3b"]
         },
         "polygon": {
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]

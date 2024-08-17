@@ -39,9 +39,11 @@ const startIndexer = async () => {
     // fetch evm networks
     cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
-            [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2, NETWORK.HAVAH, NETWORK.POLYGON].map((network) => {
-                return fetch(network)
-            })
+            [NETWORK.AVAX, NETWORK.BSC, NETWORK.BASE, NETWORK.ARBITRUM, NETWORK.OPTIMISM, NETWORK.ETH2, NETWORK.HAVAH, NETWORK.POLYGON].map(
+                (network) => {
+                    return fetch(network)
+                }
+            )
         )
     })
 
@@ -49,6 +51,15 @@ const startIndexer = async () => {
     cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
             [NETWORK.IBC_ARCHWAY, NETWORK.IBC_INJECTIVE, NETWORK.IBC_NEUTRON].map((network) => {
+                return fetch(network)
+            })
+        )
+    })
+
+    // fetch sui network
+    cron.schedule(`30 */${interval} * * * *`, async () => {
+        await Promise.all(
+            [NETWORK.SUI].map((network) => {
                 return fetch(network)
             })
         )
