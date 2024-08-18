@@ -63,11 +63,11 @@ Search messages by tx hash or serial number
 - `value`: tx hash OR sn
 
 
-## /statistics/total_messages
+## /api/statistics/total_messages
 
 Get total number of messages
 
-#### *GET* `base_url/statistics/total_messages`
+#### *GET* `base_url/api/statistics/total_messages`
 
 #### Params:
 
