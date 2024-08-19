@@ -49,6 +49,18 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris
 }
 
+const WSS: { [network: string]: string } = {
+    [NETWORK.ICON]: 'https://ctz.solidwallet.io/api/v3/icon_dex',
+    // [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uris,
+    // [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uris,
+    // [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+    [NETWORK.AVAX]: 'https://ava-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3/ext/bc/C/rpc',
+    // [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
+    [NETWORK.ARBITRUM]: 'https://arb-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf'
+    // [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
+    // [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
+}
+
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.api,
@@ -63,9 +75,9 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api,
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -200,5 +212,6 @@ export {
     RPC_URLS,
     BTP_NETWORK_ID,
     SERVICE_API_KEY,
-    SCAN_FROM_FLAG_NUMBER
+    SCAN_FROM_FLAG_NUMBER,
+    WSS
 }

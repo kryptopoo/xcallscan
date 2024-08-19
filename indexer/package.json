@@ -9,6 +9,7 @@
     "start": "ts-node index.ts",
     "indexer": "ts-node start-indexer.ts",
     "ws": "ts-node start-ws.ts",
+    "subscriber": "ts-node start-subscriber.ts",
     "init-data": "ts-node cmd db init",
     "docker-start": "tsc && ts-node index.ts"
   },
@@ -29,7 +30,7 @@
     "axios": "^1.6.8",
     "dotenv": "^16.3.1",
     "ethers": "^5.7.2",
-    "icon-sdk-js": "^1.5.1",
+    "icon-sdk-js": "^1.5.2",
     "minimist": "^1.2.8",
     "node-cron": "^3.0.2",
     "pg": "^8.11.2",

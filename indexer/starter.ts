@@ -1,10 +1,13 @@
 import cron from 'node-cron'
-import { EVENT, NETWORK, USE_MAINNET } from './common/constants'
+import { CONTRACT, EVENT, NETWORK, USE_MAINNET } from './common/constants'
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
 import logger from './modules/logger/logger'
 import { Ws } from './modules/ws/ws'
 import dotenv from 'dotenv'
+import { IconDecoder } from './modules/decoder/IconDecoder'
+import { IconSubscriber } from './modules/subscriber/IconSubscriber'
+import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -82,4 +85,28 @@ const startWs = () => {
     ws.start()
 }
 
-export default { startIndexer, startWs }
+const startSubscriber = () => {
+    logger.info('start subscriber...')
+
+    const abi = require('./abi/xcall.abi.json')
+
+    // ICON
+    const iconSubscriber = new IconSubscriber(NETWORK.ICON, CONTRACT[NETWORK.ICON].xcall[0], new IconDecoder())
+    iconSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${iconSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+
+    // ARBITRUM
+    const arbSubscriber = new EvmSubscriber(NETWORK.ARBITRUM, CONTRACT[NETWORK.ARBITRUM].xcall[0], abi)
+    arbSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${arbSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+
+    // AVAX
+    const avaxSubscriber = new EvmSubscriber(NETWORK.AVAX, CONTRACT[NETWORK.AVAX].xcall[0], abi)
+    avaxSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${avaxSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+}
+
+export default { startIndexer, startWs, startSubscriber }
