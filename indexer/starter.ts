@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 import { IconDecoder } from './modules/decoder/IconDecoder'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
+import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -106,6 +107,18 @@ const startSubscriber = () => {
     const avaxSubscriber = new EvmSubscriber(NETWORK.AVAX, CONTRACT[NETWORK.AVAX].xcall[0], abi)
     avaxSubscriber.subscribe((data: any) => {
         logger.info(`[subscriber] ${avaxSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+
+    // IBC_INJECTIVE
+    const injSubscriber = new IbcSubscriber(NETWORK.IBC_INJECTIVE, CONTRACT[NETWORK.IBC_INJECTIVE].xcall[0])
+    injSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${injSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+
+    // IBC_ARCHWAY
+    const archSubscriber = new IbcSubscriber(NETWORK.IBC_ARCHWAY, CONTRACT[NETWORK.IBC_ARCHWAY].xcall[0])
+    archSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${archSubscriber.network} callback ${JSON.stringify(data)}`)
     })
 }
 

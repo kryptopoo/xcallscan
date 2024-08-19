@@ -56,9 +56,12 @@ const WSS: { [network: string]: string } = {
     // [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
     [NETWORK.AVAX]: 'https://ava-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3/ext/bc/C/rpc',
     // [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
-    [NETWORK.ARBITRUM]: 'https://arb-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf'
+    [NETWORK.ARBITRUM]: 'https://arb-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
     // [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
     // [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
+
+    [NETWORK.IBC_INJECTIVE]: 'wss://sentry.tm.injective.network:443/websocket',
+    [NETWORK.IBC_ARCHWAY]: 'wss://rpc.constantine.archway.io:443/websocket'
 }
 
 const API_URL: { [network: string]: string } = {
