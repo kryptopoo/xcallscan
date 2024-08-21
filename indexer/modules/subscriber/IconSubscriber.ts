@@ -1,7 +1,7 @@
 import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFilter, BigNumber } from 'icon-sdk-js'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS, WSS } from '../../common/constants'
-import logger from '../logger/logger'
+import { subscriberLogger as logger } from '../logger/logger'
 import { IconDecoder } from '../decoder/IconDecoder'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
@@ -55,11 +55,11 @@ export class IconSubscriber implements ISubscriber {
                 const data = await func()
                 return data
             } catch (error: any) {
-                logger.error(`[subscriber] ${this.network} retry error ${error.code}`)
+                logger.error(`${this.network} retry error ${error.code}`)
                 if (attempt < maxRetries) {
                     await sleep(retryDelay)
                 } else {
-                    logger.error(`[subscriber] ${this.network} retry failed`)
+                    logger.error(`${this.network} retry failed`)
                 }
             }
         }
@@ -68,8 +68,8 @@ export class IconSubscriber implements ISubscriber {
     }
 
     async subscribe(calbback: ISubscriberCallback) {
-        logger.info(`[subscriber] ${this.network} connect ${WSS[this.network]}`)
-        logger.info(`[subscriber] ${this.network} listen events on ${this.contractAddress}`)
+        logger.info(`${this.network} connect ${WSS[this.network]}`)
+        logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
         const iconEventNames = [
             'CallMessageSent(Address,str,int)',
@@ -80,17 +80,17 @@ export class IconSubscriber implements ISubscriber {
             'RollbackExecuted(int)'
         ]
         const onerror = (error: any) => {
-            logger.info(`[subscriber] ${this.network} error ${JSON.stringify(error)}`)
+            logger.info(`${this.network} error ${JSON.stringify(error)}`)
         }
         const onprogress = (height: BigNumber) => {
-            // logger.info(`[subscriber] ${this.network} height ${height.toString()}`)
+            // logger.info(`${this.network} height ${height.toString()}`)
         }
         const ondata = async (notification: EventNotification) => {
-            logger.info(`[subscriber] ${this.network} ${JSON.stringify(notification)}`)
+            logger.info(`${this.network} ${JSON.stringify(notification)}`)
 
             const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
             const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
-            logger.info(`[subscriber] ${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
+            logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
 
             try {
                 if (decodeEventLog) {
@@ -106,12 +106,12 @@ export class IconSubscriber implements ISubscriber {
                         tx.eventLogs = txDetail.eventLogs
                         const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
 
-                        logger.info(`[subscriber] ${this.network} eventLog ${JSON.stringify(eventLog)}`)
+                        logger.info(`${this.network} eventLog ${JSON.stringify(eventLog)}`)
                         calbback(eventLog)
                     }
                 }
             } catch (error) {
-                logger.error(`[subscriber] ${this.network} error ${JSON.stringify(error)}`)
+                logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
         }
 

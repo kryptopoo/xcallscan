@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, WSS } from '../../common/constants'
-import logger from '../logger/logger'
+import { subscriberLogger as logger } from '../logger/logger'
 import { IbcDecoder } from '../decoder/IbcDecoder'
 import { v4 as uuidv4 } from 'uuid'
 import { toHex } from '@cosmjs/encoding'
@@ -91,8 +91,8 @@ export class IbcSubscriber implements ISubscriber {
 
     subscribe(callback: ISubscriberCallback) {
         try {
-            logger.info(`[subscriber] ${this.network} connect ${WSS[this.network]}`)
-            logger.info(`[subscriber] ${this.network} listen events on ${this.contractAddress}`)
+            logger.info(`${this.network} connect ${WSS[this.network]}`)
+            logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
             // Open a new WebSocket connection to the specified URL.
             this.ws = new WebSocket(WSS[this.network])
@@ -108,32 +108,32 @@ export class IbcSubscriber implements ISubscriber {
             }
             // When the WebSocket connection is established, send the subscription request.
             this.ws.on('open', () => {
-                logger.info(`[subscriber] ${this.network} ws open sending the subscription request`)
+                logger.info(`${this.network} ws open sending the subscription request`)
                 this.ws.send(JSON.stringify(this.wsQuery))
             })
             // When a message (i.e., a matching transaction) is received, log the transaction and close the WebSocket connection.
             this.ws.on('message', async (event: any) => {
-                // logger.info(`[subscriber] ${this.network} onmessage ${JSON.stringify(event)}`)
+                // logger.info(`${this.network} onmessage ${JSON.stringify(event)}`)
                 const eventData = JSON.parse(event)
                 if (eventData && eventData.result && eventData.result.data) {
-                    logger.info(`[subscriber] ${this.network} eventData ${JSON.stringify(eventData.result.data)}`)
+                    logger.info(`${this.network} eventData ${JSON.stringify(eventData.result.data)}`)
                     // this.disconnectFromWebsocket()
 
                     const events = eventData.result.data.value.TxResult.result.events as any[]
                     const eventName = this.getEventName(events)
                     const eventLogData = await this.decoder.decodeEventLog(events, eventName)
-                    logger.info(`[subscriber] ${this.network} ${eventName} decodeEventLog ${JSON.stringify(eventLogData)}`)
+                    logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(eventLogData)}`)
 
                     if (eventLogData) {
                         const txRaw = eventData.result.data.value.TxResult.tx
                         const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
-                        console.log(`[subscriber] ${this.network} txHash ${txHash}`)
+                        console.log(`${this.network} txHash ${txHash}`)
 
                         const client = await StargateClient.connect(RPC_URL[this.network])
                         const tx = await client.getTx(txHash)
                         if (tx) {
                             const block = await client.getBlock(tx?.height)
-                            console.log(`[subscriber] ${this.network} tx.events ${JSON.stringify(tx?.events)}`)
+                            console.log(`${this.network} tx.events ${JSON.stringify(tx?.events)}`)
 
                             const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
                             callback(eventLog)
@@ -143,28 +143,28 @@ export class IbcSubscriber implements ISubscriber {
             })
             // If an error occurs with the WebSocket, log the error and close the WebSocket connection.
             this.ws.on('error', (error: any) => {
-                logger.error(`[subscriber] ${this.network} error ${JSON.stringify(error)}`)
+                logger.error(`${this.network} error ${JSON.stringify(error)}`)
                 this.disconnectFromWebsocket()
             })
             this.ws.on('close', (code, reason) => {
-                logger.error(`[subscriber] ${this.network} close ${code} ${reason}`)
+                logger.error(`${this.network} close ${code} ${reason}`)
                 this.disconnectFromWebsocket()
             })
             this.ws.on('ping', (data) => {
-                // logger.error(`[subscriber] ${this.network} ping ${JSON.stringify(data)}`)
+                // logger.error(`${this.network} ping ${JSON.stringify(data)}`)
             })
             this.ws.on('pong', (data) => {
-                logger.error(`[subscriber] ${this.network} pong ${JSON.stringify(data)}`)
+                logger.error(`${this.network} pong ${JSON.stringify(data)}`)
             })
         } catch (err) {
             // If an error occurs when trying to connect or subscribe, log the error and close the WebSocket connection.
-            logger.error(`[subscriber] ${this.network} error ${JSON.stringify(err)}`)
+            logger.error(`${this.network} error ${JSON.stringify(err)}`)
             this.disconnectFromWebsocket()
         }
     }
 
     disconnectFromWebsocket() {
-        logger.info(`[subscriber] ${this.network} disconnectFromWebsocket`)
+        logger.info(`${this.network} disconnectFromWebsocket`)
         // If the WebSocket isn't open, exit the function.
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
         // Send an 'unsubscribe' message to the server.

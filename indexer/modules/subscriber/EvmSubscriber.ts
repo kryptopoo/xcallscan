@@ -1,7 +1,7 @@
 import { ContractInterface, ethers } from 'ethers'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS, WSS } from '../../common/constants'
-import logger from '../logger/logger'
+import { subscriberLogger as logger } from '../logger/logger'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import { EvmDecoder } from '../decoder/EvmDecoder'
@@ -48,8 +48,8 @@ export class EvmSubscriber implements ISubscriber {
     }
 
     subscribe(callback: ISubscriberCallback) {
-        logger.info(`[subscriber] ${this.network} connect ${WSS[this.network]}`)
-        logger.info(`[subscriber] ${this.network} listen events on ${this.contractAddress}`)
+        logger.info(`${this.network} connect ${WSS[this.network]}`)
+        logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
         const topics = [
             [
@@ -66,18 +66,18 @@ export class EvmSubscriber implements ISubscriber {
             topics: topics
         }
         this.provider.on(filter, async (log: any, event: any) => {
-            logger.info(`[subscriber] ${this.network} log: ${JSON.stringify(log)}`)
+            logger.info(`${this.network} log: ${JSON.stringify(log)}`)
 
             const eventName = this.getEventName(log.topics)
             const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
-            logger.info(`[subscriber] ${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
+            logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
 
             if (decodeEventLog) {
                 const block = await this.provider.getBlock(log.blockNumber)
                 const tx = await this.provider.getTransactionReceipt(log.transactionHash)
                 const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
 
-                logger.info(`[subscriber] ${this.network} eventLog ${JSON.stringify(eventLog)}`)
+                logger.info(`${this.network} eventLog ${JSON.stringify(eventLog)}`)
                 callback(eventLog)
             }
         })
