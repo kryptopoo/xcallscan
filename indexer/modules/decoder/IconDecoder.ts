@@ -4,7 +4,7 @@ import { API_URL, EVENT, NETWORK, CONTRACT } from '../../common/constants'
 import { EventLog, EventLogData } from '../../types/EventLog'
 
 export class IconDecoder implements IDecoder {
-    decodeEventLog(eventLog: any, eventName: string): EventLogData {
+    async decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | undefined> {
         let rs: EventLogData = {}
 
         if (typeof eventLog.indexed !== 'string') eventLog.indexed = JSON.stringify(eventLog.indexed)

@@ -1,130 +1,127 @@
-import {
-    IconService,
-    HttpProvider,
-    BlockMonitorSpec,
-    BlockNotification,
-    Monitor,
-    EventMonitorSpec,
-    EventNotification,
-    EventFilter,
-    Converter,
-    BigNumber
-} from 'icon-sdk-js'
+import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFilter, BigNumber } from 'icon-sdk-js'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS, WSS } from '../../common/constants'
 import logger from '../logger/logger'
 import { IconDecoder } from '../decoder/IconDecoder'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
+import { sleep } from '../../common/helper'
 
 export class IconSubscriber implements ISubscriber {
-    private monitor!: Monitor<EventNotification>
     private iconService: IconService
     private interval = 20 // block interval
     private decoder: IDecoder
 
-    constructor(public network: string, public contractAddress: string, decoder: IDecoder) {
+    public contractAddress: string
+
+    constructor(public network: string) {
         const provider: HttpProvider = new HttpProvider(WSS[network])
         this.iconService = new IconService(provider)
-        this.decoder = decoder
+        this.decoder = new IconDecoder()
+        this.contractAddress = CONTRACT[this.network].xcall[0]
     }
 
-    private async buildEventLog(txHash: string, eventLogData: EventLogData) {
-        const tx = await this.iconService.getTransaction(txHash).execute()
-        const log: EventLog = {
-            txRaw: tx,
-            blockNumber: tx.blockHeight,
-            blockTimestamp: Math.floor(new Date(tx.timestamp).getTime() / 1000000),
+    private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
+        return {
+            // txRaw: JSON.stringify(tx),
+            blockNumber: block.height,
+            blockTimestamp: Math.floor(new Date(block.timeStamp).getTime() / 1000000),
             txHash: tx.txHash,
             txFrom: tx.from,
             txTo: tx.to,
-            // gasPrice: '12500000000',
-            // gasUsed: txDetail.stepUsedByTxn, //IconService.IconConverter.toNumber().toString(),
-            // txFee: IconService.IconConverter.toNumber(
-            //     !tx.transaction_fee || tx.transaction_fee == '' ? '0x0' : tx.transaction_fee
-            // ).toString(),
-            txFee: (IconService.IconConverter.toNumber(tx.stepLimit) * IconService.IconConverter.toNumber('12500000000')).toString(),
+            txFee: (IconService.IconConverter.toNumber(tx.stepUsed) * IconService.IconConverter.toNumber(tx.stepPrice)).toString(),
             // txValue: IconService.IconConverter.toNumber(!tx.value || tx.value == '' ? '0x0' : tx.value).toString(),
-            eventName: EVENT.CallMessageSent,
-            eventData: eventLogData
+            eventName: eventName,
+            eventData: eventData
+        } as EventLog
+    }
+
+    private getEventName(log: string) {
+        if (log.includes('CallMessageSent(Address,str,int)')) return EVENT.CallMessageSent
+        if (log.includes('CallMessage(str,str,int,int,bytes)')) return EVENT.CallMessage
+        if (log.includes('CallExecuted(int,int,str)')) return EVENT.CallExecuted
+        if (log.includes('ResponseMessage(int,int)')) return EVENT.ResponseMessage
+        if (log.includes('RollbackMessage(int)')) return EVENT.RollbackMessage
+        if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
+
+        return ''
+    }
+
+    private async retry(func: any) {
+        const maxRetries = 3
+        const retryDelay = 3000
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const data = await func()
+                return data
+            } catch (error: any) {
+                logger.error(`[subscriber] ${this.network} retry error ${error.code}`)
+                if (attempt < maxRetries) {
+                    await sleep(retryDelay)
+                } else {
+                    logger.error(`[subscriber] ${this.network} retry failed`)
+                }
+            }
         }
+
+        return undefined
     }
 
     async subscribe(calbback: ISubscriberCallback) {
-        logger.info(`[subscriber] ${this.network} connecting ${WSS[this.network]}...`)
-        logger.info(`[subscriber] ${this.network} listening events on contract ${this.contractAddress}...`)
+        logger.info(`[subscriber] ${this.network} connect ${WSS[this.network]}`)
+        logger.info(`[subscriber] ${this.network} listen events on ${this.contractAddress}`)
 
-        const block = await this.iconService.getLastBlock().execute()
-        const height = block.height
-        const specCallMessageSent = new EventMonitorSpec(
-            BigNumber(height),
-            new EventFilter('CallMessageSent(Address,str,int)', this.contractAddress),
-            true,
-            this.interval
-        )
-        const specCallExecuted = new EventMonitorSpec(
-            BigNumber(height),
-            new EventFilter('CallExecuted(int,int,str)', this.contractAddress),
-            true,
-            this.interval
-        )
-
+        const iconEventNames = [
+            'CallMessageSent(Address,str,int)',
+            'CallMessage(str,str,int,int,bytes)',
+            'CallExecuted(int,int,str)',
+            'ResponseMessage(int,int)',
+            'RollbackMessage(int)',
+            'RollbackExecuted(int)'
+        ]
         const onerror = (error: any) => {
             logger.info(`[subscriber] ${this.network} error ${JSON.stringify(error)}`)
         }
         const onprogress = (height: BigNumber) => {
             // logger.info(`[subscriber] ${this.network} height ${height.toString()}`)
         }
-        const ondata = async (eventName: string, notification: EventNotification) => {
+        const ondata = async (notification: EventNotification) => {
             logger.info(`[subscriber] ${this.network} ${JSON.stringify(notification)}`)
 
-            const decodeEventLog = this.decoder.decodeEventLog(notification.logs[0], eventName)
-            logger.info(`[subscriber] ${this.network} ${JSON.stringify(decodeEventLog)}`)
+            const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
+            const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
+            logger.info(`[subscriber] ${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
 
-            // const tx = await this.iconService.getTransaction(notification.hash).execute()
-            // const log = await this.buildEventLog(notification.hash, decodeEventLog)
             try {
-                const tx = await this.iconService.getTransaction(notification.hash).execute()
-                logger.info(`[subscriber] ${this.network} tx ${JSON.stringify(tx)}`)
+                if (decodeEventLog) {
+                    // const block = await this.iconService.getBlockByHash(notification.hash).execute()
+                    const block = await this.retry(this.iconService.getBlockByHash(notification.hash).execute())
+                    let tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
+                    if (tx) {
+                        // const txDetail = await this.iconService.getTransactionResult(tx.txHash).execute()
+                        const txDetail = await this.retry(this.iconService.getTransactionResult(tx.txHash).execute())
+                        tx.blockHeight = txDetail.blockHeight
+                        tx.stepUsed = txDetail.stepUsed
+                        tx.stepPrice = txDetail.stepPrice
+                        tx.eventLogs = txDetail.eventLogs
+                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
 
-                const txDetail = this.iconService.getTransactionResult(notification.hash).execute()
-                logger.info(`[subscriber] ${this.network} txDetail ${JSON.stringify(txDetail)}`)
+                        logger.info(`[subscriber] ${this.network} eventLog ${JSON.stringify(eventLog)}`)
+                        calbback(eventLog)
+                    }
+                }
             } catch (error) {
                 logger.error(`[subscriber] ${this.network} error ${JSON.stringify(error)}`)
             }
-
-            calbback(decodeEventLog)
         }
 
-        this.iconService.monitorEvent(
-            specCallMessageSent,
-            async (notification: EventNotification) => await ondata(EVENT.CallMessageSent, notification),
-            onerror,
-            onprogress
+        const block = await this.iconService.getLastBlock().execute()
+        const height = block.height
+        const specs = iconEventNames.map(
+            (n) => new EventMonitorSpec(BigNumber(height), new EventFilter(n, this.contractAddress), true, this.interval)
         )
-        this.iconService.monitorEvent(
-            specCallExecuted,
-            async (notification: EventNotification) => await ondata(EVENT.CallExecuted, notification),
-            onerror,
-            onprogress
+        const monitorEvents = specs.map((s) =>
+            this.iconService.monitorEvent(s, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)
         )
-
-        // this.iconService.monitorEvent(
-        //     specCallExecuted,
-        //     (notification: EventNotification) => {
-        //         logger.info(`[subscriber] ${this.network} ${JSON.stringify(notification)}`)
-        //         logger.info(`[subscriber] ${this.network} ${JSON.stringify(this.decoder.decodeEventLog(notification.logs[0], EVENT.CallExecuted))}`)
-        //     },
-        //     onerror,
-        //     onprogress
-        // )
     }
 }
-
-// const network = NETWORK.ICON
-// const contract = 'cxa07f426062a1384bdd762afa6a87d123fbc81c75'
-// const decoder = new IconDecoder()
-// const subscriber = new IconSubscriber(network, contract, decoder)
-// subscriber.subscribe((data: any) => {
-//     logger.info(`[subscriber] ${subscriber.network} callback ${JSON.stringify(data)}`)
-// })

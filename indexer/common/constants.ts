@@ -33,6 +33,10 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri,
 
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uri,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
+
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri
 }
 
@@ -51,17 +55,18 @@ const RPC_URLS: { [network: string]: string[] } = {
 
 const WSS: { [network: string]: string } = {
     [NETWORK.ICON]: 'https://ctz.solidwallet.io/api/v3/icon_dex',
-    // [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uris,
-    // [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uris,
     // [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+    [NETWORK.BSC]: 'https://bsc-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3',
+    [NETWORK.ETH2]: 'https://eth-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
     [NETWORK.AVAX]: 'https://ava-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3/ext/bc/C/rpc',
-    // [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
+    [NETWORK.BASE]: 'https://base-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
     [NETWORK.ARBITRUM]: 'https://arb-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
-    // [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
-    // [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
+    [NETWORK.OPTIMISM]: 'https://opt-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
+    [NETWORK.POLYGON]: 'https://polygon-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
 
     [NETWORK.IBC_INJECTIVE]: 'wss://sentry.tm.injective.network:443/websocket',
-    [NETWORK.IBC_ARCHWAY]: 'wss://rpc.constantine.archway.io:443/websocket'
+    [NETWORK.IBC_ARCHWAY]: 'wss://rpc.constantine.archway.io:443/websocket',
+    [NETWORK.IBC_NEUTRON]: 'wss://neutron-rpc.publicnode.com:443/websocket'
 }
 
 const API_URL: { [network: string]: string } = {

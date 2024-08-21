@@ -42,24 +42,32 @@
         },
         "ibc_archway": {
             "api": "https://apis.mintscan.io/v1/archway",
-            "uri": "",
-            "uris": [],
+            "uri": "https://rpc.mainnet.archway.io",
+            "uris": [
+                "https://rpc-archway.cosmos-spaces.cloud",
+                "http://archway.rpc.nodersteam.com:26657",
+                "https://archway-mainnet-archive.allthatnode.com:26657",
+                "https://rpc-1.archway.nodes.guru"
+            ],
+            "wss": ["wss://rpc.constantine.archway.io:443/websocket"],
             "btp_network_id": "archway",
             "block_height": 1260794,
             "block_timestamp": 1695859200
         },
         "ibc_neutron": {
             "api": "https://celatone-api-prod.alleslabs.dev/v1/neutron/neutron-1",
-            "uri": "",
-            "uris": [],
+            "uri": "https://rpc-kralum.neutron-1.neutron.org",
+            "uris": ["https://neutron-rpc.publicnode.com:443"],
+            "wss": ["wss://neutron-rpc.publicnode.com:443/websocket"],
             "btp_network_id": "neutron",
             "block_height": 4115091,
             "block_timestamp": 1698710400
         },
         "ibc_injective": {
             "api": "https://sentry.exchange.grpc-web.injective.network/api/explorer/v1",
-            "uri": "",
-            "uris": [],
+            "uri": "https://injective-rpc.publicnode.com:443",
+            "uris": ["https://injective-rpc.publicnode.com:443", "https://sentry.tm.injective.network:443"],
+            "wss": ["wss://sentry.tm.injective.network:443/websocket", "wss://injective-rpc.publicnode.com:443/websocket"],
             "btp_network_id": "injective",
             "block_height": 56477980,
             "block_timestamp": 1704412800

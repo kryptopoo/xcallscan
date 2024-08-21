@@ -9,6 +9,7 @@ import { IconDecoder } from './modules/decoder/IconDecoder'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
+import { EvmDecoder } from './modules/decoder/EvmDecoder'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -89,34 +90,51 @@ const startWs = () => {
 const startSubscriber = () => {
     logger.info('start subscriber...')
 
-    const abi = require('./abi/xcall.abi.json')
-
     // ICON
-    const iconSubscriber = new IconSubscriber(NETWORK.ICON, CONTRACT[NETWORK.ICON].xcall[0], new IconDecoder())
+    const iconSubscriber = new IconSubscriber(NETWORK.ICON)
     iconSubscriber.subscribe((data: any) => {
         logger.info(`[subscriber] ${iconSubscriber.network} callback ${JSON.stringify(data)}`)
     })
 
     // ARBITRUM
-    const arbSubscriber = new EvmSubscriber(NETWORK.ARBITRUM, CONTRACT[NETWORK.ARBITRUM].xcall[0], abi)
+    const arbSubscriber = new EvmSubscriber(NETWORK.ARBITRUM)
     arbSubscriber.subscribe((data: any) => {
         logger.info(`[subscriber] ${arbSubscriber.network} callback ${JSON.stringify(data)}`)
     })
+    // BASE
+    const baseSubscriber = new EvmSubscriber(NETWORK.BASE)
+    baseSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${baseSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+    // // OP
+    // const opSubscriber = new EvmSubscriber(NETWORK.OPTIMISM)
+    // opSubscriber.subscribe((data: any) => {
+    //     logger.info(`[subscriber] ${opSubscriber.network} callback ${JSON.stringify(data)}`)
+    // })
 
     // AVAX
-    const avaxSubscriber = new EvmSubscriber(NETWORK.AVAX, CONTRACT[NETWORK.AVAX].xcall[0], abi)
+    const avaxSubscriber = new EvmSubscriber(NETWORK.AVAX)
     avaxSubscriber.subscribe((data: any) => {
         logger.info(`[subscriber] ${avaxSubscriber.network} callback ${JSON.stringify(data)}`)
     })
+    // BSC
+    const bscSubscriber = new EvmSubscriber(NETWORK.BSC)
+    bscSubscriber.subscribe((data: any) => {
+        logger.info(`[subscriber] ${bscSubscriber.network} callback ${JSON.stringify(data)}`)
+    })
+    // // ETH
+    // const ethSubscriber = new EvmSubscriber(NETWORK.ETH2)
+    // ethSubscriber.subscribe((data: any) => {
+    //     logger.info(`[subscriber] ${ethSubscriber.network} callback ${JSON.stringify(data)}`)
+    // })
 
     // IBC_INJECTIVE
-    const injSubscriber = new IbcSubscriber(NETWORK.IBC_INJECTIVE, CONTRACT[NETWORK.IBC_INJECTIVE].xcall[0])
+    const injSubscriber = new IbcSubscriber(NETWORK.IBC_INJECTIVE)
     injSubscriber.subscribe((data: any) => {
         logger.info(`[subscriber] ${injSubscriber.network} callback ${JSON.stringify(data)}`)
     })
-
     // IBC_ARCHWAY
-    const archSubscriber = new IbcSubscriber(NETWORK.IBC_ARCHWAY, CONTRACT[NETWORK.IBC_ARCHWAY].xcall[0])
+    const archSubscriber = new IbcSubscriber(NETWORK.IBC_ARCHWAY)
     archSubscriber.subscribe((data: any) => {
         logger.info(`[subscriber] ${archSubscriber.network} callback ${JSON.stringify(data)}`)
     })
