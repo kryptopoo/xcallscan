@@ -55,7 +55,7 @@ export class IconSubscriber implements ISubscriber {
                 const data = await func()
                 return data
             } catch (error: any) {
-                logger.error(`${this.network} retry error ${error.code}`)
+                logger.error(`${this.network} retry error ${JSON.stringify(error)}`)
                 if (attempt < maxRetries) {
                     await sleep(retryDelay)
                 } else {
@@ -95,7 +95,8 @@ export class IconSubscriber implements ISubscriber {
             try {
                 if (decodeEventLog) {
                     // const block = await this.iconService.getBlockByHash(notification.hash).execute()
-                    const block = await this.retry(this.iconService.getBlockByHash(notification.hash).execute())
+                    // const block = await this.retry(this.iconService.getBlockByHash(notification.hash).execute())
+                    const block = await this.retry(this.iconService.getBlockByHeight(notification.height).execute())
                     let tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
                     if (tx) {
                         // const txDetail = await this.iconService.getTransactionResult(tx.txHash).execute()
