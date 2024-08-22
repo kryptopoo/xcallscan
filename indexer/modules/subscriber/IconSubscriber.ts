@@ -48,18 +48,18 @@ export class IconSubscriber implements ISubscriber {
     }
 
     private async retry(func: any) {
-        const maxRetries = 3
+        const maxRetries = 10
         const retryDelay = 3000
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 const data = await func()
                 return data
             } catch (error: any) {
-                logger.error(`${this.network} retry error ${JSON.stringify(error)}`)
+                logger.info(`${this.network} retry ${attempt} error ${JSON.stringify(error)}`)
                 if (attempt < maxRetries) {
                     await sleep(retryDelay)
                 } else {
-                    logger.error(`${this.network} retry failed`)
+                    logger.info(`${this.network} retry failed`)
                 }
             }
         }
@@ -105,14 +105,17 @@ export class IconSubscriber implements ISubscriber {
                     // const block = await this.retry(this.iconService.getBlockByHash(notification.hash).execute())
                     let tx = undefined
                     let block = await this.retry(this.iconService.getBlockByHeight(notification.height).execute())
+                    logger.info(`${this.network} ${eventName} block ${JSON.stringify(block)}`)
                     if (block) {
                         tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
                     }
                     // try get by api
                     if (!tx) {
                         logger.info(`${this.network} ${eventName} get txs by block ${notification.height.toString()}`)
-                        const txsOfBlock = await this.getTxsByBlock(notification.height.toString())
+                        const txsOfBlock = await this.retry(this.getTxsByBlock(notification.height.toString()))
+                        logger.info(`${this.network} ${eventName} txsOfBlock ${JSON.stringify(txsOfBlock)}`)
                         tx = txsOfBlock.find((t: any) => t.from_address && t.from_address)
+                        logger.info(`${this.network} ${eventName} tx ${JSON.stringify(tx)}`)
                     }
 
                     if (tx) {
