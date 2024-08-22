@@ -67,6 +67,13 @@ export class IconSubscriber implements ISubscriber {
         return undefined
     }
 
+    private async getTxsByBlock(blockNumber: string) {
+        const url = `https://tracker.icon.community/api/v1/transactions/block-number/${blockNumber}`
+        const response = await fetch(url)
+        const txs = await response.json()
+        return txs
+    }
+
     async subscribe(calbback: ISubscriberCallback) {
         logger.info(`${this.network} connect ${WSS[this.network]}`)
         logger.info(`${this.network} listen events on ${this.contractAddress}`)
@@ -96,11 +103,21 @@ export class IconSubscriber implements ISubscriber {
                 if (decodeEventLog) {
                     // const block = await this.iconService.getBlockByHash(notification.hash).execute()
                     // const block = await this.retry(this.iconService.getBlockByHash(notification.hash).execute())
-                    const block = await this.retry(this.iconService.getBlockByHeight(notification.height).execute())
-                    let tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
+                    let tx = undefined
+                    let block = await this.retry(this.iconService.getBlockByHeight(notification.height).execute())
+                    if (block) {
+                        tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
+                    }
+                    // try get by api
+                    if (!tx) {
+                        logger.info(`${this.network} ${eventName} get txs by block ${notification.height.toString()}`)
+                        const txsOfBlock = await this.getTxsByBlock(notification.height.toString())
+                        tx = txsOfBlock.find((t: any) => t.from_address && t.from_address)
+                    }
+
                     if (tx) {
                         // const txDetail = await this.iconService.getTransactionResult(tx.txHash).execute()
-                        const txDetail = await this.retry(this.iconService.getTransactionResult(tx.txHash).execute())
+                        const txDetail = await this.retry(this.iconService.getTransactionResult(tx.txHash || tx.hash).execute())
                         tx.blockHeight = txDetail.blockHeight
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
