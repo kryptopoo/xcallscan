@@ -133,7 +133,7 @@ export class IbcSubscriber implements ISubscriber {
                         logger.info(`${this.network} StargateClient connect ${RPC_URL[this.network]}`)
                         const client = await StargateClient.connect(RPC_URL[this.network])
                         const tx = await client.getTx(txHash)
-                        logger.info(`${this.network} StargateClient getTx ${JSON.stringify(tx)}`)
+                        logger.info(`${this.network} StargateClient getTx height ${tx?.height}`)
                         if (tx) {
                             const block = await client.getBlock(tx?.height)
                             logger.info(`${this.network} tx.events ${JSON.stringify(tx?.events)}`)
