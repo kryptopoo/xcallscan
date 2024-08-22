@@ -114,28 +114,33 @@ export class IbcSubscriber implements ISubscriber {
             // When a message (i.e., a matching transaction) is received, log the transaction and close the WebSocket connection.
             this.ws.on('message', async (event: any) => {
                 // logger.info(`${this.network} onmessage ${JSON.stringify(event)}`)
-                const eventData = JSON.parse(event)
-                if (eventData && eventData.result && eventData.result.data) {
-                    logger.info(`${this.network} eventData ${JSON.stringify(eventData.result.data)}`)
+                const eventJson = JSON.parse(event)
+                if (eventJson && eventJson.result && eventJson.result.data) {
+                    logger.info(`${this.network} eventData ${JSON.stringify(eventJson.result.data)}`)
                     // this.disconnectFromWebsocket()
 
-                    const events = eventData.result.data.value.TxResult.result.events as any[]
+                    const events = eventJson.result.data.value.TxResult.result.events as any[]
+                    const txRaw = eventJson.result.data.value.TxResult.tx as string
+                    logger.info(`${this.network} txRaw ${txRaw}`)
                     const eventName = this.getEventName(events)
                     const eventLogData = await this.decoder.decodeEventLog(events, eventName)
                     logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(eventLogData)}`)
 
-                    if (eventLogData) {
-                        const txRaw = eventData.result.data.value.TxResult.tx
+                    if (eventLogData && txRaw) {
                         const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
-                        console.log(`${this.network} txHash ${txHash}`)
+                        logger.info(`${this.network} txHash ${txHash}`)
 
+                        logger.info(`${this.network} StargateClient connect ${RPC_URL[this.network]}`)
                         const client = await StargateClient.connect(RPC_URL[this.network])
                         const tx = await client.getTx(txHash)
+                        logger.info(`${this.network} StargateClient getTx ${JSON.stringify(tx)}`)
                         if (tx) {
                             const block = await client.getBlock(tx?.height)
-                            console.log(`${this.network} tx.events ${JSON.stringify(tx?.events)}`)
+                            logger.info(`${this.network} tx.events ${JSON.stringify(tx?.events)}`)
 
                             const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
+                            client.disconnect()
+
                             callback(eventLog)
                         }
                     }
