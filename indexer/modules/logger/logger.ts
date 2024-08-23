@@ -37,7 +37,7 @@ const logger = winston.createLogger({
 export default logger
 
 export const wsLogger = winston.createLogger({
-    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss [ws]' }), myFormat),
+    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), myFormat),
     transports: [
         new winston.transports.Console({}),
         new DailyRotateFile({
@@ -59,7 +59,7 @@ export const wsLogger = winston.createLogger({
 })
 
 export const subscriberLogger = winston.createLogger({
-    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss [subscriber]' }), myFormat),
+    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), myFormat),
     transports: [
         new winston.transports.Console({}),
         new DailyRotateFile({

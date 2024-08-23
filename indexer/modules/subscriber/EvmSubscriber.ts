@@ -79,10 +79,10 @@ export class EvmSubscriber implements ISubscriber {
                     const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
                     callback(eventLog)
                 } else {
-                    logger.info(`${this.network} ${eventName} could not find tx ${log.transactionHash}`)
+                    logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
                 }
             } else {
-                logger.info(`${this.network} ${eventName} could not decodeEventLog`)
+                logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
             }
         })
     }

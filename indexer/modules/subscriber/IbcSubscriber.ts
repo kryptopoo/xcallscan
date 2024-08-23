@@ -16,6 +16,8 @@ export class IbcSubscriber implements ISubscriber {
     decoder: IDecoder
     contractAddress: string
 
+    reconnectInterval: number = 10000
+
     constructor(public network: string) {
         this.contractAddress = CONTRACT[this.network].xcall[0]
         this.decoder = new IbcDecoder()
@@ -90,6 +92,51 @@ export class IbcSubscriber implements ISubscriber {
     }
 
     subscribe(callback: ISubscriberCallback) {
+        const onmessage = async (event: any) => {
+            const eventJson = JSON.parse(event)
+            if (eventJson && eventJson.result && eventJson.result.data) {
+                logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
+
+                const events = eventJson.result.data.value.TxResult.result.events as any[]
+                const txRaw = eventJson.result.data.value.TxResult.tx as string
+
+                const eventName = this.getEventName(events)
+                const eventLogData = await this.decoder.decodeEventLog(events, eventName)
+
+                if (eventLogData && txRaw) {
+                    const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
+                    const client = await StargateClient.connect(RPC_URL[this.network])
+                    const tx = await client.getTx(txHash)
+
+                    if (tx) {
+                        const block = await client.getBlock(tx?.height)
+                        const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
+                        client.disconnect()
+
+                        callback(eventLog)
+                    } else {
+                        logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                    }
+                } else {
+                    logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+                }
+            }
+        }
+
+        this.connect(onmessage)
+    }
+
+    private disconnect() {
+        logger.info(`${this.network} disconnect`)
+        // If the WebSocket isn't open, exit the function.
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
+        // Send an 'unsubscribe' message to the server.
+        this.ws.send(JSON.stringify({ ...this.wsQuery, method: 'unsubscribe' }))
+        // Close the WebSocket connection.
+        this.ws.close()
+    }
+
+    private connect(onmessage: (data: any) => Promise<void>) {
         try {
             logger.info(`${this.network} connect ${WSS[this.network]}`)
             logger.info(`${this.network} listen events on ${this.contractAddress}`)
@@ -112,61 +159,27 @@ export class IbcSubscriber implements ISubscriber {
                 this.ws.send(JSON.stringify(this.wsQuery))
             })
             // When a message (i.e., a matching transaction) is received, log the transaction and close the WebSocket connection.
-            this.ws.on('message', async (event: any) => {
-                const eventJson = JSON.parse(event)
-                if (eventJson && eventJson.result && eventJson.result.data) {
-                    logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
-
-                    const events = eventJson.result.data.value.TxResult.result.events as any[]
-                    const txRaw = eventJson.result.data.value.TxResult.tx as string
-
-                    const eventName = this.getEventName(events)
-                    const eventLogData = await this.decoder.decodeEventLog(events, eventName)
-
-                    if (eventLogData && txRaw) {
-                        const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
-                        const client = await StargateClient.connect(RPC_URL[this.network])
-                        const tx = await client.getTx(txHash)
-
-                        if (tx) {
-                            const block = await client.getBlock(tx?.height)
-                            const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
-                            client.disconnect()
-
-                            callback(eventLog)
-                        } else {
-                            logger.info(`${this.network} ${eventName} could not find tx ${txHash}`)
-                        }
-                    } else {
-                        logger.info(`${this.network} ${eventName} could not decodeEventLog`)
-                    }
-                }
-            })
+            this.ws.on('message', onmessage)
             // If an error occurs with the WebSocket, log the error and close the WebSocket connection.
             this.ws.on('error', (error: any) => {
                 logger.info(`${this.network} ws error ${JSON.stringify(error)}`)
-                this.disconnectFromWebsocket()
+                this.disconnect()
             })
             this.ws.on('close', (code, reason) => {
                 logger.info(`${this.network} ws close ${code} ${reason}`)
-                this.disconnectFromWebsocket()
+                this.disconnect()
+
+                setTimeout(() => {
+                    logger.info(`${this.network} ws reconnect...`)
+                    this.connect(onmessage)
+                }, this.reconnectInterval)
             })
             this.ws.on('ping', (data) => {})
             this.ws.on('pong', (data) => {})
         } catch (err) {
             // If an error occurs when trying to connect or subscribe, log the error and close the WebSocket connection.
             logger.error(`${this.network} error ${JSON.stringify(err)}`)
-            this.disconnectFromWebsocket()
+            this.disconnect()
         }
-    }
-
-    disconnectFromWebsocket() {
-        logger.info(`${this.network} disconnectFromWebsocket`)
-        // If the WebSocket isn't open, exit the function.
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
-        // Send an 'unsubscribe' message to the server.
-        this.ws.send(JSON.stringify({ ...this.wsQuery, method: 'unsubscribe' }))
-        // Close the WebSocket connection.
-        this.ws.close()
     }
 }

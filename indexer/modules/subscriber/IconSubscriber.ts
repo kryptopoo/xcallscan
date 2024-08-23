@@ -126,16 +126,16 @@ export class IconSubscriber implements ISubscriber {
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
                     } catch (error) {
-                        logger.info(`${this.network} ${eventName} getTransactionResult failed`)
+                        logger.info(`${this.network} ondata ${eventName} getTransactionResult failed`)
                     }
 
                     const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
                     calbback(eventLog)
                 } else {
-                    logger.info(`${this.network} ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
+                    logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                 }
             } else {
-                logger.info(`${this.network} ${eventName} could not decodeEventLog`)
+                logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
             }
         }
 
