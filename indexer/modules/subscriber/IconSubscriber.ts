@@ -29,7 +29,7 @@ export class IconSubscriber implements ISubscriber {
             txHash: tx.txHash,
             txFrom: tx.from,
             txTo: tx.to,
-            txFee: (IconService.IconConverter.toNumber(tx.stepUsed) * IconService.IconConverter.toNumber(tx.stepPrice)).toString(),
+            txFee: (IconService.IconConverter.toNumber(tx.stepUsed || tx.stepLimit) * IconService.IconConverter.toNumber(tx.stepPrice)).toString(),
             // txValue: IconService.IconConverter.toNumber(!tx.value || tx.value == '' ? '0x0' : tx.value).toString(),
             eventName: eventName,
             eventData: eventData
@@ -93,46 +93,49 @@ export class IconSubscriber implements ISubscriber {
             // logger.info(`${this.network} height ${height.toString()}`)
         }
         const ondata = async (notification: EventNotification) => {
-            logger.info(`${this.network} ${JSON.stringify(notification)}`)
+            logger.info(`${this.network} ondata ${JSON.stringify(notification)}`)
 
             const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
             const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
-            logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
 
-            try {
-                if (decodeEventLog) {
-                    // const block = await this.iconService.getBlockByHash(notification.hash).execute()
-                    // const block = await this.retry(this.iconService.getBlockByHash(notification.hash).execute())
-                    let tx = undefined
-                    let block = await this.retry(this.iconService.getBlockByHeight(notification.height).execute())
-                    logger.info(`${this.network} ${eventName} block ${JSON.stringify(block)}`)
-                    if (block) {
+            if (decodeEventLog) {
+                let tx = undefined
+
+                // init another iconService to avoid conflict
+                const iconService = new IconService(new HttpProvider(WSS[this.network]))
+
+                let blockHash = notification.hash
+                let blockNumber = notification.height
+                let block = await iconService.getBlockByHash(blockHash).execute()
+                if (block) {
+                    tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
+
+                    // try finding tx in prevBlockHash
+                    if (!tx) {
+                        blockHash = block.prevBlockHash
+                        blockNumber = new BigNumber(block.height)
+                        block = await iconService.getBlockByHash(blockHash).execute()
                         tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
                     }
-                    // try get by api
-                    if (!tx) {
-                        logger.info(`${this.network} ${eventName} get txs by block ${notification.height.toString()}`)
-                        const txsOfBlock = await this.retry(this.getTxsByBlock(notification.height.toString()))
-                        logger.info(`${this.network} ${eventName} txsOfBlock ${JSON.stringify(txsOfBlock)}`)
-                        tx = txsOfBlock.find((t: any) => t.from_address && t.from_address)
-                        logger.info(`${this.network} ${eventName} tx ${JSON.stringify(tx)}`)
-                    }
+                }
 
-                    if (tx) {
-                        // const txDetail = await this.iconService.getTransactionResult(tx.txHash).execute()
-                        const txDetail = await this.retry(this.iconService.getTransactionResult(tx.txHash || tx.hash).execute())
-                        tx.blockHeight = txDetail.blockHeight
+                if (tx) {
+                    // try getting correct fee
+                    try {
+                        const txDetail = await iconService.getTransactionResult(tx.txHash).execute()
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
-                        tx.eventLogs = txDetail.eventLogs
-                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
-
-                        logger.info(`${this.network} eventLog ${JSON.stringify(eventLog)}`)
-                        calbback(eventLog)
+                    } catch (error) {
+                        logger.info(`${this.network} ${eventName} getTransactionResult failed`)
                     }
+
+                    const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                    calbback(eventLog)
+                } else {
+                    logger.info(`${this.network} ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                 }
-            } catch (error) {
-                logger.error(`${this.network} error ${JSON.stringify(error)}`)
+            } else {
+                logger.info(`${this.network} ${eventName} could not decodeEventLog`)
             }
         }
 

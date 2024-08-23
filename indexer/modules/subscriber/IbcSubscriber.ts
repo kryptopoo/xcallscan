@@ -113,54 +113,46 @@ export class IbcSubscriber implements ISubscriber {
             })
             // When a message (i.e., a matching transaction) is received, log the transaction and close the WebSocket connection.
             this.ws.on('message', async (event: any) => {
-                // logger.info(`${this.network} onmessage ${JSON.stringify(event)}`)
                 const eventJson = JSON.parse(event)
                 if (eventJson && eventJson.result && eventJson.result.data) {
-                    logger.info(`${this.network} eventData ${JSON.stringify(eventJson.result.data)}`)
-                    // this.disconnectFromWebsocket()
+                    logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
 
                     const events = eventJson.result.data.value.TxResult.result.events as any[]
                     const txRaw = eventJson.result.data.value.TxResult.tx as string
-                    logger.info(`${this.network} txRaw ${txRaw}`)
+
                     const eventName = this.getEventName(events)
                     const eventLogData = await this.decoder.decodeEventLog(events, eventName)
-                    logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(eventLogData)}`)
 
                     if (eventLogData && txRaw) {
                         const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
-                        logger.info(`${this.network} txHash ${txHash}`)
-
-                        logger.info(`${this.network} StargateClient connect ${RPC_URL[this.network]}`)
                         const client = await StargateClient.connect(RPC_URL[this.network])
                         const tx = await client.getTx(txHash)
-                        logger.info(`${this.network} StargateClient getTx height ${tx?.height}`)
+
                         if (tx) {
                             const block = await client.getBlock(tx?.height)
-                            logger.info(`${this.network} tx.events ${JSON.stringify(tx?.events)}`)
-
                             const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
                             client.disconnect()
 
                             callback(eventLog)
+                        } else {
+                            logger.info(`${this.network} ${eventName} could not find tx ${txHash}`)
                         }
+                    } else {
+                        logger.info(`${this.network} ${eventName} could not decodeEventLog`)
                     }
                 }
             })
             // If an error occurs with the WebSocket, log the error and close the WebSocket connection.
             this.ws.on('error', (error: any) => {
-                logger.error(`${this.network} error ${JSON.stringify(error)}`)
+                logger.info(`${this.network} ws error ${JSON.stringify(error)}`)
                 this.disconnectFromWebsocket()
             })
             this.ws.on('close', (code, reason) => {
-                logger.error(`${this.network} close ${code} ${reason}`)
+                logger.info(`${this.network} ws close ${code} ${reason}`)
                 this.disconnectFromWebsocket()
             })
-            this.ws.on('ping', (data) => {
-                // logger.error(`${this.network} ping ${JSON.stringify(data)}`)
-            })
-            this.ws.on('pong', (data) => {
-                logger.error(`${this.network} pong ${JSON.stringify(data)}`)
-            })
+            this.ws.on('ping', (data) => {})
+            this.ws.on('pong', (data) => {})
         } catch (err) {
             // If an error occurs when trying to connect or subscribe, log the error and close the WebSocket connection.
             logger.error(`${this.network} error ${JSON.stringify(err)}`)

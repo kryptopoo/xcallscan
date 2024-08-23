@@ -66,19 +66,23 @@ export class EvmSubscriber implements ISubscriber {
             topics: topics
         }
         this.provider.on(filter, async (log: any, event: any) => {
-            logger.info(`${this.network} log: ${JSON.stringify(log)}`)
+            logger.info(`${this.network} ondata ${JSON.stringify(log)}`)
 
             const eventName = this.getEventName(log.topics)
             const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
-            logger.info(`${this.network} ${eventName} decodeEventLog ${JSON.stringify(decodeEventLog)}`)
 
             if (decodeEventLog) {
                 const block = await this.provider.getBlock(log.blockNumber)
                 const tx = await this.provider.getTransactionReceipt(log.transactionHash)
-                const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
 
-                logger.info(`${this.network} eventLog ${JSON.stringify(eventLog)}`)
-                callback(eventLog)
+                if (tx) {
+                    const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                    callback(eventLog)
+                } else {
+                    logger.info(`${this.network} ${eventName} could not find tx ${log.transactionHash}`)
+                }
+            } else {
+                logger.info(`${this.network} ${eventName} could not decodeEventLog`)
             }
         })
     }
