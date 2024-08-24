@@ -40,15 +40,17 @@ export class SuiScan implements IScan {
             params['nextCursor'] = nextCursor
         }
 
-        const txsRes = await this.callApi(`${API_URL[this.network]}/objects/${xcallAddress}/transactions`, params)
+        const url = `${API_URL[this.network]}/objects/${xcallAddress}/transactions`
+        const txsRes = await this.callApi(url, params)
         const txs = txsRes.content
+
         const lastFlag = txsRes.nextCursor
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i]
             const txDetail = await this.getTransactionDetail(tx.hash)
+
             if (txDetail) {
                 const eventsOfTxDetail: any[] = txDetail.rawTransaction?.result?.events ?? []
-                // const actWithObjHash = txDetail.activityMetadata[0].activityWith[0].hash
 
                 let eventNames = [eventName]
                 if (!eventName) eventNames = Object.values(EVENT)
@@ -131,12 +133,10 @@ export class SuiScan implements IScan {
 
                     break
                 case EVENT.RollbackExecuted:
-                    console.log(eventName, eventLog.parsedJson)
-
-                    // // TODO: parse here
-                    // rs._sn =
-                    // rs._code =
-                    // rs._msg =
+                    rs._sn = Number(eventLog.parsedJson.sn)
+                    if (eventLog.parsedJson.code) rs._code = eventLog.parsedJson.code
+                    if (eventLog.parsedJson.msg) rs._msg = eventLog.parsedJson.msg
+                    if (eventLog.parsedJson.err_msg) rs._msg = eventLog.parsedJson.err_msg
 
                     break
                 case EVENT.MessageReceived:
@@ -164,12 +164,9 @@ export class SuiScan implements IScan {
                     break
 
                 case EVENT.CallExecuted:
-                    console.log(eventName, eventLog.parsedJson)
-
-                    // // TODO parse here
-                    // rs._reqId =
-                    // rs._code =
-                    // rs._msg =
+                    rs._reqId = Number(eventLog.parsedJson.req_id)
+                    if (eventLog.parsedJson.code) rs._code = eventLog.parsedJson.code
+                    if (eventLog.parsedJson.err_msg) rs._msg = eventLog.parsedJson.err_msg
 
                     break
                 default:

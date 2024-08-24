@@ -136,7 +136,7 @@
             "xcall": ["0x9835d02616f76Dc5f92E689F49b08566CFAFafcA"]
         },
         "sui": {
-            "xcall": ["0x25f664e39077e1e7815f06a82290f2aa488d7f5139913886ad8948730a98977d"]
+            "xcall": ["0x60add4475c91742470074396ba29b6d62572abd1ac08c18abe228be949c21420"]
         },
         "polygon": {
             "xcall": ["0x0B59764C48297E768c135b8D072F9884a37EB84c"]
