@@ -18,59 +18,63 @@ export class SuiScan implements IScan {
             const res = await axiosInstance.get(apiUrl, {
                 params: params
             })
+
             return res.data
         } catch (error: any) {
             logger.error(`${this.network} called api failed ${apiUrl} ${error.code}`)
         }
 
-        return { data: [] }
+        return { data: { content: [], nextCursor: undefined } }
     }
 
     async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
         let results: EventLog[] = []
 
-        let isNextPage: boolean = false
         let nextCursor: string = flag
         const params: any = {
             orderBy: 'ASC',
             size: 20,
             objectSourceType: 'INPUT_OBJECT'
         }
-        if (nextCursor) {
+        if (nextCursor && nextCursor != '0') {
             params['nextCursor'] = nextCursor
         }
 
-        const eventLogsRes = await this.callApi(`${API_URL[this.network]}/objects/${xcallAddress}/transactions`, params)
-        const eventLogs = eventLogsRes.content
-        const lastFlag = eventLogsRes.nextCursor
-        if (eventLogs) {
-            for (let i = 0; i < eventLogs.length; i++) {
-                const eventLog = eventLogs[i]
-                const txDetail = await this.getTransactionDetail(eventLog.hash)
-                if (txDetail) {
-                    const eventsOfTxDetail: any[] = txDetail.rawTransaction.result.events
+        const url = `${API_URL[this.network]}/objects/${xcallAddress}/transactions`
+        const txsRes = await this.callApi(url, params)
+        const txs = txsRes.content
 
-                    let eventNames = [eventName]
-                    if (!eventName) eventNames = Object.values(EVENT)
+        const lastFlag = txsRes.nextCursor
+        for (let i = 0; i < txs.length; i++) {
+            const tx = txs[i]
+            const txDetail = await this.getTransactionDetail(tx.hash)
 
-                    for (let z = 0; z < eventNames.length; z++) {
-                        const eventName = eventNames[z]
+            if (txDetail) {
+                const eventsOfTxDetail: any[] = txDetail.rawTransaction?.result?.events ?? []
 
-                        const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
+                let eventNames = [eventName]
+                if (!eventName) eventNames = Object.values(EVENT)
 
-                        if (decodeEventLog) {
-                            const log: EventLog = {
-                                blockNumber: Number(txDetail.rawTransaction.result.checkpoint),
-                                blockTimestamp: Math.floor(new Date(Number(txDetail.rawTransaction.result.timestampMs)).getTime() / 1000),
-                                txHash: txDetail.activityMetadata[0].activityWith[0].hash,
-                                txFrom: decodeEventLog?._from,
-                                txTo: decodeEventLog?._to,
-                                eventName: eventName,
-                                eventData: decodeEventLog
-                            }
+                for (let z = 0; z < eventNames.length; z++) {
+                    const eventName = eventNames[z]
+                    const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
 
-                            results.push(log)
+                    if (decodeEventLog) {
+                        const log: EventLog = {
+                            txRaw: txDetail.rawTransaction.result,
+                            blockNumber: Number(tx.checkpoint),
+                            blockTimestamp: Math.floor(new Date(Number(tx.timestamp)).getTime() / 1000),
+                            txHash: tx.hash,
+                            txFrom: tx.senderAddress,
+                            // recipient could be empty
+                            txTo: tx.balanceChanges.find((b: any) => b.owner.addressOwner != tx.senderAddress)?.owner.addressOwner,
+                            txFee: tx.fee.toString(),
+                            // txValue: tx.value.toString(),
+                            eventName: eventName,
+                            eventData: decodeEventLog
                         }
+
+                        results.push(log)
                     }
                 }
             }
@@ -107,15 +111,12 @@ export class SuiScan implements IScan {
             let rs: any = {}
             switch (eventName) {
                 case EVENT.CallMessageSent:
-                    console.log(eventName, eventLog.parsedJson)
-
-                    // // TODO: parse here
-                    // rs._from =
-                    // rs._to =
-                    // rs._sn =
-                    // rs._nsn =
-                    // rs._decodedFrom =
-                    // rs._decodedTo =
+                    rs._from = eventLog.parsedJson.from
+                    rs._to = eventLog.parsedJson.to
+                    rs._sn = Number(eventLog.parsedJson.sn)
+                    rs._nsn = eventLog.parsedJson?.nsn
+                    rs._decodedFrom = eventLog.parsedJson.from
+                    rs._decodedTo = eventLog.parsedJson.to
 
                     break
                 case EVENT.ResponseMessage:
@@ -132,12 +133,10 @@ export class SuiScan implements IScan {
 
                     break
                 case EVENT.RollbackExecuted:
-                    console.log(eventName, eventLog.parsedJson)
-
-                    // // TODO: parse here
-                    // rs._sn =
-                    // rs._code =
-                    // rs._msg =
+                    rs._sn = Number(eventLog.parsedJson.sn)
+                    if (eventLog.parsedJson.code) rs._code = eventLog.parsedJson.code
+                    if (eventLog.parsedJson.msg) rs._msg = eventLog.parsedJson.msg
+                    if (eventLog.parsedJson.err_msg) rs._msg = eventLog.parsedJson.err_msg
 
                     break
                 case EVENT.MessageReceived:
@@ -165,12 +164,9 @@ export class SuiScan implements IScan {
                     break
 
                 case EVENT.CallExecuted:
-                    console.log(eventName, eventLog.parsedJson)
-
-                    // // TODO parse here
-                    // rs._reqId =
-                    // rs._code =
-                    // rs._msg =
+                    rs._reqId = Number(eventLog.parsedJson.req_id)
+                    if (eventLog.parsedJson.code) rs._code = eventLog.parsedJson.code
+                    if (eventLog.parsedJson.err_msg) rs._msg = eventLog.parsedJson.err_msg
 
                     break
                 default:

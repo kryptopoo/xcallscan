@@ -20,7 +20,7 @@ const NETWORK = {
     ARBITRUM: 'arbitrum',
     OPTIMISM: 'optimism',
     SUI: 'sui',
-    POLYGON: 'polygon',
+    POLYGON: 'polygon'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -33,7 +33,7 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri,
 
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -46,7 +46,7 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uris,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
 
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris
 }
 
 const API_URL: { [network: string]: string } = {
@@ -63,9 +63,9 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
-
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -81,7 +81,10 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.btp_network_id,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.btp_network_id,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.btp_network_id,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.btp_network_id
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.btp_network_id,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.btp_network_id,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -97,8 +100,7 @@ const API_KEY: { [network: string]: string } = {
     [NETWORK.BASE]: process.env.SCAN_BASE_API_KEY ?? '',
     [NETWORK.ARBITRUM]: process.env.SCAN_ARBITRUM_API_KEY ?? '',
     [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? '',
-
-    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? '',
+    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? ''
 }
 
 const SERVICE_API_KEY = {
