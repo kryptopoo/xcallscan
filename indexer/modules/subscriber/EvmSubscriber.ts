@@ -27,7 +27,7 @@ export class EvmSubscriber implements ISubscriber {
             txHash: tx.transactionHash,
             txFrom: tx.from,
             txTo: tx.to ?? '',
-            txFee: tx.effectiveGasPrice.mul(tx.cumulativeGasUsed).toString(),
+            txFee: tx.effectiveGasPrice.mul(tx.gasUsed).toString(),
             // txValue: ethers.BigNumber.from(tx.value).toString(),
             // gasPrice: ethers.BigNumber.from(eventLog.gasPrice).toString(),
             // gasUsed: ethers.BigNumber.from(eventLog.gasUsed).toString(),

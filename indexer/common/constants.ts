@@ -55,7 +55,7 @@ const RPC_URLS: { [network: string]: string[] } = {
 
 const WSS: { [network: string]: string } = {
     [NETWORK.ICON]: 'https://ctz.solidwallet.io/api/v3/icon_dex',
-    // [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+    [NETWORK.HAVAH]: 'https://ctz.havah.io/api/v3',
     [NETWORK.BSC]: 'https://bsc-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3',
     [NETWORK.ETH2]: 'https://eth-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
     [NETWORK.AVAX]: 'https://ava-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3/ext/bc/C/rpc',

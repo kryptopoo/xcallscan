@@ -6,6 +6,7 @@ import { IconDecoder } from '../decoder/IconDecoder'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import { sleep } from '../../common/helper'
+import { retryAsync } from 'ts-retry'
 
 export class IconSubscriber implements ISubscriber {
     private iconService: IconService
@@ -29,7 +30,7 @@ export class IconSubscriber implements ISubscriber {
             txHash: tx.txHash,
             txFrom: tx.from,
             txTo: tx.to,
-            txFee: (IconService.IconConverter.toNumber(tx.stepUsed || tx.stepLimit) * IconService.IconConverter.toNumber(tx.stepPrice)).toString(),
+            txFee: (IconService.IconConverter.toNumber(tx.stepUsed || tx.stepLimit) * IconService.IconConverter.toNumber('12500000000')).toString(),
             // txValue: IconService.IconConverter.toNumber(!tx.value || tx.value == '' ? '0x0' : tx.value).toString(),
             eventName: eventName,
             eventData: eventData
@@ -45,26 +46,6 @@ export class IconSubscriber implements ISubscriber {
         if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
 
         return ''
-    }
-
-    private async retry(func: any) {
-        const maxRetries = 10
-        const retryDelay = 3000
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                const data = await func()
-                return data
-            } catch (error: any) {
-                logger.info(`${this.network} retry ${attempt} error ${JSON.stringify(error)}`)
-                if (attempt < maxRetries) {
-                    await sleep(retryDelay)
-                } else {
-                    logger.info(`${this.network} retry failed`)
-                }
-            }
-        }
-
-        return undefined
     }
 
     private async getTxsByBlock(blockNumber: string) {
@@ -122,7 +103,12 @@ export class IconSubscriber implements ISubscriber {
                 if (tx) {
                     // try getting correct fee
                     try {
-                        const txDetail = await iconService.getTransactionResult(tx.txHash).execute()
+                        const txDetail = await retryAsync(
+                            async () => {
+                                return await iconService.getTransactionResult(tx.txHash).execute()
+                            },
+                            { delay: 1000, maxTry: 3 }
+                        )
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
                     } catch (error) {
