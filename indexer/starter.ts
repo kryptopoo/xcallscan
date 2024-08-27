@@ -10,6 +10,8 @@ import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
 import { EvmDecoder } from './modules/decoder/EvmDecoder'
+import { IFetcher } from './interfaces/IFetcher'
+
 dotenv.config()
 
 const startIndexer = async () => {
@@ -107,10 +109,32 @@ const startSubscriber = () => {
         new IbcSubscriber(NETWORK.IBC_ARCHWAY)
     ]
 
+    const fetchers: { [network: string]: IFetcher } = {
+        // ICON
+        [NETWORK.ICON]: new Fetcher(NETWORK.ICON),
+
+        // EVM
+        [NETWORK.ARBITRUM]: new Fetcher(NETWORK.ARBITRUM),
+        [NETWORK.BASE]: new Fetcher(NETWORK.BASE),
+        [NETWORK.OPTIMISM]: new Fetcher(NETWORK.OPTIMISM),
+        [NETWORK.AVAX]: new Fetcher(NETWORK.AVAX),
+        [NETWORK.BSC]: new Fetcher(NETWORK.BSC),
+
+        // IBC
+        [NETWORK.IBC_INJECTIVE]: new Fetcher(NETWORK.IBC_INJECTIVE),
+        [NETWORK.IBC_ARCHWAY]: new Fetcher(NETWORK.IBC_ARCHWAY)
+    }
+
     for (let i = 0; i < subscribers.length; i++) {
         const subscriber = subscribers[i]
-        subscriber.subscribe((data: any) => {
+        subscriber.subscribe((data) => {
             ssLogger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
+
+            try {
+                fetchers[subscriber.network].storeDb(data)
+            } catch (error) {
+                ssLogger.error(`${subscriber.network} error ${JSON.stringify(error)}`)
+            }
         })
     }
 }

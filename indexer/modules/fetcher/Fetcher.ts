@@ -17,7 +17,7 @@ export class Fetcher implements IFetcher {
         this.scan = ScanFactory.createScan(network)
     }
 
-    private async storeDb(eventLog: EventLog) {
+    public async storeDb(eventLog: EventLog) {
         let eventModel: EventModel = {
             event: eventLog.eventName,
             sn: eventLog.eventData._sn,

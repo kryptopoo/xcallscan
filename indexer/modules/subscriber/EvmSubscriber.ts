@@ -14,7 +14,8 @@ export class EvmSubscriber implements ISubscriber {
 
     constructor(public network: string) {
         this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[this.network])
-        this.provider.pollingInterval = 10000
+        // // pollingInterval default is 4000 ms
+        this.provider.pollingInterval = 4000
         this.decoder = new EvmDecoder(this.network)
         this.contractAddress = CONTRACT[this.network].xcall[0]
     }

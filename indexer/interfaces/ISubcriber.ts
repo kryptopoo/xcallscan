@@ -1,5 +1,7 @@
+import { EventLog } from "../types/EventLog"
+
 export interface ISubscriberCallback {
-    (data: any): void
+    (data: EventLog): void
 }
 
 export interface ISubscriber {

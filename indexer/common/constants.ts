@@ -53,16 +53,19 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris
 }
 
+const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
+const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
 const WSS: { [network: string]: string } = {
     [NETWORK.ICON]: 'https://ctz.solidwallet.io/api/v3/icon_dex',
     [NETWORK.HAVAH]: 'https://ctz.havah.io/api/v3',
-    [NETWORK.BSC]: 'https://bsc-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3',
-    [NETWORK.ETH2]: 'https://eth-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
-    [NETWORK.AVAX]: 'https://ava-mainnet.blastapi.io/70992bb6-1518-445c-88ec-5cd69f0754b3/ext/bc/C/rpc',
-    [NETWORK.BASE]: 'https://base-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
-    [NETWORK.ARBITRUM]: 'https://arb-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
-    [NETWORK.OPTIMISM]: 'https://opt-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
-    [NETWORK.POLYGON]: 'https://polygon-mainnet.g.alchemy.com/v2/4Ltbkjw0YnmYVrzphnEPUKeYjuADwzGf',
+
+    [NETWORK.BSC]: `https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.ETH2]: `https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.AVAX]: `https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.BASE]: `https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.ARBITRUM]: `https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.OPTIMISM]: `https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.POLYGON]: `https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
 
     [NETWORK.IBC_INJECTIVE]: 'wss://sentry.tm.injective.network:443/websocket',
     [NETWORK.IBC_ARCHWAY]: 'wss://rpc.constantine.archway.io:443/websocket',

@@ -5,12 +5,12 @@ import { subscriberLogger as logger } from '../logger/logger'
 import { IconDecoder } from '../decoder/IconDecoder'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
-import { sleep } from '../../common/helper'
 import { retryAsync } from 'ts-retry'
 
 export class IconSubscriber implements ISubscriber {
     private iconService: IconService
-    private interval = 20 // block interval
+    // default interval is 20 block
+    private interval = 2 // block time ~2s
     private decoder: IDecoder
 
     public contractAddress: string
