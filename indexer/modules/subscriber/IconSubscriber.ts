@@ -76,33 +76,33 @@ export class IconSubscriber implements ISubscriber {
         const ondata = async (notification: EventNotification) => {
             logger.info(`${this.network} ondata ${JSON.stringify(notification)}`)
 
-            const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
-            const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
+            try {
+                const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
+                const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
 
-            if (decodeEventLog) {
-                let tx = undefined
+                if (decodeEventLog) {
+                    let tx = undefined
 
-                // init another iconService to avoid conflict
-                const iconService = new IconService(new HttpProvider(WSS[this.network]))
+                    // init another iconService to avoid conflict
+                    const iconService = new IconService(new HttpProvider(WSS[this.network]))
 
-                let blockHash = notification.hash
-                let blockNumber = notification.height
-                let block = await iconService.getBlockByHash(blockHash).execute()
-                if (block) {
-                    tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
-
-                    // try finding tx in prevBlockHash
-                    if (!tx) {
-                        blockHash = block.prevBlockHash
-                        blockNumber = new BigNumber(block.height)
-                        block = await iconService.getBlockByHash(blockHash).execute()
+                    let blockHash = notification.hash
+                    let blockNumber = notification.height
+                    let block = await iconService.getBlockByHash(blockHash).execute()
+                    if (block) {
                         tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
-                    }
-                }
 
-                if (tx) {
-                    // try getting correct fee
-                    try {
+                        // try finding tx in prevBlockHash
+                        if (!tx) {
+                            blockHash = block.prevBlockHash
+                            blockNumber = new BigNumber(block.height)
+                            block = await iconService.getBlockByHash(blockHash).execute()
+                            tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
+                        }
+                    }
+
+                    if (tx) {
+                        // try getting correct fee
                         const txDetail = await retryAsync(
                             async () => {
                                 return await iconService.getTransactionResult(tx.txHash).execute()
@@ -111,17 +111,18 @@ export class IconSubscriber implements ISubscriber {
                         )
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
-                    } catch (error) {
-                        logger.info(`${this.network} ondata ${eventName} getTransactionResult failed`)
-                    }
 
-                    const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
-                    calbback(eventLog)
+                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                        calbback(eventLog)
+                    } else {
+                        logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
+                    }
                 } else {
-                    logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
+                    logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                 }
-            } else {
-                logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+            } catch (error) {
+                logger.info(`${this.network} error ${JSON.stringify(error)}`)
+                logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
         }
 

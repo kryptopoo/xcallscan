@@ -95,6 +95,7 @@ const startSubscriber = () => {
     const subscribers = [
         // ICON
         new IconSubscriber(NETWORK.ICON),
+        new IconSubscriber(NETWORK.HAVAH),
 
         // EVM
         new EvmSubscriber(NETWORK.ARBITRUM),
@@ -112,6 +113,7 @@ const startSubscriber = () => {
     const fetchers: { [network: string]: IFetcher } = {
         // ICON
         [NETWORK.ICON]: new Fetcher(NETWORK.ICON),
+        [NETWORK.HAVAH]: new Fetcher(NETWORK.HAVAH),
 
         // EVM
         [NETWORK.ARBITRUM]: new Fetcher(NETWORK.ARBITRUM),

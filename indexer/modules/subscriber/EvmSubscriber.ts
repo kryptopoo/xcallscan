@@ -5,6 +5,7 @@ import { subscriberLogger as logger } from '../logger/logger'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import { EvmDecoder } from '../decoder/EvmDecoder'
+import { retryAsync } from 'ts-retry'
 
 export class EvmSubscriber implements ISubscriber {
     private provider: ethers.providers.StaticJsonRpcProvider
@@ -69,21 +70,37 @@ export class EvmSubscriber implements ISubscriber {
         this.provider.on(filter, async (log: any, event: any) => {
             logger.info(`${this.network} ondata ${JSON.stringify(log)}`)
 
-            const eventName = this.getEventName(log.topics)
-            const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
+            try {
+                const eventName = this.getEventName(log.topics)
+                const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
 
-            if (decodeEventLog) {
-                const block = await this.provider.getBlock(log.blockNumber)
-                const tx = await this.provider.getTransactionReceipt(log.transactionHash)
+                if (decodeEventLog) {
+                    const block = await retryAsync(
+                        async () => {
+                            return await this.provider.getBlock(log.blockNumber)
+                        },
+                        { delay: 1000, maxTry: 3 }
+                    )
 
-                if (tx) {
-                    const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
-                    callback(eventLog)
+                    const tx = await retryAsync(
+                        async () => {
+                            return await this.provider.getTransactionReceipt(log.transactionHash)
+                        },
+                        { delay: 1000, maxTry: 3 }
+                    )
+
+                    if (tx) {
+                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                        callback(eventLog)
+                    } else {
+                        logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
+                    }
                 } else {
-                    logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
+                    logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                 }
-            } else {
-                logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+            } catch (error) {
+                logger.info(`${this.network} error ${JSON.stringify(error)}`)
+                logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
         })
     }

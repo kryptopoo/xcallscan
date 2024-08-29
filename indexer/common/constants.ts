@@ -57,7 +57,7 @@ const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
 const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
 const WSS: { [network: string]: string } = {
     [NETWORK.ICON]: 'https://ctz.solidwallet.io/api/v3/icon_dex',
-    [NETWORK.HAVAH]: 'https://ctz.havah.io/api/v3',
+    [NETWORK.HAVAH]: 'https://ctz.havah.io/api/v3/icon_dex',
 
     [NETWORK.BSC]: `https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
     [NETWORK.ETH2]: `https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,

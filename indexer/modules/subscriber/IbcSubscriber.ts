@@ -97,28 +97,33 @@ export class IbcSubscriber implements ISubscriber {
             if (eventJson && eventJson.result && eventJson.result.data) {
                 logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
 
-                const events = eventJson.result.data.value.TxResult.result.events as any[]
-                const txRaw = eventJson.result.data.value.TxResult.tx as string
+                try {
+                    const events = eventJson.result.data.value.TxResult.result.events as any[]
+                    const txRaw = eventJson.result.data.value.TxResult.tx as string
 
-                const eventName = this.getEventName(events)
-                const eventLogData = await this.decoder.decodeEventLog(events, eventName)
+                    const eventName = this.getEventName(events)
+                    const eventLogData = await this.decoder.decodeEventLog(events, eventName)
 
-                if (eventLogData && txRaw) {
-                    const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
-                    const client = await StargateClient.connect(RPC_URL[this.network])
-                    const tx = await client.getTx(txHash)
+                    if (eventLogData && txRaw) {
+                        const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
+                        const client = await StargateClient.connect(RPC_URL[this.network])
+                        const tx = await client.getTx(txHash)
 
-                    if (tx) {
-                        const block = await client.getBlock(tx?.height)
-                        const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
-                        client.disconnect()
+                        if (tx) {
+                            const block = await client.getBlock(tx?.height)
+                            const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
+                            client.disconnect()
 
-                        callback(eventLog)
+                            callback(eventLog)
+                        } else {
+                            logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                        }
                     } else {
-                        logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                        logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                     }
-                } else {
-                    logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+                } catch (error) {
+                    logger.info(`${this.network} error ${JSON.stringify(error)}`)
+                    logger.error(`${this.network} error ${JSON.stringify(error)}`)
                 }
             }
         }
