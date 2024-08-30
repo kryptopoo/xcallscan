@@ -112,8 +112,14 @@ export class IconSubscriber implements ISubscriber {
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
 
-                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
-                        calbback(eventLog)
+                        if (tx.status == 1) {
+                            const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                            calbback(eventLog)
+                        } else {
+                            // case of tx failed
+                            logger.info(`${this.network} ondata tx failed ${tx.txHash}`)
+                            logger.error(`${this.network} ondata tx failed ${tx.txHash}`)
+                        }
                     } else {
                         logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                     }
