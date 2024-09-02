@@ -100,15 +100,15 @@ export class IconSubscriber implements ISubscriber {
                             async () => {
                                 return await iconService.getTransactionResult(tx.txHash).execute()
                             },
-                            { delay: 1000, maxTry: 3 }
+                            { delay: 1000, maxTry: 5, until: (lastResult) => lastResult.status == 1 }
                         )
                         tx.stepUsed = txDetail.stepUsed
                         tx.stepPrice = txDetail.stepPrice
 
-                        if (tx.status == 1) {
-                            const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
-                            calbback(eventLog)
-                        } else {
+                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                        calbback(eventLog)
+
+                        if (tx.status == 0) {
                             // case of tx failed
                             logger.info(`${this.network} ondata tx failed ${tx.txHash}`)
                             logger.error(`${this.network} ondata tx failed ${tx.txHash}`)
