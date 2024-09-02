@@ -10,7 +10,7 @@ import { retryAsync } from 'ts-retry'
 export class IconSubscriber implements ISubscriber {
     private iconService: IconService
     // default interval is 20 block
-    private interval = 2 // block time ~2s
+    private interval = 5 // block time ~2s
     private decoder: IDecoder
 
     public contractAddress: string
@@ -46,13 +46,6 @@ export class IconSubscriber implements ISubscriber {
         if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
 
         return ''
-    }
-
-    private async getTxsByBlock(blockNumber: string) {
-        const url = `https://tracker.icon.community/api/v1/transactions/block-number/${blockNumber}`
-        const response = await fetch(url)
-        const txs = await response.json()
-        return txs
     }
 
     async subscribe(calbback: ISubscriberCallback) {

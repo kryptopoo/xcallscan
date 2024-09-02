@@ -43,38 +43,40 @@ export class SuiScan implements IScan {
         const url = `${API_URL[this.network]}/objects/${xcallAddress}/transactions`
         const txsRes = await this.callApi(url, params)
         const txs = txsRes.content
-
         const lastFlag = txsRes.nextCursor
-        for (let i = 0; i < txs.length; i++) {
-            const tx = txs[i]
-            const txDetail = await this.getTransactionDetail(tx.hash)
 
-            if (txDetail) {
-                const eventsOfTxDetail: any[] = txDetail.rawTransaction?.result?.events ?? []
+        if (txs) {
+            for (let i = 0; i < txs.length; i++) {
+                const tx = txs[i]
+                const txDetail = await this.getTransactionDetail(tx.hash)
 
-                let eventNames = [eventName]
-                if (!eventName) eventNames = Object.values(EVENT)
+                if (txDetail) {
+                    const eventsOfTxDetail: any[] = txDetail.rawTransaction?.result?.events ?? []
 
-                for (let z = 0; z < eventNames.length; z++) {
-                    const eventName = eventNames[z]
-                    const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
+                    let eventNames = [eventName]
+                    if (!eventName) eventNames = Object.values(EVENT)
 
-                    if (decodeEventLog) {
-                        const log: EventLog = {
-                            txRaw: txDetail.rawTransaction.result,
-                            blockNumber: Number(tx.checkpoint),
-                            blockTimestamp: Math.floor(new Date(Number(tx.timestamp)).getTime() / 1000),
-                            txHash: tx.hash,
-                            txFrom: tx.senderAddress,
-                            // recipient could be empty
-                            txTo: tx.balanceChanges.find((b: any) => b.owner.addressOwner != tx.senderAddress)?.owner.addressOwner,
-                            txFee: tx.fee.toString(),
-                            // txValue: tx.value.toString(),
-                            eventName: eventName,
-                            eventData: decodeEventLog
+                    for (let z = 0; z < eventNames.length; z++) {
+                        const eventName = eventNames[z]
+                        const decodeEventLog = this.decodeEventLog(eventsOfTxDetail, eventName)
+
+                        if (decodeEventLog) {
+                            const log: EventLog = {
+                                txRaw: txDetail.rawTransaction.result,
+                                blockNumber: Number(tx.checkpoint),
+                                blockTimestamp: Math.floor(new Date(Number(tx.timestamp)).getTime() / 1000),
+                                txHash: tx.hash,
+                                txFrom: tx.senderAddress,
+                                // recipient could be empty
+                                txTo: tx.balanceChanges.find((b: any) => b.owner.addressOwner != tx.senderAddress)?.owner.addressOwner,
+                                txFee: tx.fee.toString(),
+                                // txValue: tx.value.toString(),
+                                eventName: eventName,
+                                eventData: decodeEventLog
+                            }
+
+                            results.push(log)
                         }
-
-                        results.push(log)
                     }
                 }
             }
