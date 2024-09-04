@@ -13,13 +13,11 @@ export class IconSubscriber implements ISubscriber {
     private interval = 5 // block time ~2s
     private decoder: IDecoder
 
-    public contractAddress: string
-
-    constructor(public network: string) {
+    constructor(public network: string, public contractAddress: string) {
         const provider: HttpProvider = new HttpProvider(WSS[network])
         this.iconService = new IconService(provider)
         this.decoder = new IconDecoder()
-        this.contractAddress = CONTRACT[this.network].xcall[0]
+        // this.contractAddress = CONTRACT[this.network].xcall[0]
     }
 
     private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
@@ -48,6 +46,46 @@ export class IconSubscriber implements ISubscriber {
         return ''
     }
 
+    async findTxInBlock(iconService: IconService, blockNumber: BigNumber, eventName: string) {
+        let block = undefined
+        try {
+            block = await retryAsync(
+                async () => {
+                    return await iconService.getBlockByHeight(blockNumber).execute()
+                },
+                { delay: 1000, maxTry: 5 }
+            )
+        } catch (error) {
+            logger.error(`${this.network} get block ${blockNumber} error ${JSON.stringify(error)}`)
+        }
+
+        if (block) {
+            const confirmedTxs = block.confirmedTransactionList
+                .filter((t: any) => t.from && t.to)
+                .concat(block.confirmedTransactionList.filter((t: any) => t.from && t.to))
+
+            for (let i = 0; i < confirmedTxs.length; i++) {
+                const confirmedTx = confirmedTxs[i]
+                const confirmedTxDetail = await retryAsync(
+                    async () => {
+                        return await iconService.getTransactionResult(confirmedTx.txHash).execute()
+                    },
+                    { delay: 1000, maxTry: 5 }
+                )
+
+                const confirmedEventLogs = confirmedTxDetail.eventLogs as any[]
+                for (let e = 0; e < confirmedEventLogs.length; e++) {
+                    const tryDecodeEventLog = await this.decoder.decodeEventLog(confirmedEventLogs[e], eventName)
+                    if (tryDecodeEventLog) {
+                        return { tx: confirmedTxDetail, block: block }
+                    }
+                }
+            }
+        }
+
+        return undefined
+    }
+
     async subscribe(calbback: ISubscriberCallback) {
         logger.info(`${this.network} connect ${WSS[this.network]}`)
         logger.info(`${this.network} listen events on ${this.contractAddress}`)
@@ -74,45 +112,21 @@ export class IconSubscriber implements ISubscriber {
                 const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
 
                 if (decodeEventLog) {
-                    let tx = undefined
-
                     // init another iconService to avoid conflict
                     const iconService = new IconService(new HttpProvider(WSS[this.network]))
 
                     let blockHash = notification.hash
                     let blockNumber = notification.height
-                    let block = await iconService.getBlockByHash(blockHash).execute()
-                    if (block) {
-                        tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
-
-                        // try finding tx in prevBlockHash
-                        if (!tx) {
-                            blockHash = block.prevBlockHash
-                            blockNumber = new BigNumber(block.height)
-                            block = await iconService.getBlockByHash(blockHash).execute()
-                            tx = block.confirmedTransactionList.find((t: any) => t.from && t.to) as any
-                        }
+                    let prevBlockNumber = new BigNumber(Number(notification.height) - 1)
+                    let txInBlock = await this.findTxInBlock(iconService, prevBlockNumber, eventName)
+                    if (!txInBlock) {
+                        // try current block from notification
+                        txInBlock = await this.findTxInBlock(iconService, blockNumber, eventName)
                     }
 
-                    if (tx) {
-                        // try getting correct fee
-                        const txDetail = await retryAsync(
-                            async () => {
-                                return await iconService.getTransactionResult(tx.txHash).execute()
-                            },
-                            { delay: 1000, maxTry: 5, until: (lastResult) => lastResult.status == 1 }
-                        )
-                        tx.stepUsed = txDetail.stepUsed
-                        tx.stepPrice = txDetail.stepPrice
-
-                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                    if (txInBlock) {
+                        const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
                         calbback(eventLog)
-
-                        if (tx.status == 0) {
-                            // case of tx failed
-                            logger.info(`${this.network} ondata tx failed ${tx.txHash}`)
-                            logger.error(`${this.network} ondata tx failed ${tx.txHash}`)
-                        }
                     } else {
                         logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                     }
@@ -125,10 +139,9 @@ export class IconSubscriber implements ISubscriber {
             }
         }
 
-        const block = await this.iconService.getLastBlock().execute()
-        const height = block.height
+        const lastBlock = await this.iconService.getLastBlock().execute()
         const specs = iconEventNames.map(
-            (n) => new EventMonitorSpec(BigNumber(height), new EventFilter(n, this.contractAddress), true, this.interval)
+            (n) => new EventMonitorSpec(BigNumber(lastBlock.height), new EventFilter(n, this.contractAddress), true, this.interval)
         )
         const monitorEvents = specs.map((s) =>
             this.iconService.monitorEvent(s, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)

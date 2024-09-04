@@ -36,7 +36,7 @@ export class InjectiveScan implements IScan {
                 limit: 1,
                 skip: 0
             })
-            this.totalCount = countRes.paging.total
+            this.totalCount = countRes ? countRes.paging.total : 0
         }
 
         if (scanCount < this.totalCount) {

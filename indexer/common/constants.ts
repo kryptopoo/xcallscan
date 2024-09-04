@@ -68,9 +68,11 @@ const WSS: { [network: string]: string } = {
     [NETWORK.POLYGON]: `https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
 
     [NETWORK.IBC_INJECTIVE]: 'wss://sentry.tm.injective.network:443/websocket',
-    [NETWORK.IBC_ARCHWAY]: 'wss://rpc.constantine.archway.io:443/websocket',
+    [NETWORK.IBC_ARCHWAY]: 'wss:///rpc.mainnet.archway.io:443/websocket',
     [NETWORK.IBC_NEUTRON]: 'wss://neutron-rpc.publicnode.com:443/websocket'
 }
+
+const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(",") : []
 
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
@@ -224,5 +226,6 @@ export {
     BTP_NETWORK_ID,
     SERVICE_API_KEY,
     SCAN_FROM_FLAG_NUMBER,
-    WSS
+    WSS,
+    SUBSCRIBER_NETWORKS
 }
