@@ -1,6 +1,6 @@
 import { ContractInterface, ethers } from 'ethers'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, WSS } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { IDecoder } from '../../interfaces/IDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
@@ -16,7 +16,7 @@ export class EvmSubscriber implements ISubscriber {
     constructor(public network: string) {
         this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[this.network][0])
         // // pollingInterval default is 4000 ms
-        this.provider.pollingInterval = 4000
+        this.provider.pollingInterval = SUBSCRIBER_INTERVAL
         this.decoder = new EvmDecoder(this.network)
         this.contractAddress = CONTRACT[this.network].xcall[0]
     }

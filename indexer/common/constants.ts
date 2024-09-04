@@ -77,6 +77,7 @@ const WSS: { [network: string]: string[] } = {
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
+const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? Number(process.env.SUBSCRIBER_INTERVAL) : 4000
 
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
@@ -230,5 +231,6 @@ export {
     SERVICE_API_KEY,
     SCAN_FROM_FLAG_NUMBER,
     WSS,
-    SUBSCRIBER_NETWORKS
+    SUBSCRIBER_NETWORKS,
+    SUBSCRIBER_INTERVAL
 }

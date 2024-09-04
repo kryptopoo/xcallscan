@@ -1,6 +1,6 @@
 import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFilter, BigNumber } from 'icon-sdk-js'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, WSS } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { IconDecoder } from '../decoder/IconDecoder'
 import { IDecoder } from '../../interfaces/IDecoder'
@@ -10,7 +10,7 @@ import { retryAsync } from 'ts-retry'
 export class IconSubscriber implements ISubscriber {
     private iconService: IconService
     // default interval is 20 block
-    private interval = 2 // block time ~2s
+    private interval = Math.round(SUBSCRIBER_INTERVAL / 2000) // block time ~2s
     private decoder: IDecoder
 
     constructor(public network: string, public contractAddress: string) {

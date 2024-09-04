@@ -1,6 +1,6 @@
 import { WebSocket } from 'ws'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, WSS } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { IbcDecoder } from '../decoder/IbcDecoder'
 import { v4 as uuidv4 } from 'uuid'
@@ -16,7 +16,7 @@ export class IbcSubscriber implements ISubscriber {
     decoder: IDecoder
     contractAddress: string
 
-    reconnectInterval: number = 10000
+    reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
 
     constructor(public network: string) {
         this.contractAddress = CONTRACT[this.network].xcall[0]
