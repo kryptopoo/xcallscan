@@ -143,11 +143,11 @@ export class IbcSubscriber implements ISubscriber {
 
     private connect(onmessage: (data: any) => Promise<void>) {
         try {
-            logger.info(`${this.network} connect ${WSS[this.network]}`)
+            logger.info(`${this.network} connect ${WSS[this.network][0]}`)
             logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
             // Open a new WebSocket connection to the specified URL.
-            this.ws = new WebSocket(WSS[this.network])
+            this.ws = new WebSocket(WSS[this.network][0])
 
             // Define the subscription request. It asks for transactions where the recipient address, and checks for transactions to be published.
             this.wsQuery = {

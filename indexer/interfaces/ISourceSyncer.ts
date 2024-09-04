@@ -1,4 +1,4 @@
 export interface ISourceSyncer {
-    syncReceivedMessages(sn: number): Promise<void>
-    syncSentMessages(sn: number): Promise<void>
+    syncReceivedMessages(sn: number, srcNetworks: string[]): Promise<void>
+    syncSentMessages(sn: number, destNetworks: string[]): Promise<void>
 }

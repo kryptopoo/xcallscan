@@ -4,17 +4,15 @@ import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
 import logger, { subscriberLogger as ssLogger } from './modules/logger/logger'
 import { Ws } from './modules/ws/ws'
-import dotenv from 'dotenv'
-import { IconDecoder } from './modules/decoder/IconDecoder'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
-import { EvmDecoder } from './modules/decoder/EvmDecoder'
 import { IFetcher } from './interfaces/IFetcher'
 import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
 import { ISubscriber } from './interfaces/ISubcriber'
-import { sleep } from './common/helper'
+import { getNetwork, sleep } from './common/helper'
 
+import dotenv from 'dotenv'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -138,39 +136,7 @@ const startSubscriber = () => {
         [NETWORK.IBC_NEUTRON]: new Fetcher(NETWORK.IBC_NEUTRON)
     }
 
-    const syncers: { [network: string]: Syncer } = {
-        // ICON
-        [NETWORK.ICON]: new Syncer([
-            NETWORK.ICON,
-            NETWORK.HAVAH,
-            NETWORK.ARBITRUM,
-            NETWORK.BASE,
-            NETWORK.OPTIMISM,
-            NETWORK.AVAX,
-            NETWORK.BSC,
-            NETWORK.ETH2,
-            NETWORK.POLYGON,
-            NETWORK.IBC_INJECTIVE,
-            NETWORK.IBC_ARCHWAY,
-            NETWORK.IBC_NEUTRON
-        ]),
-        [NETWORK.HAVAH]: new Syncer([NETWORK.ICON, NETWORK.HAVAH]),
-
-        // EVM
-        [NETWORK.ARBITRUM]: new Syncer([NETWORK.ICON, NETWORK.ARBITRUM]),
-        [NETWORK.BASE]: new Syncer([NETWORK.ICON, NETWORK.BASE]),
-        [NETWORK.OPTIMISM]: new Syncer([NETWORK.ICON, NETWORK.OPTIMISM]),
-        [NETWORK.AVAX]: new Syncer([NETWORK.ICON, NETWORK.AVAX]),
-        [NETWORK.BSC]: new Syncer([NETWORK.ICON, NETWORK.BSC]),
-        [NETWORK.ETH2]: new Syncer([NETWORK.ICON, NETWORK.ETH2]),
-        [NETWORK.POLYGON]: new Syncer([NETWORK.ICON, NETWORK.POLYGON]),
-
-        // IBC
-        [NETWORK.IBC_INJECTIVE]: new Syncer([NETWORK.ICON, NETWORK.IBC_INJECTIVE]),
-        [NETWORK.IBC_ARCHWAY]: new Syncer([NETWORK.ICON, NETWORK.IBC_ARCHWAY]),
-        [NETWORK.IBC_NEUTRON]: new Syncer([NETWORK.ICON, NETWORK.IBC_NEUTRON])
-    }
-
+    // only subscribe networks in .env
     for (let i = 0; i < SUBSCRIBER_NETWORKS.length; i++) {
         const network = SUBSCRIBER_NETWORKS[i]
         const subscriber = subscribers[network]
@@ -181,14 +147,27 @@ const startSubscriber = () => {
                 try {
                     // this event should be come after CallMessage
                     if (data.eventName == EVENT.CallExecuted) await sleep(1000)
-                    await fetchers[subscriber.network].storeDb(data)
-                    const sn = data.eventData._sn
+
+                    // store db
+                    const eventModel = await fetchers[subscriber.network].storeDb(data)
+                    ssLogger.info(`${subscriber.network} storeDb ${JSON.stringify(eventModel)}`)
+
+                    // init syncer corresponding networks
+                    const syncerNetworks = subscriber.network != NETWORK.ICON ? [NETWORK.ICON, subscriber.network] : [NETWORK.ICON]
+                    const srcNetwork = getNetwork(eventModel.from_decoded || '')
+                    const destNetwork = getNetwork(eventModel.to_decoded || '')
+                    if (srcNetwork && !syncerNetworks.includes(srcNetwork)) syncerNetworks.push(srcNetwork)
+                    if (destNetwork && !syncerNetworks.includes(destNetwork)) syncerNetworks.push(destNetwork)
+                    const syncer = new Syncer(syncerNetworks)
+
+                    // sync message with specific networks
+                    const sn = eventModel.sn
                     if (sn) {
-                        await syncers[subscriber.network].syncMessage(sn)
-                        ssLogger.info(`${subscriber.network} syncMessage ${sn}`)
+                        await syncer.syncMessage(sn)
+                        ssLogger.info(`${subscriber.network} syncMessage networks:${JSON.stringify(syncerNetworks)} event:${data.eventName} sn:${sn}`)
                     } else {
-                        await syncers[subscriber.network].syncNewMessages()
-                        ssLogger.info(`${subscriber.network} syncNewMessages`)
+                        await syncer.syncNewMessages()
+                        ssLogger.info(`${subscriber.network} syncNewMessages networks:${JSON.stringify(syncerNetworks)} event:${data.eventName}`)
                     }
                 } catch (error) {
                     ssLogger.error(`${subscriber.network} error ${JSON.stringify(error)}`)

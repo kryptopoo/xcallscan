@@ -13,7 +13,7 @@ export class EvmDecoder implements IDecoder {
     private provider: ethers.providers.StaticJsonRpcProvider
 
     constructor(network: string) {
-        this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[network])
+        this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[network][0])
     }
 
     private decodeFunction(abi: any, funcName: string, data: string) {

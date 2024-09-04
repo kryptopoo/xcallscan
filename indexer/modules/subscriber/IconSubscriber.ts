@@ -10,11 +10,11 @@ import { retryAsync } from 'ts-retry'
 export class IconSubscriber implements ISubscriber {
     private iconService: IconService
     // default interval is 20 block
-    private interval = 5 // block time ~2s
+    private interval = 2 // block time ~2s
     private decoder: IDecoder
 
     constructor(public network: string, public contractAddress: string) {
-        const provider: HttpProvider = new HttpProvider(WSS[network])
+        const provider: HttpProvider = new HttpProvider(WSS[network][0])
         this.iconService = new IconService(provider)
         this.decoder = new IconDecoder()
         // this.contractAddress = CONTRACT[this.network].xcall[0]
@@ -87,7 +87,7 @@ export class IconSubscriber implements ISubscriber {
     }
 
     async subscribe(calbback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${WSS[this.network]}`)
+        logger.info(`${this.network} connect ${WSS[this.network][0]}`)
         logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
         const iconEventNames = [
@@ -113,7 +113,7 @@ export class IconSubscriber implements ISubscriber {
 
                 if (decodeEventLog) {
                     // init another iconService to avoid conflict
-                    const iconService = new IconService(new HttpProvider(WSS[this.network]))
+                    const iconService = new IconService(new HttpProvider(WSS[this.network][0]))
 
                     let blockHash = notification.hash
                     let blockNumber = notification.height

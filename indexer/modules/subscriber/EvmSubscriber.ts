@@ -14,7 +14,7 @@ export class EvmSubscriber implements ISubscriber {
     public contractAddress: string
 
     constructor(public network: string) {
-        this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[this.network])
+        this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[this.network][0])
         // // pollingInterval default is 4000 ms
         this.provider.pollingInterval = 4000
         this.decoder = new EvmDecoder(this.network)
@@ -50,7 +50,7 @@ export class EvmSubscriber implements ISubscriber {
     }
 
     subscribe(callback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${WSS[this.network]}`)
+        logger.info(`${this.network} connect ${WSS[this.network][0]}`)
         logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
         const topics = [

@@ -55,24 +55,28 @@ const RPC_URLS: { [network: string]: string[] } = {
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
 const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
-const WSS: { [network: string]: string } = {
-    [NETWORK.ICON]: 'https://ctz.solidwallet.io/api/v3/icon_dex',
-    [NETWORK.HAVAH]: 'https://ctz.havah.io/api/v3/icon_dex',
+const WSS: { [network: string]: string[] } = {
+    [NETWORK.ICON]: ['https://ctz.solidwallet.io/api/v3/icon_dex'],
+    [NETWORK.HAVAH]: ['https://ctz.havah.io/api/v3/icon_dex'],
 
-    [NETWORK.BSC]: `https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
-    [NETWORK.ETH2]: `https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
-    [NETWORK.AVAX]: `https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
-    [NETWORK.BASE]: `https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
-    [NETWORK.ARBITRUM]: `https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
-    [NETWORK.OPTIMISM]: `https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
-    [NETWORK.POLYGON]: `https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`,
+    [NETWORK.BSC]: [`https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.ETH2]: [`https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.AVAX]: [`https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.BASE]: [`https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.ARBITRUM]: [`https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.OPTIMISM]: [`https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.POLYGON]: [`https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
 
-    [NETWORK.IBC_INJECTIVE]: 'wss://sentry.tm.injective.network:443/websocket',
-    [NETWORK.IBC_ARCHWAY]: 'wss:///rpc.mainnet.archway.io:443/websocket',
-    [NETWORK.IBC_NEUTRON]: 'wss://neutron-rpc.publicnode.com:443/websocket'
+    [NETWORK.IBC_INJECTIVE]: ['wss://sentry.tm.injective.network:443/websocket'],
+    [NETWORK.IBC_ARCHWAY]: ['wss:///rpc.mainnet.archway.io:443/websocket'],
+    [NETWORK.IBC_NEUTRON]: [
+        'wss://rpc.neutron.quokkastake.io:443/websocket',
+        'wss://neutron-rpc.publicnode.com:443/websocket',
+        'wss://rpc-neutron.whispernode.com:443/websocket'
+    ]
 }
 
-const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(",") : []
+const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
 
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
@@ -90,7 +94,6 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api
-
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
