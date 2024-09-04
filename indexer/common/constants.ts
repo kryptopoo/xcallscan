@@ -67,8 +67,20 @@ const WSS: { [network: string]: string[] } = {
     [NETWORK.OPTIMISM]: [`https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.POLYGON]: [`https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
 
-    [NETWORK.IBC_INJECTIVE]: ['wss://sentry.tm.injective.network:443/websocket'],
-    [NETWORK.IBC_ARCHWAY]: ['wss:///rpc.mainnet.archway.io:443/websocket'],
+    [NETWORK.IBC_INJECTIVE]: [
+        'wss://sentry.tm.injective.network:443/websocket', 
+        'wss://rpc-injective.whispernode.com:443/websocket',
+        'wss://injective-rpc.lavenderfive.com:443/websocket',
+        'wss://rpc-injective.ecostake.com:443/websocket',
+        'wss://injective-rpc.highstakes.ch:443/websocket'
+    ],
+    [NETWORK.IBC_ARCHWAY]: [
+        'wss://rpc.mainnet.archway.io:443/websocket',
+        'wss://rpc-archway.mzonder.com:443/websocket',
+        'wss://archway-mainnet.rpc.l0vd.com:443/websocket',
+        'wss://rpc-archway.whispernode.com:443/websocket',
+        'wss://archway-rpc.lavenderfive.com:443/websocket'
+    ],
     [NETWORK.IBC_NEUTRON]: [
         'wss://rpc.neutron.quokkastake.io:443/websocket',
         'wss://neutron-rpc.publicnode.com:443/websocket',
