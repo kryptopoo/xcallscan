@@ -133,6 +133,17 @@ class Db {
         return undefined
     }
 
+    async getEventBySn(network: string, event: string, sn: number) {
+        const tableName = `${network}_events`
+        const eventRs = await this.pool.query(`SELECT * FROM ${tableName} where event = $1 AND sn = $2`, [event, sn])
+
+        if (eventRs && eventRs.rows.length > 0) {
+            return eventRs.rows[0]
+        }
+
+        return undefined
+    }
+
     async getEventsBySn(network: string, sn: number) {
         const eventsRs = await this.pool.query(`SELECT * FROM ${network}_events where sn = $1 order by block_number`, [sn])
         return eventsRs.rows as EventModel[]

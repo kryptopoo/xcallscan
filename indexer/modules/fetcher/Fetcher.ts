@@ -17,7 +17,7 @@ export class Fetcher implements IFetcher {
         this.scan = ScanFactory.createScan(network)
     }
 
-    private async storeDb(eventLog: EventLog) {
+    public async storeDb(eventLog: EventLog): Promise<EventModel> {
         let eventModel: EventModel = {
             event: eventLog.eventName,
             sn: eventLog.eventData._sn,
@@ -41,7 +41,6 @@ export class Fetcher implements IFetcher {
 
         // fulfill data to special events
         if (eventLog.eventName == EVENT.CallExecuted) {
-            // update sn to CallExecuted event
             const callMessageEvent = await this._db.getEventByReqId(this.scan.network, EVENT.CallMessage, eventLog.eventData?._reqId)
             if (callMessageEvent) {
                 eventModel.sn = callMessageEvent.sn
@@ -51,6 +50,17 @@ export class Fetcher implements IFetcher {
                 eventModel.to_decoded = callMessageEvent.to_decoded
             }
         }
+        if (eventLog.eventName == EVENT.ResponseMessage || eventLog.eventName == EVENT.RollbackMessage || eventLog.eventName == EVENT.RollbackExecuted) {
+            const callMessageSentEvent = await this._db.getEventBySn(this.scan.network, EVENT.CallMessageSent, eventModel.sn)
+            if (callMessageSentEvent) {
+                eventModel.sn = callMessageSentEvent.sn
+                eventModel.from_raw = callMessageSentEvent.from_raw
+                eventModel.to_raw = callMessageSentEvent.to_raw
+                eventModel.from_decoded = callMessageSentEvent.from_decoded
+                eventModel.to_decoded = callMessageSentEvent.to_decoded
+            }
+        }
+
         if (eventLog.eventName == EVENT.CallMessage) {
             // update sn to CallExecuted event
             const callExecutedEvent = await this._db.getEventByReqId(this.scan.network, EVENT.CallExecuted, eventLog.eventData?._reqId)
@@ -68,6 +78,8 @@ export class Fetcher implements IFetcher {
         }
 
         await this._db.insertEvent(this.scan.network, eventModel)
+
+        return eventModel
     }
 
     private async getCounter(xcallAddress: string, eventName: string) {

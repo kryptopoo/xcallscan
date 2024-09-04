@@ -1,7 +1,7 @@
 import createSubscriber, { Subscriber } from 'pg-listen'
 import { createServer, Server } from 'http'
 import { WebSocketServer } from 'ws'
-import logger from '../logger/logger'
+import { wsLogger as logger } from '../logger/logger'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -23,7 +23,11 @@ export class Ws {
 
         // init server
         this.server = createServer((req, res) => {
-            res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,**Authorization**');
+            // res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,**Authorization**')
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Access-Control-Request-Method', '*')
+            res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET')
+            res.setHeader('Access-Control-Allow-Headers', '*')
         })
     }
 
@@ -35,39 +39,39 @@ export class Ws {
         await this.subscriber.listenTo('message')
 
         this.subscriber.events.on('error', (error) => {
-            logger.error(`[ws] subscriber error ${error.message}`)
+            logger.error(`on error ${error.message}`)
         })
         this.subscriber.notifications.on('message', (data: any) => {
-            logger.info(`[ws] subscriber message ${JSON.stringify(data)}`)
+            logger.info(`on message ${JSON.stringify(data)}`)
             broadcast(data)
         })
 
         const broadcast = (data: any) => {
             if (wss.clients.size == 0) {
-                logger.info(`[ws] broadcast: no client connected`)
+                logger.info(`broadcast: no client connected`)
             }
             let clientIndex = 0
             wss.clients.forEach((client) => {
                 clientIndex += 1
                 if (client.readyState === client.OPEN) {
                     client.send(JSON.stringify(data))
-                    logger.info(`[ws] broadcast: client ${clientIndex} ${JSON.stringify(data)}`)
+                    logger.info(`broadcast: client ${clientIndex} ${JSON.stringify(data)}`)
                 }
             })
         }
 
         // Creating connection using websocket
         wss.on('connection', (ws) => {
-            logger.info(`[ws] new client connected, total clients ${wss.clients.size}`)
+            logger.info(`new client connected, total clients ${wss.clients.size}`)
 
             // handling close connection
             ws.onclose = function () {
-                logger.info(`[ws] client closed connection, total clients ${wss.clients.size}`)
+                logger.info(`client closed connection, total clients ${wss.clients.size}`)
             }
 
             // handling client connection error
             ws.onerror = function (error) {
-                logger.error(`[ws] error ${error.message}`)
+                logger.error(`error ${error.message}`)
             }
         })
 
@@ -76,9 +80,9 @@ export class Ws {
             // handle whitelist IPs
             const whitelistIPs: string[] = process.env.WS_WHITELIST_IPS?.split(';') || []
             const ipAddr = request.socket.remoteAddress?.split(':').pop() || ''
-            logger.info(`[ws] request from IP ${ipAddr}`)
+            logger.info(`request from IP ${ipAddr}`)
             if (whitelistIPs.length > 0 && !whitelistIPs.includes(ipAddr)) {
-                logger.error(`[ws] access denied IP ${ipAddr}`)
+                logger.error(`access denied IP ${ipAddr}`)
                 socket.write('HTTP/1.1 401 Unauthorized')
                 socket.destroy()
                 return
@@ -90,6 +94,6 @@ export class Ws {
         })
 
         this.server.listen(this.port)
-        logger.info(`[ws] the websocket server is running on port ${this.port}`)
+        logger.info(`the websocket server is running on port ${this.port}`)
     }
 }

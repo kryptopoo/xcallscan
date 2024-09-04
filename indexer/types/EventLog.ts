@@ -22,3 +22,17 @@ export type EventLog = {
     eventName: string
     eventData?: any
 }
+
+export type EventLogData = {
+    _from?: string
+    _to?: string
+    _sn?: number
+    _nsn?: number
+    _reqId?: number
+    _code?: number
+    _msg?: string
+    _data?: string
+
+    _decodedFrom?: string
+    _decodedTo?: string
+}

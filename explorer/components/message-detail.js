@@ -108,10 +108,10 @@ export default async function MessageDetail({ msgData, meta }) {
                             )}
                         </div>
 
-                        <div className="table-row bg-white border-b">
+                        {/* <div className="table-row bg-white border-b">
                             <div className="table-cell xl:w-96 px-3 py-2 xl:px-6 xl:py-4 font-medium whitespace-normal xl:whitespace-nowrap">Protocol/Message fee:</div>
                             <div className="table-cell px-3 py-2 xl:px-6 xl:py-4">{converter.fromWei(msgData.value).toFixed(4)} {helper.getNativeAsset(msgData.src_network)}</div>
-                        </div>
+                        </div> */}
 
                         <div className="table-row bg-white border-b">
                             <div className="table-cell xl:w-96 px-3 py-2 xl:px-6 xl:py-4 font-medium whitespace-normal xl:whitespace-nowrap">Transaction fee:</div>

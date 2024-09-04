@@ -5,6 +5,7 @@ import { API_URL, EVENT, CONTRACT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import AxiosCustomInstance from './AxiosCustomInstance'
+import { cosmosHash } from '../../common/helper'
 
 export class InjectiveScan implements IScan {
     countName: string = 'CountNumber'
@@ -36,7 +37,7 @@ export class InjectiveScan implements IScan {
                 limit: 1,
                 skip: 0
             })
-            this.totalCount = countRes.paging.total
+            this.totalCount = countRes ? countRes.paging.total : 0
         }
 
         if (scanCount < this.totalCount) {
@@ -79,7 +80,7 @@ export class InjectiveScan implements IScan {
                             // txRaw: txRes.data.raw_log,
                             blockNumber: Number(tx.block_number),
                             blockTimestamp: Math.floor(new Date(tx.block_unix_timestamp).getTime() / 1000),
-                            txHash: tx.hash,
+                            txHash: cosmosHash(tx.hash),
                             txFrom: msgExecuteContract.value.sender,
                             txTo: msgExecuteContract.value.contract ?? '',
                             txFee: tx.gas_fee.amount[0].amount,

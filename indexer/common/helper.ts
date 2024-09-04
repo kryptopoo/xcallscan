@@ -1,3 +1,5 @@
+import { BTP_NETWORK_ID, NETWORK } from './constants'
+
 const nowTimestamp = () => {
     return Math.floor(Date.now() / 1000)
 }
@@ -43,4 +45,30 @@ const shortAddress = (address: string, betweenString: string = '...') => {
     return shortAddr
 }
 
-export { nowTimestamp, lastWeekTimestamp, lastDaysTimestamp, toDateString, toTimestamp, localDateToTimestamp, sleep, shortAddress }
+const cosmosHash = (hash: string) => {
+    if (hash.startsWith('0x')) return hash.substring(2).toUpperCase()
+    return hash
+}
+
+const getNetwork = (btpAddress: string) => {
+    const networks = Object.values(NETWORK)
+    for (let i = 0; i < networks.length; i++) {
+        let network = networks[i]
+        if (btpAddress && btpAddress.indexOf(BTP_NETWORK_ID[network]) > -1) return network
+    }
+
+    return undefined
+}
+
+export {
+    nowTimestamp,
+    lastWeekTimestamp,
+    lastDaysTimestamp,
+    toDateString,
+    toTimestamp,
+    localDateToTimestamp,
+    sleep,
+    shortAddress,
+    cosmosHash,
+    getNetwork
+}

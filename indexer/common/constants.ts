@@ -33,6 +33,10 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri,
 
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uri,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
+
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri
 }
 
@@ -49,6 +53,32 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris
 }
 
+const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
+const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
+const WSS: { [network: string]: string[] } = {
+    [NETWORK.ICON]: ['https://ctz.solidwallet.io/api/v3/icon_dex'],
+    [NETWORK.HAVAH]: ['https://ctz.havah.io/api/v3/icon_dex'],
+
+    [NETWORK.BSC]: [`https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.ETH2]: [`https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.AVAX]: [`https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.BASE]: [`https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.ARBITRUM]: [`https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.OPTIMISM]: [`https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.POLYGON]: [`https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+
+    [NETWORK.IBC_INJECTIVE]: ['wss://sentry.tm.injective.network:443/websocket'],
+    [NETWORK.IBC_ARCHWAY]: ['wss:///rpc.mainnet.archway.io:443/websocket'],
+    [NETWORK.IBC_NEUTRON]: [
+        'wss://rpc.neutron.quokkastake.io:443/websocket',
+        'wss://neutron-rpc.publicnode.com:443/websocket',
+        'wss://rpc-neutron.whispernode.com:443/websocket'
+    ]
+}
+
+const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
+const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? Number(process.env.SUBSCRIBER_INTERVAL) : 4000
+
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.api,
@@ -63,9 +93,8 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api,
-
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -200,5 +229,8 @@ export {
     RPC_URLS,
     BTP_NETWORK_ID,
     SERVICE_API_KEY,
-    SCAN_FROM_FLAG_NUMBER
+    SCAN_FROM_FLAG_NUMBER,
+    WSS,
+    SUBSCRIBER_NETWORKS,
+    SUBSCRIBER_INTERVAL
 }
