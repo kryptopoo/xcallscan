@@ -17,6 +17,8 @@ export class IbcSubscriber implements ISubscriber {
     contractAddress: string
 
     reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
+    disconnectedCount: number = 0
+    wssUrl = WSS[this.network][0]
 
     constructor(public network: string) {
         this.contractAddress = CONTRACT[this.network].xcall[0]
@@ -132,7 +134,16 @@ export class IbcSubscriber implements ISubscriber {
     }
 
     private disconnect() {
-        logger.info(`${this.network} disconnect`)
+        this.disconnectedCount += 1
+        logger.info(`${this.network} disconnect ${this.disconnectedCount}`)
+
+        if (this.disconnectedCount >= 5) {
+            this.disconnectedCount = 0
+            const wssUrlIndex = WSS[this.network].indexOf(this.wssUrl)
+            this.wssUrl = WSS[this.network][wssUrlIndex >= WSS[this.network].length - 1 ? 0 : wssUrlIndex + 1]
+            // this.wssUrl = WSS[this.network][Math.floor(Math.random() * WSS[this.network].length)]
+        }
+
         // If the WebSocket isn't open, exit the function.
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
         // Send an 'unsubscribe' message to the server.
@@ -143,11 +154,11 @@ export class IbcSubscriber implements ISubscriber {
 
     private connect(onmessage: (data: any) => Promise<void>) {
         try {
-            logger.info(`${this.network} connect ${WSS[this.network][0]}`)
+            logger.info(`${this.network} connect ${this.wssUrl}`)
             logger.info(`${this.network} listen events on ${this.contractAddress}`)
 
             // Open a new WebSocket connection to the specified URL.
-            this.ws = new WebSocket(WSS[this.network][0])
+            this.ws = new WebSocket(this.wssUrl)
 
             // Define the subscription request. It asks for transactions where the recipient address, and checks for transactions to be published.
             this.wsQuery = {
