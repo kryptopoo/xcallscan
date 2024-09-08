@@ -128,7 +128,7 @@
             "block_timestamp": 0
         },
         "sui": {
-            "api": "https://suiscan.xyz/api/sui-backend/mainnet/api",
+            "api": "https://sui-mainnet-endpoint.blockvision.org",
             "uri": "",
             "uris": [],
             "btp_network_id": "sui",

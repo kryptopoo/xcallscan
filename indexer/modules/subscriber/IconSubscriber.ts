@@ -8,12 +8,14 @@ import { EventLog, EventLogData } from '../../types/EventLog'
 import { retryAsync } from 'ts-retry'
 
 export class IconSubscriber implements ISubscriber {
-    private iconService: IconService
+    iconService: IconService
     // default interval is 20 block
-    private interval = Math.round(SUBSCRIBER_INTERVAL / 2000) // block time ~2s
-    private decoder: IDecoder
+    interval = Math.round(SUBSCRIBER_INTERVAL / 2000) // block time ~2s
+    decoder: IDecoder
 
-    constructor(public network: string, public contractAddress: string) {
+    reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
+
+    constructor(public network: string, public contractAddresses: string[]) {
         const provider: HttpProvider = new HttpProvider(WSS[network][0])
         this.iconService = new IconService(provider)
         this.decoder = new IconDecoder()
@@ -88,7 +90,7 @@ export class IconSubscriber implements ISubscriber {
 
     async subscribe(calbback: ISubscriberCallback) {
         logger.info(`${this.network} connect ${WSS[this.network][0]}`)
-        logger.info(`${this.network} listen events on ${this.contractAddress}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddresses)}`)
 
         const iconEventNames = [
             'CallMessageSent(Address,str,int)',
@@ -99,7 +101,12 @@ export class IconSubscriber implements ISubscriber {
             'RollbackExecuted(int)'
         ]
         const onerror = (error: any) => {
-            logger.info(`${this.network} error ${JSON.stringify(error)}`)
+            logger.error(`${this.network} onerror ${JSON.stringify(error)}`)
+
+            setTimeout(() => {
+                logger.info(`${this.network} ws reconnect...`)
+                monitorEvent()
+            }, this.reconnectInterval)
         }
         const onprogress = (height: BigNumber) => {
             // logger.info(`${this.network} height ${height.toString()}`)
@@ -139,12 +146,25 @@ export class IconSubscriber implements ISubscriber {
             }
         }
 
-        const lastBlock = await this.iconService.getLastBlock().execute()
-        const specs = iconEventNames.map(
-            (n) => new EventMonitorSpec(BigNumber(lastBlock.height), new EventFilter(n, this.contractAddress), true, this.interval)
-        )
-        const monitorEvents = specs.map((s) =>
-            this.iconService.monitorEvent(s, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)
-        )
+        const monitorEvent = async () => {
+            const allEventFilters: EventFilter[] = []
+            for (let i = 0; i < this.contractAddresses.length; i++) {
+                const contractAddr = this.contractAddresses[i]
+                iconEventNames.forEach((eventName) => {
+                    allEventFilters.push(new EventFilter(eventName, contractAddr))
+                })
+            }
+            const lastBlock = await this.iconService.getLastBlock().execute()
+            // const specs = iconEventNames.map(
+            //     (n) => new EventMonitorSpec(BigNumber(lastBlock.height), new EventFilter(n, this.contractAddress), true, this.interval)
+            // )
+            // const monitorEvents = specs.map((s) =>
+            //     this.iconService.monitorEvent(s, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)
+            // )
+            const spec = new EventMonitorSpec(BigNumber(lastBlock.height), allEventFilters, true, this.interval)
+            this.iconService.monitorEvent(spec, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)
+        }
+
+        monitorEvent()
     }
 }

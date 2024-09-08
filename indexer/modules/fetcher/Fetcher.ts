@@ -183,7 +183,7 @@ export class Fetcher implements IFetcher {
         }
 
         const finished = lastFlag == counter.value
-        if (!finished && updateCounter) await this._db.updateCounter(counter.name, lastFlag)
+        if (!finished && updateCounter && lastFlag) await this._db.updateCounter(counter.name, lastFlag)
 
         return finished
     }
