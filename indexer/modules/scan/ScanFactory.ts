@@ -8,6 +8,7 @@ import { InjectiveScan } from './InjectiveScan'
 import { MintAccountScan } from './MintAccountScan'
 import { MintScanV2 } from './MintScanV2'
 import { SuiScan } from './SuiScan'
+import { SuiVisionScan } from './SuiVisionScan'
 
 export class ScanFactory {
     static createScan(network: string) {
@@ -40,7 +41,7 @@ export class ScanFactory {
             scan = new EvmScan(network)
         }
         if (network == NETWORK.SUI) {
-            scan = new SuiScan(network)
+            scan = new SuiVisionScan(network)
         }
 
         return scan

@@ -95,7 +95,8 @@ const startSubscriber = () => {
 
     const subscribers: { [network: string]: ISubscriber } = {
         // ICON
-        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON, CONTRACT[NETWORK.ICON].xcall[0]),
+        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON, CONTRACT[NETWORK.ICON].xcall),
+        [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH, CONTRACT[NETWORK.HAVAH].xcall),
 
         // EVM
         [NETWORK.ARBITRUM]: new EvmSubscriber(NETWORK.ARBITRUM),
@@ -110,10 +111,6 @@ const startSubscriber = () => {
         [NETWORK.IBC_INJECTIVE]: new IbcSubscriber(NETWORK.IBC_INJECTIVE),
         [NETWORK.IBC_ARCHWAY]: new IbcSubscriber(NETWORK.IBC_ARCHWAY),
         [NETWORK.IBC_NEUTRON]: new IbcSubscriber(NETWORK.IBC_NEUTRON)
-    }
-    // havah is an exception case
-    for (let index = 0; index < CONTRACT[NETWORK.HAVAH].xcall.length; index++) {
-        subscribers[NETWORK.HAVAH] = new HavahSubscriber(NETWORK.HAVAH, CONTRACT[NETWORK.HAVAH].xcall[index])
     }
 
     const fetchers: { [network: string]: IFetcher } = {

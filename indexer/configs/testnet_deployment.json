@@ -85,7 +85,7 @@
             "block_timestamp": 0
         },
         "sui": {
-            "api": "https://suiscan.xyz/api/sui-backend/testnet-wave-3/api",
+            "api": "https://sui-testnet-endpoint.blockvision.org",
             "uri": "",
             "uris": [],
             "btp_network_id": "sui-test",

@@ -23,24 +23,21 @@ export class Syncer {
         // sync sent messages
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
-            const remainingNetworks = this.networks.filter((n) => n != network)
             const sourceSyncer = this.sourceSyncers[network]
-            await sourceSyncer.syncSentMessages(sn, remainingNetworks)
+            await sourceSyncer.syncSentMessages(sn, this.networks)
         }
 
         // sync received messages
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
-            const remainingNetworks = this.networks.filter((n) => n != network)
             const sourceSyncer = this.sourceSyncers[network]
-            await sourceSyncer.syncReceivedMessages(sn, remainingNetworks)
+            await sourceSyncer.syncReceivedMessages(sn, this.networks)
         }
     }
 
     async syncNewMessages() {
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
-            const remainingNetworks = this.networks.filter((n) => n != network)
             const sourceSyncer = this.sourceSyncers[network]
 
             // // Detect new messages by sn number
@@ -70,11 +67,11 @@ export class Syncer {
             if (newMsgCount > 0) {
                 // sync sent messages
                 for (let i = 0; i < newMsgCount; i++) {
-                    await sourceSyncer.syncSentMessages(snList[i].sn, remainingNetworks)
+                    await sourceSyncer.syncSentMessages(snList[i].sn)
                 }
                 // sync received messages
                 for (let i = 0; i < newMsgCount; i++) {
-                    await sourceSyncer.syncReceivedMessages(snList[i].sn, remainingNetworks)
+                    await sourceSyncer.syncReceivedMessages(snList[i].sn)
                 }
             }
         }
@@ -83,7 +80,6 @@ export class Syncer {
     async syncUnfinishedMessages() {
         for (let i = 0; i < this.networks.length; i++) {
             const network = this.networks[i]
-            const remainingNetworks = this.networks.filter((n) => n != network)
             const pendingMsgs = await this._db.getNotSyncedMessages(network)
             logger.info(`${network} syncing ${pendingMsgs.length} unfinished messages ${pendingMsgs.map((m) => m.sn).join(', ')}`)
 
@@ -94,7 +90,7 @@ export class Syncer {
                 const destNetwork = pendingMsgs[i].dest_network
 
                 const srcSyncer = this.sourceSyncers[srcNetwork]
-                await srcSyncer.syncSentMessages(sn, remainingNetworks)
+                await srcSyncer.syncSentMessages(sn)
 
                 // handle missing CallExecuted event
                 let destEvents = await this._db.getEventsBySn(destNetwork, sn)
@@ -112,7 +108,7 @@ export class Syncer {
                 }
 
                 const destSyncer = this.sourceSyncers[destNetwork]
-                await destSyncer.syncReceivedMessages(sn, remainingNetworks)
+                await destSyncer.syncReceivedMessages(sn)
             }
         }
     }

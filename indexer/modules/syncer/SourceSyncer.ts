@@ -106,7 +106,7 @@ export class SourceSyncer implements ISourceSyncer {
         return { srcNetwork: undefined, srcDapp: undefined }
     }
 
-    async syncSentMessages(sn: number, destNetworks: string[]): Promise<void> {
+    async syncSentMessages(sn: number, destNetworks: string[] = []): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
 
         for (let i = 0; i < events.length; i++) {
@@ -118,7 +118,7 @@ export class SourceSyncer implements ISourceSyncer {
                 if (!msg) continue
 
                 // skip if not in destNetworks
-                if (!destNetworks.includes(msg.dest_network ?? '')) continue
+                if (destNetworks.length > 0 && !destNetworks.includes(msg.dest_network ?? '')) continue
 
                 const insertCount = await this._db.insertMessage(msg)
                 if (insertCount > 0) {
@@ -132,7 +132,7 @@ export class SourceSyncer implements ISourceSyncer {
                     if (!msg) continue
 
                     // skip if not in destNetworks
-                    if (!destNetworks.includes(msg.dest_network ?? '')) continue
+                    if (destNetworks.length > 0 && !destNetworks.includes(msg.dest_network ?? '')) continue
 
                     // skip updating status if it's executed/rollbacked
                     const msgStatus = await this._db.getMessageStatus(
@@ -182,7 +182,7 @@ export class SourceSyncer implements ISourceSyncer {
                     if (!msg) continue
 
                     // skip if not in destNetworks
-                    if (!destNetworks.includes(msg.dest_network ?? '')) continue
+                    if (destNetworks.length > 0 && !destNetworks.includes(msg.dest_network ?? '')) continue
 
                     const updateCount = await this._db.updateRollbackMessage(
                         msg.sn,
@@ -208,7 +208,7 @@ export class SourceSyncer implements ISourceSyncer {
                     if (!msg) continue
 
                     // skip if not in destNetworks
-                    if (!destNetworks.includes(msg.dest_network ?? '')) continue
+                    if (destNetworks.length > 0 && !destNetworks.includes(msg.dest_network ?? '')) continue
 
                     const updateCount = await this._db.updateRollbackMessage(
                         msg.sn,
@@ -235,7 +235,7 @@ export class SourceSyncer implements ISourceSyncer {
         }
     }
 
-    async syncReceivedMessages(sn: number, srcNetworks: string[]): Promise<void> {
+    async syncReceivedMessages(sn: number, srcNetworks: string[] = []): Promise<void> {
         const events = await this._db.getEventsBySn(this.network, sn)
         const destNetwork = this.network
 
@@ -248,7 +248,7 @@ export class SourceSyncer implements ISourceSyncer {
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
                     // skip if not in srcNetworks
-                    if (srcNetwork && !srcNetworks.includes(srcNetwork)) continue
+                    if (srcNetworks.length > 0 && !srcNetworks.includes(srcNetwork)) continue
 
                     // update status Delivered for the source network
                     const updateCount = await this._db.updateSentMessage(
@@ -271,7 +271,7 @@ export class SourceSyncer implements ISourceSyncer {
                 let { srcNetwork, srcDapp } = await this.findSourceNetwork(event.from_raw ?? '')
                 if (srcNetwork && srcDapp) {
                     // skip if not in srcNetworks
-                    if (srcNetwork && !srcNetworks.includes(srcNetwork)) continue
+                    if (srcNetworks.length > 0 && !srcNetworks.includes(srcNetwork)) continue
 
                     // check if msg rollbacked
                     const isRollbacked = await this._db.validateRollbackedStatus(event.sn, srcNetwork, destNetwork, srcDapp)
