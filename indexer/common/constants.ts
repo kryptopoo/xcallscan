@@ -63,7 +63,7 @@ const WSS: { [network: string]: string[] } = {
     [NETWORK.BSC]: [`https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.ETH2]: [`https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     // [NETWORK.AVAX]: [`https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.AVAX]: [`https://avalanche-mainnet.core.chainstack.com/ext/bc/C/rpc2/${WEB3_CHAINSTACK_API_KEY}`],
+    [NETWORK.AVAX]: [`https://avalanche-mainnet.core.chainstack.com/ext/bc/C/rpc/${WEB3_CHAINSTACK_API_KEY}`],
     [NETWORK.BASE]: [`https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.ARBITRUM]: [`https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.OPTIMISM]: [`https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
