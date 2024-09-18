@@ -36,7 +36,7 @@ const startIndexer = async () => {
     const interval = USE_MAINNET ? 1 : 5 // in minutes
     const networks = Object.values(NETWORK)
     const syncer = new Syncer(networks)
-    logger.info('start indexing networks', networks)
+    logger.info(`start indexing networks ${JSON.stringify(networks)}`)
 
     // fetch data between networks
     // fetch ICON networks
