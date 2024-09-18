@@ -16,14 +16,12 @@ export class EvmDecoder implements IDecoder {
         this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[network][0])
     }
 
-    private decodeFunction(abi: any, funcName: string, data: string) {
+    public decodeFunction(abi: any, funcName: string, data: string) {
         try {
             const contractInterface = new ethers.utils.Interface(abi)
             const decodedData = contractInterface.decodeFunctionData(funcName, data)
             return decodedData
-        } catch (error) {
-            // logger.error(`decoding function error ${funcName}`)
-        }
+        } catch (error) {}
 
         return undefined
     }
@@ -95,13 +93,9 @@ export class EvmDecoder implements IDecoder {
                                 'deposit(address token,uint amount,string memory to,bytes memory data)',
                                 tx.data
                             )
-                        if (!decodedData) decodedData = this.decodeFunction(assetManagerAbi, 'depositNative(uint amount)', tx.data)
+                        if (!decodedData) decodedData = this.decodeFunction(assetManagerAbi, 'depositNative(uint256 amount)', tx.data)
                         if (!decodedData)
-                            decodedData = this.decodeFunction(
-                                assetManagerAbi,
-                                'depositNative(uint amount,string memory to,bytes memory data)',
-                                tx.data
-                            )
+                            decodedData = this.decodeFunction(assetManagerAbi, 'depositNative(uint256 amount,string to,bytes data)', tx.data)
 
                         if (decodedData && tx.to) {
                             const assetManagerAddr = tx.to

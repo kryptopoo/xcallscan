@@ -55,20 +55,22 @@ const RPC_URLS: { [network: string]: string[] } = {
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
 const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
+const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
 const WSS: { [network: string]: string[] } = {
     [NETWORK.ICON]: ['https://ctz.solidwallet.io/api/v3/icon_dex'],
     [NETWORK.HAVAH]: ['https://ctz.havah.io/api/v3/icon_dex'],
 
     [NETWORK.BSC]: [`https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.ETH2]: [`https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.AVAX]: [`https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    // [NETWORK.AVAX]: [`https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.AVAX]: [`https://avalanche-mainnet.core.chainstack.com/ext/bc/C/rpc2/${WEB3_CHAINSTACK_API_KEY}`],
     [NETWORK.BASE]: [`https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.ARBITRUM]: [`https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.OPTIMISM]: [`https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
     [NETWORK.POLYGON]: [`https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
 
     [NETWORK.IBC_INJECTIVE]: [
-        'wss://sentry.tm.injective.network:443/websocket', 
+        'wss://sentry.tm.injective.network:443/websocket',
         'wss://rpc-injective.whispernode.com:443/websocket',
         'wss://injective-rpc.lavenderfive.com:443/websocket',
         'wss://rpc-injective.ecostake.com:443/websocket',
