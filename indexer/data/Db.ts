@@ -176,13 +176,18 @@ class Db {
     }
 
     // MESSAGE
-    async getMessage(fromNetwork: string, toNetwork: string, sn: number) {
-        const rs = await this.pool.query(`SELECT * FROM messages WHERE src_network = $1 AND dest_network = $2 AND sn = $3`, [
-            fromNetwork,
-            toNetwork,
-            sn
-        ])
-        return rs.rowCount == 0 ? undefined : rs.rows[0]
+    async getMessages(sn: number, srcNetwork: string = '', destNetwork: string = '') {
+        if (srcNetwork && destNetwork) {
+            const rs = await this.pool.query(`SELECT * FROM messages WHERE src_network = $1 AND dest_network = $2 AND sn = $3`, [
+                srcNetwork,
+                destNetwork,
+                sn
+            ])
+            return rs.rowCount == 0 ? [] : rs.rows
+        }
+
+        const msgsBySnRs = await this.pool.query(`SELECT * FROM messages WHERE sn = $1`, [sn])
+        return msgsBySnRs.rowCount == 0 ? [] : msgsBySnRs.rows
     }
 
     async getMessageBySn(sn: number) {

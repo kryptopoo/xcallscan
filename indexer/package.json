@@ -10,6 +10,7 @@
     "indexer": "ts-node start-indexer.ts",
     "ws": "ts-node start-ws.ts",
     "subscriber": "ts-node start-subscriber.ts",
+    "analyzer": "ts-node start-analyzer.ts",
     "init-data": "ts-node cmd db init",
     "docker-start": "tsc && ts-node index.ts"
   },

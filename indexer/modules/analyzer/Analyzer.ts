@@ -1,7 +1,8 @@
 import createSubscriber, { Subscriber } from 'pg-listen'
-import logger from '../logger/logger'
-import dotenv from 'dotenv'
+import { analyzerLogger as logger } from '../logger/logger'
 import { MsgActionParser } from '../parser/MsgActionParser'
+import { MSG_STATUS } from '../../common/constants'
+import dotenv from 'dotenv'
 dotenv.config()
 
 export class Analyzer {
@@ -23,16 +24,14 @@ export class Analyzer {
         await this.subscriber.listenTo('message')
 
         this.subscriber.events.on('error', (error) => {
-            logger.error(`[analyzer] subscriber error ${error.message}`)
+            logger.error(`error ${error.message}`)
         })
         this.subscriber.notifications.on('message', (data: any) => {
-            // logger.info(`[analyzer] subscriber message ${JSON.stringify(data)}`)
-            if (data.src_tx_hash && data.dest_tx_hash) {
-                logger.info(
-                    `[analyzer] id:${data.id} sn:${data.sn} ${data.src_network} ${data.src_tx_hash} -> ${data.dest_network} ${data.dest_tx_hash}`
-                )
+            // analyze msg action when msg executed
+            if (data.status == MSG_STATUS.Executed && data.src_tx_hash && data.dest_tx_hash) {
+                logger.info(`id:${data.id} sn:${data.sn} ${data.src_network} ${data.src_tx_hash} -> ${data.dest_network} ${data.dest_tx_hash}`)
                 actionParser.parseMgsAction(data.src_network, data.src_tx_hash, data.dest_network, data.dest_tx_hash).then((act) => {
-                    logger.info(`[analyzer] msg action ${JSON.stringify(act)}`)
+                    logger.info(`msg action: ${JSON.stringify(act)}`)
                 })
             }
         })

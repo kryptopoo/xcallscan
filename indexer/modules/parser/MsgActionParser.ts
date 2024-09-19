@@ -2,8 +2,9 @@ import logger from '../logger/logger'
 import { ethers } from 'ethers'
 import axios from 'axios'
 import { API_KEY, API_URL, NETWORK, RPC_URL, RPC_URLS, USE_MAINNET } from '../../common/constants'
-import { cosmosAddress, sleep } from '../../common/helper'
+import { cosmosHash, sleep } from '../../common/helper'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
+import { retryAsync } from 'ts-retry'
 
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
@@ -137,7 +138,7 @@ interface MgsAction {
 export class MsgActionParser {
     constructor() {}
 
-    async callApi(apiUrl: string, params: any, apiKey: string = ''): Promise<any> {
+    private async callApi(apiUrl: string, params: any, apiKey: string = ''): Promise<any> {
         let errorCode = undefined
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
@@ -193,7 +194,7 @@ export class MsgActionParser {
         return false
     }
 
-    async getPrice(symbol: string) {
+    private async getPrice(symbol: string) {
         // // get cmc map data
         // const cmcMapRes = await axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/map', {
         //     headers: {
@@ -228,202 +229,165 @@ export class MsgActionParser {
         return ASSET_MAP[nativeSymbol].priceUsd
     }
 
-    async convertAmountUsd(amount: string, assetSymbol: string) {
+    private async convertAmountUsd(amount: string, assetSymbol: string) {
         const priceUsd = await this.getPrice(assetSymbol)
         const amountNumber = Number(amount) * Number(priceUsd)
         return amountNumber.toFixed(6)
     }
 
-    formatUnits(amount: string, decimals: number) {
+    private formatUnits(amount: string, decimals: number) {
         return ethers.utils.formatUnits(amount, decimals)
     }
 
-    async parseTokenTransfers(network: string, txHash: string): Promise<TokenTransfer[] | undefined> {
-        if (network == NETWORK.ICON) {
-            const maxRetries = 3
-            const retryDelay = 3000
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    const txHashRes = await this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash })
-                    const rs = txHashRes.data
+    private async parseIconTokenTransfers(txHash: string) {
+        const network = NETWORK.ICON
+        const txHashRes = await retryAsync(
+            async () => {
+                return await this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash })
+            },
+            { delay: 1000, maxTry: 5 }
+        )
+        const rs = txHashRes.data
 
-                    const groupBySymbol = rs.reduce((group: any, item: any) => {
-                        const { token_contract_symbol } = item
-                        group[token_contract_symbol] = group[token_contract_symbol] ?? []
-                        group[token_contract_symbol].push(item)
-                        return group
-                    }, {})
+        let tokenTransfer: TokenTransfer[] = []
+        if (rs) {
+            const groupBySymbol = rs.reduce((group: any, item: any) => {
+                const { token_contract_symbol } = item
+                group[token_contract_symbol] = group[token_contract_symbol] ?? []
+                group[token_contract_symbol].push(item)
+                return group
+            }, {})
 
-                    let tokenTransfer: TokenTransfer[] = []
-                    for (const symbol in groupBySymbol) {
-                        tokenTransfer.push({
-                            asset: {
-                                name: symbol,
-                                symbol: symbol
-                                // decimals: 0
-                            },
-                            amount: groupBySymbol[symbol]
-                                .sort((a: any, b: any) => a.value_decimal - b.value_decimal)
-                                .pop()
-                                ?.value_decimal?.toString()
-                        })
-                    }
-
-                    return tokenTransfer
-                } catch (error: any) {
-                    logger.error(`${network} get token transfers error ${error.code}`)
-                    if (attempt < maxRetries) {
-                        await sleep(retryDelay)
-                    } else {
-                        logger.error(`${network} get token transfers failed ${txHash}`)
-                    }
-                }
+            for (const symbol in groupBySymbol) {
+                tokenTransfer.push({
+                    asset: {
+                        name: symbol,
+                        symbol: symbol
+                        // decimals: 0
+                    },
+                    amount: groupBySymbol[symbol]
+                        .sort((a: any, b: any) => a.value_decimal - b.value_decimal)
+                        .pop()
+                        ?.value_decimal?.toString()
+                })
             }
-
-            return []
         }
 
-        if (network == NETWORK.HAVAH) {
-            const maxRetries = 3
-            const retryDelay = 3000
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        return tokenTransfer
+    }
+
+    private async parseHavahTokenTransfers(txHash: string) {
+        const network = NETWORK.HAVAH
+        const txHashRes = await retryAsync(
+            async () => {
+                return await this.callApi(`${API_URL[network]}/transaction/info`, {
+                    txHash: txHash
+                })
+            },
+            { delay: 1000, maxTry: 5 }
+        )
+
+        // TODO: correct asset
+        return [
+            {
+                asset: {
+                    name: NATIVE_ASSET[network],
+                    symbol: NATIVE_ASSET[network]
+                },
+                amount: txHashRes.data.data.amount
+            } as TokenTransfer
+        ]
+    }
+
+    private async parseEvmTokenTransfers(network: string, txHash: string) {
+        const provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
+
+        // deposit Native
+        let tx = await retryAsync(
+            async () => {
+                return await provider.getTransaction(txHash)
+            },
+            { delay: 1000, maxTry: 5 }
+        )
+
+        const assetManagerAbi = require('../../abi/AssetManager.abi.json')
+        const contractInterface = new ethers.utils.Interface(assetManagerAbi)
+        let parsedTx = undefined
+
+        try {
+            parsedTx = contractInterface.parseTransaction(tx)
+        } catch (error) {}
+
+        // console.log('parsedTx', parsedTx)
+
+        if (parsedTx && parsedTx.name == 'depositNative') {
+            return [
+                {
+                    asset: {
+                        name: NATIVE_ASSET[network],
+                        symbol: NATIVE_ASSET[network]
+                    },
+                    amount: this.formatUnits(parsedTx.args?.amount?.toString(), 18)
+                } as TokenTransfer
+            ]
+        }
+
+        // deposit tokens
+        let tokenTransfers: TokenTransfer[] = []
+        let txDetail = await retryAsync(
+            async () => {
+                return await provider.getTransactionReceipt(txHash)
+            },
+            { delay: 1000, maxTry: 5 }
+        )
+        if (txDetail && txDetail.logs) {
+            for (let index = 0; index < txDetail.logs.length; index++) {
+                const log = txDetail.logs[index]
                 try {
-                    let txHashRes = await this.callApi(`${API_URL[network]}/transaction/info`, {
-                        txHash: txHash
+                    const erc20Interface = new ethers.utils.Interface(['event Transfer(address indexed from, address indexed to, uint256 value)'])
+                    const parsedLog = erc20Interface.parseLog(log)
+                    const amount = parsedLog.args.value.toString()
+                    const assetAddress = log.address
+
+                    const erc20 = new ethers.Contract(assetAddress, ERC20_ABI, provider)
+                    const symbol = await erc20.symbol()
+                    const decimals = await erc20.decimals()
+
+                    tokenTransfers.push({
+                        asset: {
+                            name: symbol.toString(),
+                            symbol: symbol.toString(),
+                            contract: assetAddress,
+                            decimals: decimals
+                        },
+                        amount: this.formatUnits(amount.toString(), decimals)
                     })
-
-                    // TODO: correct asset
-                    return [
-                        {
-                            asset: {
-                                name: NATIVE_ASSET[network],
-                                symbol: NATIVE_ASSET[network]
-                            },
-                            amount: txHashRes.data.data.amount
-                        } as TokenTransfer
-                    ]
-                } catch (error: any) {
-                    logger.error(`${network} get transaction error ${error.code}`)
-                    if (attempt < maxRetries) {
-                        await sleep(retryDelay)
-                    } else {
-                        logger.error(`${network} get transaction failed ${txHash}`)
-                    }
-                }
-            }
-
-            return []
-        }
-
-        // EVM based
-        if (
-            network == NETWORK.BSC ||
-            network == NETWORK.ETH2 ||
-            network == NETWORK.BASE ||
-            network == NETWORK.ARBITRUM ||
-            network == NETWORK.OPTIMISM ||
-            network == NETWORK.AVAX ||
-            network == NETWORK.POLYGON
-        ) {
-            let provider = new ethers.providers.JsonRpcProvider(RPC_URL[network])
-
-            const maxRetries = 5
-            const retryDelay = 2000
-            let retryProviderIndex = -1
-            for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                // depositNative
-                try {
-                    const tx = await provider.getTransaction(txHash)
-
-                    const assetManagerAbi = require('../../abi/AssetManager.abi.json')
-                    const contractInterface = new ethers.utils.Interface(assetManagerAbi)
-                    const parsedTx = contractInterface.parseTransaction(tx)
-                    // console.log('parsedTx', parsedTx)
-
-                    if (parsedTx.name == 'depositNative') {
-                        return [
-                            {
-                                asset: {
-                                    name: NATIVE_ASSET[network],
-                                    symbol: NATIVE_ASSET[network]
-                                },
-                                amount: this.formatUnits(parsedTx.args?.amount?.toString(), 18)
-                            } as TokenTransfer
-                        ]
-                    }
                 } catch (error) {}
-
-                // deposit tokens
-                try {
-                    const tx = await provider.getTransactionReceipt(txHash)
-
-                    let tokenTransfers: TokenTransfer[] = []
-                    for (let index = 0; index < tx.logs.length; index++) {
-                        const log = tx.logs[index]
-                        try {
-                            const erc20Interface = new ethers.utils.Interface([
-                                'event Transfer(address indexed from, address indexed to, uint256 value)'
-                            ])
-                            const parsedLog = erc20Interface.parseLog(log)
-                            const amount = parsedLog.args.value.toString()
-                            const assetAddress = log.address
-
-                            const erc20 = new ethers.Contract(assetAddress, ERC20_ABI, provider)
-                            const symbol = await erc20.symbol()
-                            const decimals = await erc20.decimals()
-
-                            tokenTransfers.push({
-                                asset: {
-                                    name: symbol.toString(),
-                                    symbol: symbol.toString(),
-                                    contract: assetAddress,
-                                    decimals: decimals
-                                },
-                                amount: this.formatUnits(amount.toString(), decimals)
-                            })
-                        } catch (error) {}
-                    }
-
-                    return tokenTransfers
-                } catch (error: any) {
-                    logger.error(`${network} parseTokenTransfers error ${error.code}`)
-                    if (attempt < maxRetries) {
-                        // try change other provider
-                        if (retryProviderIndex < RPC_URLS[network].length - 1) {
-                            retryProviderIndex += 1
-                            provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][retryProviderIndex])
-                            logger.info(`${network} change provider uri ${RPC_URLS[network][retryProviderIndex]}`)
-                        }
-
-                        await sleep(retryDelay)
-                    } else {
-                        logger.error(`${network} parseTokenTransfers failed ${txHash}`)
-                    }
-                }
             }
-
-            return []
         }
 
-        // Cosmos IBC
-        if (network == NETWORK.IBC_ARCHWAY || network == NETWORK.IBC_INJECTIVE || network == NETWORK.IBC_NEUTRON) {
-            // oply support mainnet
-            const MINTSCAN_BASE_API = 'https://apis.mintscan.io/v1'
-            const MINTSCAN_API_KEY = process.env.SCAN_MINTSCAN_API_KEY
-            const url = `${MINTSCAN_BASE_API}/${network.replace('ibc_', '')}/txs/${cosmosAddress(txHash)}`
+        return tokenTransfers
+    }
 
-            const txsRes = await this.callApi(url, {}, MINTSCAN_API_KEY)
-            const data = txsRes.data[0]
+    private async parseCosmosTokenTransfers(network: string, txHash: string) {
+        let tokenTransfer: TokenTransfer[] = []
+
+        // only support mainnet
+        const MINTSCAN_BASE_API = 'https://apis.mintscan.io/v1'
+        const MINTSCAN_API_KEY = process.env.SCAN_MINTSCAN_API_KEY
+        const url = `${MINTSCAN_BASE_API}/${network.replace('ibc_', '')}/txs/${cosmosHash(txHash)}`
+        const txsRes = await this.callApi(url, {}, MINTSCAN_API_KEY)
+        const data = txsRes.data[0]
+
+        if (data) {
             const msgExecuteContractItem = data.tx['/cosmos-tx-v1beta1-Tx'].body?.messages?.find(
                 (t: any) => t['@type'] == '/cosmwasm.wasm.v1.MsgExecuteContract' || t['@type'] == '/injective.wasmx.v1.MsgExecuteContractCompat'
             )
             const msgExecuteContract = msgExecuteContractItem['/cosmwasm-wasm-v1-MsgExecuteContract']
-            // console.log('msgExecuteContract', msgExecuteContract)
 
             // try get transfer info
-            if (msgExecuteContract.funds.length == 0) {
+            if ((msgExecuteContract && msgExecuteContract.funds.length == 0) || msgExecuteContractItem) {
                 // assume transfer native
-
                 const transferLog = data.logs[0].events.find((e: any) => e.type == 'transfer')
                 if (!transferLog) {
                     return []
@@ -438,7 +402,7 @@ export class MsgActionParser {
                         ? ({ name: NATIVE_ASSET[network], symbol: NATIVE_ASSET[network] } as TokenInfo)
                         : this.getAssetByContract(network, transferAssetDenom)
 
-                return [
+                tokenTransfer = [
                     {
                         asset: assetInfo,
                         amount: this.formatUnits(transferAmount.replace(transferAssetDenom, ''), ASSET_MAP[NATIVE_ASSET[network]].decimals)
@@ -446,19 +410,29 @@ export class MsgActionParser {
                 ]
             }
 
-            return msgExecuteContract.funds.map((f: any) => {
-                const assetInfo = this.getAssetByContract(network, f.denom)
+            if (msgExecuteContract && msgExecuteContract.funds.length > 0) {
+                tokenTransfer = msgExecuteContract.funds.map((f: any) => {
+                    const assetInfo = this.getAssetByContract(network, f.denom)
 
-                return {
-                    asset: assetInfo,
-                    amount: this.formatUnits(f.amount, assetInfo.decimals || 18)
-                } as TokenTransfer
-            })
+                    return {
+                        asset: assetInfo,
+                        amount: this.formatUnits(f.amount, assetInfo.decimals || 18)
+                    } as TokenTransfer
+                })
+            }
         }
+
+        return tokenTransfer
     }
 
-    async getLoanTransfer(txHash: string) {
-        const txHashRes = await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
+    private async getLoanTransfer(txHash: string) {
+        const txHashRes = await retryAsync(
+            async () => {
+                return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
+            },
+            { delay: 1000, maxTry: 5 }
+        )
+
         const data = txHashRes.data
         const loanData = data?.find(
             (item: any) => item.method == 'OriginateLoan' || item.method == 'CollateralReceived' || item.method == 'LoanRepaid'
@@ -466,11 +440,45 @@ export class MsgActionParser {
         return loanData?.method as string
     }
 
-    async isSwapTransfer(txHash: string) {
-        const txHashRes = await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
+    private async isSwapTransfer(txHash: string) {
+        const txHashRes = await retryAsync(
+            async () => {
+                return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
+            },
+            { delay: 1000, maxTry: 5 }
+        )
+
         const data = txHashRes.data
         const swapData = data?.find((item: any) => item.method == 'Swap')
         return swapData
+    }
+
+    async parseTokenTransfers(network: string, txHash: string): Promise<TokenTransfer[] | undefined> {
+        if (network == NETWORK.ICON) {
+            return await this.parseIconTokenTransfers(txHash)
+        }
+
+        if (network == NETWORK.HAVAH) {
+            return await this.parseHavahTokenTransfers(txHash)
+        }
+
+        // EVM based
+        if (
+            network == NETWORK.BSC ||
+            network == NETWORK.ETH2 ||
+            network == NETWORK.BASE ||
+            network == NETWORK.ARBITRUM ||
+            network == NETWORK.OPTIMISM ||
+            network == NETWORK.AVAX ||
+            network == NETWORK.POLYGON
+        ) {
+            return await this.parseEvmTokenTransfers(network, txHash)
+        }
+
+        // Cosmos IBC
+        if (network == NETWORK.IBC_ARCHWAY || network == NETWORK.IBC_INJECTIVE || network == NETWORK.IBC_NEUTRON) {
+            return await this.parseCosmosTokenTransfers(network, txHash)
+        }
     }
 
     async parseMgsAction(fromNetwork: string, fromHash: string, toNetwork: string, toHash: string) {
@@ -505,7 +513,13 @@ export class MsgActionParser {
 
             if (fromNetwork == NETWORK.ICON || toNetwork == NETWORK.ICON) {
                 const txHash = fromNetwork == NETWORK.ICON ? fromHash : toHash
-                const txHashRes = await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
+                const txHashRes = await retryAsync(
+                    async () => {
+                        return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
+                    },
+                    { delay: 1000, maxTry: 5 }
+                )
+
                 const loanData = txHashRes.data?.find(
                     (item: any) => item.method == 'OriginateLoan' || item.method == 'CollateralReceived' || item.method == 'LoanRepaid'
                 )
@@ -557,63 +571,6 @@ export class MsgActionParser {
 
             return msgAction
         }
-
-        // // swap
-        // if (fromTokenTransfers.length == 2 || toTokenTransfers.length == 2) {
-        //     const msgAction: MgsAction = {
-        //         type: 'swap',
-        //         detail: {
-        //             type: 'swap',
-        //             src_network: fromNetwork,
-        //             src_asset: { name: '', symbol: '' },
-        //             src_amount: '0',
-        //             dest_network: toNetwork,
-        //             dest_asset: { name: '', symbol: '' },
-        //             dest_amount: '0'
-        //         } as MgsActionDetail,
-        //         amount_usd: '0'
-        //     }
-
-        //     if (fromNetwork == NETWORK.ICON) {
-        //         msgAction.detail!.dest_asset = toTokenTransfers[0].asset
-        //         msgAction.detail!.dest_amount = toTokenTransfers[0].amount
-
-        //         for (let i = 0; i < fromTokenTransfers.length; i++) {
-        //             const tokenTransfer = fromTokenTransfers[i]
-        //             const nativeAssetSymbol = this.getNativeAssetSymbol(tokenTransfer.asset.symbol, msgAction.detail!.dest_asset.symbol)
-        //             if (!nativeAssetSymbol) {
-        //                 msgAction.detail!.src_asset = tokenTransfer.asset
-        //                 msgAction.detail!.src_amount = tokenTransfer.amount
-
-        //                 // TODO: correct decimals
-        //                 msgAction.amount_usd = (
-        //                     Number(msgAction.detail!.src_amount) * Number(this.getPrice(msgAction.detail!.src_asset.symbol))
-        //                 ).toString()
-        //             }
-        //         }
-        //     }
-
-        //     if (toNetwork == NETWORK.ICON) {
-        //         msgAction.detail!.src_asset = fromTokenTransfers[0].asset
-        //         msgAction.detail!.src_amount = fromTokenTransfers[0].amount
-
-        //         for (let i = 0; i < toTokenTransfers.length; i++) {
-        //             const tokenTransfer = toTokenTransfers[i]
-        //             const nativeAssetSymbol = this.getNativeAssetSymbol(tokenTransfer.asset.symbol, msgAction.detail!.src_asset.symbol)
-        //             if (!nativeAssetSymbol) {
-        //                 msgAction.detail!.dest_asset = tokenTransfer.asset
-        //                 msgAction.detail!.dest_amount = tokenTransfer.amount
-
-        //                 // TODO: correct decimals
-        //                 msgAction.amount_usd = (
-        //                     Number(msgAction.detail!.src_amount) * Number(this.getPrice(msgAction.detail!.src_asset.symbol))
-        //                 ).toString()
-        //             }
-        //         }
-        //     }
-
-        //     return msgAction
-        // }
 
         // default as sending message
         return {

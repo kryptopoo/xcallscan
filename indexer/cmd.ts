@@ -118,20 +118,20 @@ const runCmd = async () => {
 
     if (cmd == 'analyze') {
         const sn = args[1]
+        const srcNetwork = args[2] ?? ''
+        const destNetwork = args[3] ?? ''
         const db = new Db()
         const actionParser = new MsgActionParser()
 
-        db.getMessageBySn(sn).then((msgs) => {
+        db.getMessages(sn, srcNetwork, destNetwork).then((msgs) => {
             for (let index = 0; index < msgs.length; index++) {
                 const msg = msgs[index]
 
                 if (msg.src_tx_hash && msg.dest_tx_hash) {
-                    setTimeout(() => {
-                        console.log(`sn:${msg.sn} ${msg.src_network} ${msg.src_tx_hash} -> ${msg.dest_network} ${msg.dest_tx_hash}`)
-                        actionParser.parseMgsAction(msg.src_network, msg.src_tx_hash, msg.dest_network, msg.dest_tx_hash).then((act) => {
-                            console.log(`action`, act)
-                        })
-                    }, (index + 1) * 10000)
+                    console.log(`id:${msg.id} sn:${msg.sn} ${msg.src_network} ${msg.src_tx_hash} -> ${msg.dest_network} ${msg.dest_tx_hash}`)
+                    actionParser.parseMgsAction(msg.src_network, msg.src_tx_hash, msg.dest_network, msg.dest_tx_hash).then((act) => {
+                        console.log(`action`, act)
+                    })
                 }
             }
         })

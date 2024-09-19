@@ -39,7 +39,7 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.polygon.uri
+    
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -57,8 +57,6 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uris,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
-
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris
 }
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
@@ -95,9 +93,7 @@ const WSS: { [network: string]: string[] } = {
         'wss://rpc.neutron.quokkastake.io:443/websocket',
         'wss://neutron-rpc.publicnode.com:443/websocket',
         'wss://rpc-neutron.whispernode.com:443/websocket'
-    ],
-
-    [NETWORK.SUI]: ["https://sui-mainnet-endpoint.blockvision.org"]
+    ]
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []

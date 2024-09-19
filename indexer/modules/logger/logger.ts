@@ -79,3 +79,25 @@ export const subscriberLogger = winston.createLogger({
         })
     ]
 })
+
+export const analyzerLogger = winston.createLogger({
+    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), myFormat),
+    transports: [
+        new winston.transports.Console({}),
+        new DailyRotateFile({
+            level: 'error',
+            filename: './logs/%DATE%.analyzer.error.log',
+            json: false,
+            datePattern: 'yyyy-MM-DD',
+            maxFiles: 10
+        }),
+        new DailyRotateFile({
+            // name: 'info-file',
+            level: 'info',
+            filename: './logs/%DATE%.analyzer.log',
+            json: false,
+            datePattern: 'yyyy-MM-DD',
+            maxFiles: 10
+        })
+    ]
+})

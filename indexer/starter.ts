@@ -14,6 +14,7 @@ import { ISubscriber } from './interfaces/ISubcriber'
 import { getNetwork, sleep } from './common/helper'
 
 import dotenv from 'dotenv'
+import { Analyzer } from './modules/analyzer/Analyzer'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -181,4 +182,11 @@ const startSubscriber = () => {
     }
 }
 
-export default { startIndexer, startWs, startSubscriber }
+const startAnalyzer = () => {
+    logger.info('start analyzer...')
+
+    const analyzer = new Analyzer()
+    analyzer.start()
+}
+
+export default { startIndexer, startWs, startSubscriber, startAnalyzer }
