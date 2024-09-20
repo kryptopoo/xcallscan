@@ -399,8 +399,13 @@ export class MsgActionParser {
         // in case of AVAX missing logs
         if (network == NETWORK.AVAX && tokenTransfers.length == 0) {
             const url = `https://cdn.routescan.io/api/blockchain/43114/tx/${txHash}?lean=false`
-            const res = await this.callApi(url, {})
-            const transferOp = res.data?.operations?.find((op: any) => op.value > 0)
+            const res = await retryAsync(
+                async () => {
+                    return await this.callApi(url, {})
+                },
+                { delay: 1000, maxTry: 3 }
+            )
+            const transferOp = res?.data?.operations?.find((op: any) => op.value > 0)
             if (transferOp) {
                 const symbol = NATIVE_ASSET[network]
                 const decimals = ASSET_MAP[symbol]?.decimals
