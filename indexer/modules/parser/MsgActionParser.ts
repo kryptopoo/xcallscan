@@ -350,8 +350,6 @@ export class MsgActionParser {
             parsedTx = contractInterface.parseTransaction(tx)
         } catch (error) {}
 
-        // console.log('parsedTx', parsedTx)
-
         if (parsedTx && parsedTx.name == 'depositNative') {
             return [
                 {
@@ -395,6 +393,25 @@ export class MsgActionParser {
                         amount: this.formatUnits(amount.toString(), decimals)
                     })
                 } catch (error) {}
+            }
+        }
+
+        // in case of AVAX missing logs
+        if (network == NETWORK.AVAX && tokenTransfers.length == 0) {
+            const url = `https://cdn.routescan.io/api/blockchain/43114/tx/${txHash}?lean=false`
+            const res = await this.callApi(url, {})
+            const transferOp = res.data?.operations?.find((op: any) => op.value > 0)
+            if (transferOp) {
+                const symbol = NATIVE_ASSET[network]
+                const decimals = ASSET_MAP[symbol]?.decimals
+                tokenTransfers.push({
+                    asset: {
+                        name: symbol,
+                        symbol: symbol,
+                        decimals: decimals
+                    },
+                    amount: decimals ? this.formatUnits(transferOp.value.toString(), decimals) : '0'
+                })
             }
         }
 
