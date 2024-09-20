@@ -159,7 +159,38 @@ export class MsgActionParser {
             errorCode = error.code
         }
 
+        logger.error(`called api might be failed ${apiUrl}`)
         return undefined
+    }
+
+    private async getSuiTx(txHash: string) {
+        const network = NETWORK.SUI
+        const apiUrl = `${API_URL[network]}/${API_KEY[network]}`
+        const postData = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'sui_getTransactionBlock',
+            params: [
+                txHash,
+                {
+                    showBalanceChanges: true,
+                    showEffects: true,
+                    showInput: true,
+                    showEvents: true,
+                    showObjectChanges: true,
+                    showRawInput: true
+                }
+            ]
+        }
+
+        try {
+            const axiosInstance = AxiosCustomInstance.getInstance()
+            const res = await axiosInstance.post(apiUrl, postData)
+
+            return res.data.result
+        } catch (error: any) {
+            logger.error(`called api failed ${apiUrl} ${error.code}`)
+        }
     }
 
     // For IBC networks
@@ -245,9 +276,9 @@ export class MsgActionParser {
             async () => {
                 return await this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash })
             },
-            { delay: 1000, maxTry: 5 }
+            { delay: 1000, maxTry: 3 }
         )
-        const rs = txHashRes.data
+        const rs = txHashRes?.data
 
         let tokenTransfer: TokenTransfer[] = []
         if (rs) {
@@ -284,7 +315,7 @@ export class MsgActionParser {
                     txHash: txHash
                 })
             },
-            { delay: 1000, maxTry: 5 }
+            { delay: 1000, maxTry: 3 }
         )
 
         // TODO: correct asset
@@ -300,14 +331,15 @@ export class MsgActionParser {
     }
 
     private async parseEvmTokenTransfers(network: string, txHash: string) {
-        const provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
+        // const provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
+        const provider = new ethers.providers.FallbackProvider(RPC_URLS[network].map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
 
         // deposit Native
         let tx = await retryAsync(
             async () => {
                 return await provider.getTransaction(txHash)
             },
-            { delay: 1000, maxTry: 5 }
+            { delay: 1000, maxTry: 3 }
         )
 
         const assetManagerAbi = require('../../abi/AssetManager.abi.json')
@@ -338,7 +370,7 @@ export class MsgActionParser {
             async () => {
                 return await provider.getTransactionReceipt(txHash)
             },
-            { delay: 1000, maxTry: 5 }
+            { delay: 1000, maxTry: 3 }
         )
         if (txDetail && txDetail.logs) {
             for (let index = 0; index < txDetail.logs.length; index++) {
@@ -377,7 +409,7 @@ export class MsgActionParser {
         const MINTSCAN_API_KEY = process.env.SCAN_MINTSCAN_API_KEY
         const url = `${MINTSCAN_BASE_API}/${network.replace('ibc_', '')}/txs/${cosmosHash(txHash)}`
         const txsRes = await this.callApi(url, {}, MINTSCAN_API_KEY)
-        const data = txsRes.data[0]
+        const data = txsRes?.data[0]
 
         if (data) {
             const msgExecuteContractItem = data.tx['/cosmos-tx-v1beta1-Tx'].body?.messages?.find(
@@ -425,15 +457,39 @@ export class MsgActionParser {
         return tokenTransfer
     }
 
+    private async parseSuiTokenTransfers(txhash: string) {
+        const network = NETWORK.SUI
+        const networkDecimals = 9
+        const tokenTransfer: TokenTransfer[] = []
+
+        const tx = await this.getSuiTx(txhash)
+
+        if (tx && tx.balanceChanges) {
+            for (let index = 0; index < tx.balanceChanges.length; index++) {
+                const balance = tx.balanceChanges[index]
+                const symbol = balance.coinType.split('::').pop()
+                tokenTransfer.push({
+                    asset: {
+                        name: symbol,
+                        symbol: symbol
+                    },
+                    amount: this.formatUnits(balance.amount.toString(), networkDecimals)
+                } as TokenTransfer)
+            }
+        }
+
+        return tokenTransfer
+    }
+
     private async getLoanTransfer(txHash: string) {
         const txHashRes = await retryAsync(
             async () => {
                 return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
             },
-            { delay: 1000, maxTry: 5 }
+            { delay: 1000, maxTry: 3 }
         )
 
-        const data = txHashRes.data
+        const data = txHashRes?.data
         const loanData = data?.find(
             (item: any) => item.method == 'OriginateLoan' || item.method == 'CollateralReceived' || item.method == 'LoanRepaid'
         )
@@ -445,10 +501,10 @@ export class MsgActionParser {
             async () => {
                 return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
             },
-            { delay: 1000, maxTry: 5 }
+            { delay: 1000, maxTry: 3 }
         )
 
-        const data = txHashRes.data
+        const data = txHashRes?.data
         const swapData = data?.find((item: any) => item.method == 'Swap')
         return swapData
     }
@@ -478,6 +534,11 @@ export class MsgActionParser {
         // Cosmos IBC
         if (network == NETWORK.IBC_ARCHWAY || network == NETWORK.IBC_INJECTIVE || network == NETWORK.IBC_NEUTRON) {
             return await this.parseCosmosTokenTransfers(network, txHash)
+        }
+
+        // SUI
+        if (network == NETWORK.SUI) {
+            return await this.parseSuiTokenTransfers(txHash)
         }
     }
 
@@ -517,13 +578,13 @@ export class MsgActionParser {
                     async () => {
                         return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
                     },
-                    { delay: 1000, maxTry: 5 }
+                    { delay: 1000, maxTry: 3 }
                 )
 
-                const loanData = txHashRes.data?.find(
+                const loanData = txHashRes?.data?.find(
                     (item: any) => item.method == 'OriginateLoan' || item.method == 'CollateralReceived' || item.method == 'LoanRepaid'
                 )
-                const swapData = txHashRes.data?.find((item: any) => item.method == 'Swap')
+                const swapData = txHashRes?.data?.find((item: any) => item.method == 'Swap')
 
                 // LOAN
                 if (loanData) {

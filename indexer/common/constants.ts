@@ -37,9 +37,7 @@ const RPC_URL: { [network: string]: string } = {
 
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uri,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
-
-    
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -56,7 +54,7 @@ const RPC_URLS: { [network: string]: string[] } = {
 
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uris,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris
 }
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
@@ -138,18 +136,20 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
 
 const API_KEY: { [network: string]: string } = {
     [NETWORK.ICON]: '',
+    [NETWORK.HAVAH]: '',
+
     [NETWORK.BSC]: process.env.SCAN_BSC_API_KEY ?? '',
     [NETWORK.ETH2]: process.env.SCAN_ETH_API_KEY ?? '',
-    [NETWORK.HAVAH]: '',
+    [NETWORK.BASE]: process.env.SCAN_BASE_API_KEY ?? '',
+    [NETWORK.ARBITRUM]: process.env.SCAN_ARBITRUM_API_KEY ?? '',
+    [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? '',
+    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? '', 
 
     [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',
     [NETWORK.IBC_INJECTIVE]: '',
 
-    [NETWORK.BASE]: process.env.SCAN_BASE_API_KEY ?? '',
-    [NETWORK.ARBITRUM]: process.env.SCAN_ARBITRUM_API_KEY ?? '',
-    [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? '',
-    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? ''
+    [NETWORK.SUI]: process.env.WEB3_BLOCKVISION_API_KEY ?? ''
 }
 
 const SERVICE_API_KEY = {
