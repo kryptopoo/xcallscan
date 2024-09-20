@@ -435,7 +435,7 @@ export class MsgActionParser {
             const msgExecuteContract = msgExecuteContractItem['/cosmwasm-wasm-v1-MsgExecuteContract']
 
             // try get transfer info
-            if ((msgExecuteContract && msgExecuteContract.funds.length == 0) || msgExecuteContractItem) {
+            if ((msgExecuteContract && msgExecuteContract.funds.length == 0) || (network == NETWORK.IBC_INJECTIVE && msgExecuteContractItem)) {
                 // assume transfer native
                 const transferLog = data.logs[0].events.find((e: any) => e.type == 'transfer')
                 if (!transferLog) {
@@ -468,6 +468,9 @@ export class MsgActionParser {
                         amount: this.formatUnits(f.amount, assetInfo.decimals || 18)
                     } as TokenTransfer
                 })
+
+                // don't care native token fee
+                if (tokenTransfer.length > 1) return tokenTransfer.filter((t) => t.asset.symbol != NATIVE_ASSET[network])
             }
         }
 
