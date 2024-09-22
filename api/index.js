@@ -26,7 +26,8 @@ const defaultAllowedOrigins = [
     'http://testnet.xcallscan.xyz',
     'https://testnet.xcallscan.xyz',
     'http://xcallscan.xyz',
-    'https://xcallscan.xyz'
+    'https://xcallscan.xyz',
+    'https://balanced-network-interface-([a-zA-Z0-9]*)-balanced-dao.vercel.app(.*)'
 ]
 
 const allowedOrigins = defaultAllowedOrigins.concat(process.env.ALLOW_ORIGINS ? process.env.ALLOW_ORIGINS.split(';') : [])
@@ -34,6 +35,23 @@ const allowedOrigins = defaultAllowedOrigins.concat(process.env.ALLOW_ORIGINS ? 
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true)
+
+        // check regex origins
+        // simple check regex string
+        const isRegex = (str) => {
+            return str.indexOf('*') > -1
+        }
+        const regexOrigins = allowedOrigins.filter((o) => isRegex(o))
+        if (regexOrigins.length > 0) {
+            for (let i = 0; i < regexOrigins.length; i++) {
+                const regexOrigin = regexOrigins[i]
+                const isValid = origin.search(regexOrigin) > -1
+                if (isValid) {
+                    return callback(null, true)
+                }
+            }
+        }
+
         if (allowedOrigins.indexOf(origin) === -1) {
             var msg = 'The CORS policy for this site does not ' + 'allow access from the specified Origin.'
             return callback(new Error(msg), false)
