@@ -25,32 +25,40 @@ const NETWORK = {
 
 const RPC_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.uri,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uri,
+
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uri,
     [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uri,
-    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uri,
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uri,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.uri,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri,
 
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uri,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
 
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri
+    [NETWORK.SUI]: CONFIG_NETWORKS.polygon.uri
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.uris,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uris,
     [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uris,
-    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uris,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uris,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
 
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uris,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris
 }
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
@@ -87,7 +95,9 @@ const WSS: { [network: string]: string[] } = {
         'wss://rpc.neutron.quokkastake.io:443/websocket',
         'wss://neutron-rpc.publicnode.com:443/websocket',
         'wss://rpc-neutron.whispernode.com:443/websocket'
-    ]
+    ],
+
+    [NETWORK.SUI]: ["https://sui-mainnet-endpoint.blockvision.org"]
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
