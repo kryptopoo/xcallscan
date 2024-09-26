@@ -78,9 +78,10 @@ app.get('/api/messages', async (req, res) => {
     const dest_address = req.query.dest_address
     const from_timestamp = req.query.from_timestamp
     const to_timestamp = req.query.to_timestamp
+    const action_type = req.query.action_type
 
     try {
-        const rs = await db.getMessages(skip, limit, status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp)
+        const rs = await db.getMessages(skip, limit, status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp, action_type)
 
         res.status(200).json(rs)
     } catch (error) {

@@ -255,6 +255,29 @@ class Db {
         return isRollbackedStatus
     }
 
+    async updateMessageAction(
+        sn: number,
+        src_network: string,
+        dest_network: string,
+        action_type: string,
+        action_detail: string,
+        action_amount_usd: string
+    ) {
+        try {
+            const rs = await this.pool.query(
+                `UPDATE messages   
+                SET action_type = $4, action_detail = $5, action_amount_usd = $6
+                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 `,
+                [sn, src_network, dest_network, action_type, action_detail, action_amount_usd]
+            )
+            return rs.rowCount ?? 0
+        } catch (error: any) {
+            logger.error(`db: error ${error.message}`)
+        }
+
+        return 0
+    }
+
     async updateMessageSynced(sn: number, src_network: string, dest_network: string, src_app: string, synced: boolean) {
         try {
             const rs = await this.pool.query(

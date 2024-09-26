@@ -11,13 +11,22 @@ const getAssets = async () => {
     return res.json()
 }
 
-const getMessages = async (pageSize, pageNumber) => {
+const getMessages = async (pageSize, pageNumber, srcNetwork, destNetwork, actionType) => {
     // await new Promise((r) => setTimeout(r, 1000))
 
     const skip = parseInt(pageSize) * (parseInt(pageNumber) - 1)
     const limit = parseInt(pageSize)
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/messages?skip=${skip}&limit=${limit}`, { cache: 'no-store' })
+    const params = {
+        skip,
+        limit
+    }
+
+    if (srcNetwork) params.src_network = srcNetwork
+    if (destNetwork) params.dest_network = destNetwork
+    if (actionType) params.action_type = actionType
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/messages?${new URLSearchParams(params)}`, { cache: 'no-store' })
 
     if (res.status !== 200) {
         throw new Error(`Status ${res.status}`)

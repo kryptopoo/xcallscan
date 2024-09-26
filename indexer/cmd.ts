@@ -120,6 +120,7 @@ const runCmd = async () => {
         const sn = args[1]
         const srcNetwork = args[2] ?? ''
         const destNetwork = args[3] ?? ''
+        const storedb = args[4] ? Boolean(args[4]) : false
         const db = new Db()
         const actionParser = new MsgActionParser()
 
@@ -130,7 +131,11 @@ const runCmd = async () => {
                 if (msg.src_tx_hash && msg.dest_tx_hash) {
                     console.log(`id:${msg.id} sn:${msg.sn} ${msg.src_network} ${msg.src_tx_hash} -> ${msg.dest_network} ${msg.dest_tx_hash}`)
                     actionParser.parseMgsAction(msg.src_network, msg.src_tx_hash, msg.dest_network, msg.dest_tx_hash).then((act) => {
-                        console.log(`action`, act)
+                        console.log(`id:${msg.id} sn:${msg.sn} msg_action`, act)
+
+                        if (act && storedb) {
+                            db.updateMessageAction(msg.sn, msg.src_network, msg.dest_network, act.type, JSON.stringify(act.detail), act.amount_usd)
+                        }
                     })
                 }
             }

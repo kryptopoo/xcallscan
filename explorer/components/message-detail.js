@@ -6,6 +6,30 @@ import helper from '@/lib/helper'
 import Script from 'next/script'
 
 export default async function MessageDetail({ msgData, meta }) {
+    const round = (str) => {
+        return Number(str).toFixed(8)
+    }
+
+    const msgActionDetail = JSON.parse(msgData.action_detail)
+    let msgAction = ''
+    switch (msgData.action_type) {
+        case 'Transfer':
+            const transferAssetSymbol = msgActionDetail.dest_asset.symbol || msgActionDetail.src_asset.symbol
+            const transferAmount = Number(msgActionDetail.dest_amount) > 0 ? msgActionDetail.dest_amount : Number(msgActionDetail.src_amount) > 0 ? msgActionDetail.src_amount : '0'
+            msgAction = `${msgData.action_type} ${round(transferAmount)} ${transferAssetSymbol}`
+            break
+        case 'Swap':
+            msgAction = `${msgData.action_type} ${round(msgActionDetail?.src_amount)} ${msgActionDetail?.src_asset?.symbol} -> ${round(msgActionDetail?.dest_amount)} ${
+                msgActionDetail?.dest_asset?.symbol
+            }`
+            break
+        case 'Loan':
+            msgAction = `${msgActionDetail.type} ${msgActionDetail?.dest_amount} ${msgActionDetail?.dest_asset?.symbol}`
+            break
+        default:
+            break
+    }
+
     return (
         <div className="py-2 flex flex-col">
             <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -115,7 +139,17 @@ export default async function MessageDetail({ msgData, meta }) {
 
                         <div className="table-row bg-white border-b">
                             <div className="table-cell xl:w-96 px-3 py-2 xl:px-6 xl:py-4 font-medium whitespace-normal xl:whitespace-nowrap">Transaction fee:</div>
-                            <div className="table-cell px-3 py-2 xl:px-6 xl:py-4">{converter.fromWei(msgData.fee).toFixed(4)} {helper.getNativeAsset(msgData.src_network)}</div>
+                            <div className="table-cell px-3 py-2 xl:px-6 xl:py-4">
+                                {converter.fromWei(msgData.fee).toFixed(8)} {helper.getNativeAsset(msgData.src_network)}
+                            </div>
+                        </div>
+
+                        <div className="table-row bg-white border-b">
+                            <div className="table-cell xl:w-96 px-3 py-2 xl:px-6 xl:py-4 font-medium whitespace-normal xl:whitespace-nowrap">Action:</div>
+                            <div className="table-cell px-3 py-2 xl:px-6 xl:py-4">
+                                {msgAction} 
+                                {/* <br /><br />{JSON.stringify(msgActionDetail)} */}
+                            </div>
                         </div>
 
                         <div className="table-row bg-white border-b">
@@ -127,7 +161,7 @@ export default async function MessageDetail({ msgData, meta }) {
             </div>
 
             <div className="py-4 flex flex-row-reverse">
-                <Link className="hover:underline underline-offset-2 text-sm pr-2" href={`/messages`}>
+                <Link className="hover:underline underline-offset-2 text-sm pr-2" href={`/`}>
                     Back to Messages
                 </Link>
             </div>

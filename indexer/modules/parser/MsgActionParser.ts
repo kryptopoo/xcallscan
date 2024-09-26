@@ -72,6 +72,11 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         decimals: 6,
         priceUsd: '1'
     },
+    USDT: {
+        symbols: ['USDT', 'archUSDT'],
+        decimals: 6,
+        priceUsd: '1'
+    },
     BTC: {
         symbols: ['BTC', 'WBTC'],
         decimals: 18,
@@ -79,7 +84,7 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         cmcId: 1
     },
     ETH: {
-        symbols: ['ETH', 'WETH'],
+        symbols: ['ETH', 'WETH', 'weETH'],
         decimals: 18,
         priceUsd: '',
         cmcId: 1027
@@ -109,16 +114,16 @@ const NATIVE_ASSET: { [network: string]: string } = {
 }
 
 const NETWORK_ASSETS: { [network: string]: string[] } = {
-    [NETWORK.ICON]: ['ICX', 'bnUSD'],
-    [NETWORK.BSC]: ['BNB'],
+    [NETWORK.ICON]: ['ICX', 'bnUSD', 'sICX', 'CFT'],
+    [NETWORK.BSC]: ['BNB', 'bnUSD'],
     [NETWORK.ETH2]: ['ETH'],
-    [NETWORK.HAVAH]: ['HVH'],
-    [NETWORK.IBC_ARCHWAY]: ['ARCH'],
+    [NETWORK.HAVAH]: ['HVH', 'bnUSD'],
+    [NETWORK.IBC_ARCHWAY]: ['ARCH', 'sARCH', 'bnUSD', 'USDC'],
     [NETWORK.IBC_NEUTRON]: ['NTRN'],
-    [NETWORK.IBC_INJECTIVE]: ['INJ'],
-    [NETWORK.AVAX]: ['AVAX'],
-    [NETWORK.BASE]: ['ETH'],
-    [NETWORK.ARBITRUM]: ['ETH'],
+    [NETWORK.IBC_INJECTIVE]: ['INJ', 'bnUSD'],
+    [NETWORK.AVAX]: ['AVAX', 'bnUSD', 'USDT', 'USDC'],
+    [NETWORK.BASE]: ['ETH', 'bnUSD', 'USDC'],
+    [NETWORK.ARBITRUM]: ['ETH', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.OPTIMISM]: ['ETH'],
     [NETWORK.SUI]: ['SUI'],
     [NETWORK.POLYGON]: ['MATIC']
@@ -233,7 +238,7 @@ export class MsgActionParser {
     }
 
     private isUsdAsset(symbol: string) {
-        const usdAssets = ['USDC', 'bnUSD']
+        const usdAssets = ['USDC', 'USDT', 'bnUSD']
         for (let index = 0; index < usdAssets.length; index++) {
             const key = usdAssets[index]
             if (ASSET_MAP[key].symbols.includes(symbol)) return true
@@ -278,6 +283,8 @@ export class MsgActionParser {
     }
 
     private async convertAmountUsd(amount: string, assetSymbol: string) {
+        if (this.isUsdAsset(assetSymbol)) return amount
+
         const priceUsd = await this.getPrice(assetSymbol)
         const amountNumber = Number(amount) * Number(priceUsd)
         return amountNumber.toFixed(6)
@@ -523,34 +530,6 @@ export class MsgActionParser {
         return tokenTransfer
     }
 
-    private async getLoanTransfer(txHash: string) {
-        const txHashRes = await retryAsync(
-            async () => {
-                return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
-            },
-            { delay: 1000, maxTry: 3 }
-        )
-
-        const data = txHashRes?.data
-        const loanData = data?.find(
-            (item: any) => item.method == 'OriginateLoan' || item.method == 'CollateralReceived' || item.method == 'LoanRepaid'
-        )
-        return loanData?.method as string
-    }
-
-    private async isSwapTransfer(txHash: string) {
-        const txHashRes = await retryAsync(
-            async () => {
-                return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
-            },
-            { delay: 1000, maxTry: 3 }
-        )
-
-        const data = txHashRes?.data
-        const swapData = data?.find((item: any) => item.method == 'Swap')
-        return swapData
-    }
-
     async parseTokenTransfers(network: string, txHash: string): Promise<TokenTransfer[] | undefined> {
         if (network == NETWORK.ICON) {
             return await this.parseIconTokenTransfers(txHash)
@@ -627,8 +606,6 @@ export class MsgActionParser {
             }
             const amountAsset = fromTokenTransfers[0] ?? toTokenTransfers[0]
             msgAction.amount_usd = await this.convertAmountUsd(amountAsset.amount, amountAsset.asset.symbol)
-
-            return msgAction
         }
 
         // xtransfer - swap - loan
@@ -654,17 +631,17 @@ export class MsgActionParser {
                     msgAction.detail!.type = 'CrossTransfer'
 
                     // assume native asset
-                    msgAction.detail!.src_asset = { name: 'ICX', symbol: 'ICX' }
-                    msgAction.detail!.src_amount = ethers.utils
-                        .formatEther(BigNumber.from(JSON.parse(xtransfer.data)[1]).toString())
-                        .toString()
-                    msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
+                    if (fromNetwork == NETWORK.ICON && msgAction.detail && !msgAction.detail.src_asset) {
+                        msgAction.detail.src_asset = { name: 'ICX', symbol: 'ICX' }
+                        msgAction.detail.src_amount = ethers.utils.formatEther(BigNumber.from(JSON.parse(xtransfer.data)[1]).toString()).toString()
+                        msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
+                    }
                 }
 
                 // LOAN
                 if (loanData) {
                     msgAction.type = `Loan`
-                    msgAction.detail!.type = `Loan-${loanData.method.toLowerCase()}`
+                    msgAction.detail!.type = `Loan-${loanData.method}`
                 }
 
                 // SWAP
@@ -728,7 +705,7 @@ export class MsgActionParser {
 
         // default as sending message
         return {
-            type: 'sendmsg',
+            type: 'SendMsg',
             amount_usd: '0'
         } as MgsAction
     }
