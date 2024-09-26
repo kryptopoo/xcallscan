@@ -9,7 +9,7 @@ import IconService from 'icon-sdk-js'
 
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
-// TODO: map price usd
+// map native tokens to wrapped tokens
 const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; priceUsd: string; denom?: string; cmcId?: number } } = {
     MATIC: {
         symbols: ['MATIC'],
@@ -78,7 +78,7 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         priceUsd: '1'
     },
     BTC: {
-        symbols: ['BTC', 'WBTC'],
+        symbols: ['BTC', 'WBTC', 'tBTC'],
         decimals: 18,
         priceUsd: '',
         cmcId: 1
@@ -97,20 +97,21 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
     }
 }
 
-const NATIVE_ASSET: { [network: string]: string } = {
-    [NETWORK.ICON]: 'ICX',
-    [NETWORK.BSC]: 'BNB',
-    [NETWORK.ETH2]: 'ETH',
-    [NETWORK.HAVAH]: 'HVH',
-    [NETWORK.IBC_ARCHWAY]: 'ARCH',
-    [NETWORK.IBC_NEUTRON]: 'NTRN',
-    [NETWORK.IBC_INJECTIVE]: 'INJ',
-    [NETWORK.AVAX]: 'AVAX',
-    [NETWORK.BASE]: 'ETH',
-    [NETWORK.ARBITRUM]: 'ETH',
-    [NETWORK.OPTIMISM]: 'ETH',
-    [NETWORK.SUI]: 'SUI',
-    [NETWORK.POLYGON]: 'MATIC'
+// native assets
+const NATIVE_ASSETS: { [network: string]: string[] } = {
+    [NETWORK.ICON]: ['ICX', 'sICX'],
+    [NETWORK.BSC]: ['BNB'],
+    [NETWORK.ETH2]: ['ETH'],
+    [NETWORK.HAVAH]: ['HVH'],
+    [NETWORK.IBC_ARCHWAY]: ['ARCH'],
+    [NETWORK.IBC_NEUTRON]: ['NTRN'],
+    [NETWORK.IBC_INJECTIVE]: ['INJ'],
+    [NETWORK.AVAX]: ['AVAX'],
+    [NETWORK.BASE]: ['ETH'],
+    [NETWORK.ARBITRUM]: ['ETH'],
+    [NETWORK.OPTIMISM]: ['ETH'],
+    [NETWORK.SUI]: ['SUI'],
+    [NETWORK.POLYGON]: ['MATIC']
 }
 
 const NETWORK_ASSETS: { [network: string]: string[] } = {
@@ -123,7 +124,7 @@ const NETWORK_ASSETS: { [network: string]: string[] } = {
     [NETWORK.IBC_INJECTIVE]: ['INJ', 'bnUSD'],
     [NETWORK.AVAX]: ['AVAX', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.BASE]: ['ETH', 'bnUSD', 'USDC'],
-    [NETWORK.ARBITRUM]: ['ETH', 'bnUSD', 'USDT', 'USDC'],
+    [NETWORK.ARBITRUM]: ['ETH', 'WBTC', 'tBTC', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.OPTIMISM]: ['ETH'],
     [NETWORK.SUI]: ['SUI'],
     [NETWORK.POLYGON]: ['MATIC']
@@ -314,20 +315,23 @@ export class MsgActionParser {
             }, {})
 
             for (const symbol in groupBySymbol) {
+                // skip burned token
+                if (groupBySymbol[symbol].filter((item: any) => item.to_address == 'hx0000000000000000000000000000000000000000').length > 0) continue
+
+                const token = groupBySymbol[symbol].sort((a: any, b: any) => a.value_decimal - b.value_decimal).pop()
                 tokenTransfer.push({
                     asset: {
                         name: symbol,
-                        symbol: symbol
+                        symbol: symbol,
+                        contract: token?.token_contract_address
                         // decimals: 0
                     },
-                    amount: groupBySymbol[symbol]
-                        .sort((a: any, b: any) => a.value_decimal - b.value_decimal)
-                        .pop()
-                        ?.value_decimal?.toString()
+                    amount: token?.value_decimal.toString()
                 })
             }
         }
 
+        console.log('tokenTransfer', tokenTransfer)
         return tokenTransfer
     }
 
@@ -346,8 +350,8 @@ export class MsgActionParser {
         return [
             {
                 asset: {
-                    name: NATIVE_ASSET[network],
-                    symbol: NATIVE_ASSET[network]
+                    name: NATIVE_ASSETS[network][0],
+                    symbol: NATIVE_ASSETS[network][0]
                 },
                 amount: txHashRes.data.data.amount
             } as TokenTransfer
@@ -378,8 +382,8 @@ export class MsgActionParser {
             return [
                 {
                     asset: {
-                        name: NATIVE_ASSET[network],
-                        symbol: NATIVE_ASSET[network]
+                        name: NATIVE_ASSETS[network][0],
+                        symbol: NATIVE_ASSETS[network][0]
                     },
                     amount: this.formatUnits(parsedTx.args?.amount?.toString(), 18)
                 } as TokenTransfer
@@ -431,7 +435,7 @@ export class MsgActionParser {
             )
             const transferOp = res?.data?.operations?.find((op: any) => op.value > 0)
             if (transferOp) {
-                const symbol = NATIVE_ASSET[network]
+                const symbol = NATIVE_ASSETS[network][0]
                 const decimals = ASSET_MAP[symbol]?.decimals
                 tokenTransfers.push({
                     asset: {
@@ -471,19 +475,20 @@ export class MsgActionParser {
                     return []
                 }
 
+                const nativeAssetSymbol = NATIVE_ASSETS[network][0]
                 const transferAmount = transferLog.attributes?.find((a: any) => a.key == 'amount')?.value.toString()
-                const nativeDenom = ASSET_MAP[NATIVE_ASSET[network]].denom
+                const nativeDenom = ASSET_MAP[nativeAssetSymbol].denom
                 const transferAssetDenom =
                     transferAmount.indexOf(nativeDenom) > 0 ? nativeDenom : transferAmount.substring(transferAmount.indexOf('ibc/'))
                 const assetInfo =
                     transferAssetDenom == nativeDenom
-                        ? ({ name: NATIVE_ASSET[network], symbol: NATIVE_ASSET[network] } as TokenInfo)
+                        ? ({ name: nativeAssetSymbol, symbol: nativeAssetSymbol } as TokenInfo)
                         : this.getAssetByContract(network, transferAssetDenom)
 
                 tokenTransfer = [
                     {
                         asset: assetInfo,
-                        amount: this.formatUnits(transferAmount.replace(transferAssetDenom, ''), ASSET_MAP[NATIVE_ASSET[network]].decimals)
+                        amount: this.formatUnits(transferAmount.replace(transferAssetDenom, ''), ASSET_MAP[nativeAssetSymbol].decimals)
                     } as TokenTransfer
                 ]
             }
@@ -499,7 +504,7 @@ export class MsgActionParser {
                 })
 
                 // don't care native token fee
-                if (tokenTransfer.length > 1) return tokenTransfer.filter((t) => t.asset.symbol != NATIVE_ASSET[network])
+                if (tokenTransfer.length > 1) return tokenTransfer.filter((t) => t.asset.symbol != NATIVE_ASSETS[network][0])
             }
         }
 
@@ -590,22 +595,22 @@ export class MsgActionParser {
 
         // transfer
         if (fromTokenTransfers.length == 1 || toTokenTransfers.length == 1) {
+            const srcTokenTransfer = fromTokenTransfers[0]
+            const destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol == srcTokenTransfer.asset.symbol)
+
             msgAction = {
                 type: 'Transfer',
                 detail: {
                     type: 'Transfer',
                     src_network: fromNetwork,
-                    src_asset: fromTokenTransfers[0] ? fromTokenTransfers[0].asset : ({ name: '', symbol: '' } as TokenInfo),
-                    src_amount: fromTokenTransfers[0] ? fromTokenTransfers[0].amount : '0',
+                    src_asset: srcTokenTransfer.asset,
+                    src_amount: srcTokenTransfer.amount,
                     dest_network: toNetwork,
-                    dest_asset: toTokenTransfers[0] ? toTokenTransfers[0].asset : ({ name: '', symbol: '' } as TokenInfo),
-                    dest_amount: toTokenTransfers[0] ? toTokenTransfers[0].amount : '0'
+                    dest_asset: destTokenTransfer ? destTokenTransfer.asset : ({ name: '', symbol: '' } as TokenInfo),
+                    dest_amount: destTokenTransfer ? destTokenTransfer.amount : '0'
                 },
-                // TODO: correct decimals
-                amount_usd: '0'
+                amount_usd: await this.convertAmountUsd(srcTokenTransfer.amount, srcTokenTransfer.asset.symbol)
             }
-            const amountAsset = fromTokenTransfers[0] ?? toTokenTransfers[0]
-            msgAction.amount_usd = await this.convertAmountUsd(amountAsset.amount, amountAsset.asset.symbol)
         }
 
         // xtransfer - swap - loan
@@ -650,18 +655,18 @@ export class MsgActionParser {
                     msgAction.detail!.type = 'Swap'
 
                     if (fromNetwork == NETWORK.ICON && fromTokenTransfers.length >= 2) {
-                        const srcTokenTransfer = fromTokenTransfers.find((t) => NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
-                        const destTokenTransfer = fromTokenTransfers.find((t) => NETWORK_ASSETS[toNetwork].includes(t.asset.symbol))
+                        // const srcTokenTransfer = fromTokenTransfers.find((t) => NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
+                        // const destTokenTransfer = fromTokenTransfers.find((t) => NETWORK_ASSETS[toNetwork].includes(t.asset.symbol))
 
-                        if (srcTokenTransfer) {
-                            msgAction.detail!.src_asset = srcTokenTransfer.asset
-                            msgAction.detail!.src_amount = srcTokenTransfer.amount
-                        }
+                        // if (srcTokenTransfer) {
+                        //     msgAction.detail!.src_asset = srcTokenTransfer.asset
+                        //     msgAction.detail!.src_amount = srcTokenTransfer.amount
+                        // }
 
-                        if (destTokenTransfer) {
-                            msgAction.detail!.dest_asset = destTokenTransfer.asset
-                            msgAction.detail!.dest_amount = destTokenTransfer.amount
-                        }
+                        // if (destTokenTransfer) {
+                        //     msgAction.detail!.dest_asset = destTokenTransfer.asset
+                        //     msgAction.detail!.dest_amount = destTokenTransfer.amount
+                        // }
 
                         // for (let i = 0; i < fromTokenTransfers.length; i++) {
                         //     const tokenTransfer = fromTokenTransfers[i]
@@ -671,13 +676,46 @@ export class MsgActionParser {
                         //         msgAction.detail!.dest_amount = tokenTransfer.amount
                         //     }
                         // }
+
+                        const destTokenTransfer = toTokenTransfers[0]
+                        if (destTokenTransfer) {
+                            msgAction.detail!.dest_asset = destTokenTransfer.asset
+                            msgAction.detail!.dest_amount = destTokenTransfer.amount
+                        }
+
+                        // swap from native assets
+                        const srcTokenTransfer = fromTokenTransfers.find((t) => NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol))
+                        if (srcTokenTransfer) {
+                            msgAction.detail!.src_asset = {
+                                name: NATIVE_ASSETS[fromNetwork][0],
+                                symbol: NATIVE_ASSETS[fromNetwork][0]
+                            }
+                            msgAction.detail!.src_amount = srcTokenTransfer.amount
+                        }
                     }
 
                     if (toNetwork == NETWORK.ICON && toTokenTransfers.length >= 2) {
-                        msgAction.detail!.src_asset = toTokenTransfers[0].asset
-                        msgAction.detail!.src_amount = toTokenTransfers[0].amount
-                        msgAction.detail!.dest_asset = toTokenTransfers[1].asset
-                        msgAction.detail!.dest_amount = toTokenTransfers[1].amount
+                        const srcTokenTransfer = fromTokenTransfers[0]
+
+                        if (srcTokenTransfer) {
+                            msgAction.detail!.src_asset = srcTokenTransfer.asset
+                            msgAction.detail!.src_amount = srcTokenTransfer.amount
+                        }
+
+                        // // TODO: swap to ICX
+                        // const icxTransfers = txHashRes.data?.filter((e: any) => e.method == 'ICXTransfer')
+                        // if (icxTransfers && icxTransfers.length > 0) {
+                        //     const icxTransferAmount = JSON.parse(icxTransfers[0].indexed).pop()
+
+                        //     msgAction.detail!.dest_asset = { symbol: 'ICX', name: 'ICX' }
+                        //     msgAction.detail!.dest_amount = ethers.utils.formatEther(BigNumber.from(icxTransferAmount).toString()).toString()
+                        // }
+
+                        const destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol != srcTokenTransfer?.asset.symbol)
+                        if (destTokenTransfer) {
+                            msgAction.detail!.dest_asset = destTokenTransfer.asset
+                            msgAction.detail!.dest_amount = destTokenTransfer.amount
+                        }
 
                         // for (let i = 0; i < toTokenTransfers.length; i++) {
                         //     const tokenTransfer = toTokenTransfers[i]
