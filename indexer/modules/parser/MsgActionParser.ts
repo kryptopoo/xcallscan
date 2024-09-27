@@ -1,11 +1,12 @@
 import logger from '../logger/logger'
 import { BigNumber, ethers } from 'ethers'
 import axios from 'axios'
-import { API_KEY, API_URL, NETWORK, RPC_URL, RPC_URLS, USE_MAINNET } from '../../common/constants'
+import { API_KEY, API_URL, NETWORK, RPC_URL, RPC_URLS, USE_MAINNET, WEB3_ALCHEMY_API_KEY } from '../../common/constants'
 import { cosmosHash, sleep } from '../../common/helper'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { retryAsync } from 'ts-retry'
 import IconService from 'icon-sdk-js'
+// import { Alchemy, AssetTransfersCategory, Network } from 'alchemy-sdk'
 
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
@@ -115,7 +116,7 @@ const NATIVE_ASSETS: { [network: string]: string[] } = {
 }
 
 const NETWORK_ASSETS: { [network: string]: string[] } = {
-    [NETWORK.ICON]: ['ICX', 'bnUSD', 'sICX', 'CFT'],
+    [NETWORK.ICON]: ['ICX', 'bnUSD', 'sICX', 'BALN', 'USDT', 'USDC', 'sARCH', 'SUI', 'INJ', 'HVH', 'ETH', 'BTC', 'BNB', 'AVAX', 'hyTB', 'OMM', 'CFT'],
     [NETWORK.BSC]: ['BNB', 'bnUSD'],
     [NETWORK.ETH2]: ['ETH'],
     [NETWORK.HAVAH]: ['HVH', 'bnUSD'],
@@ -426,6 +427,54 @@ export class MsgActionParser {
                     })
                 } catch (error) {}
             }
+
+            // TODO: Using Alchemy to get token transfers
+            // // try alchemy
+            // const config = {
+            //     apiKey: WEB3_ALCHEMY_API_KEY,
+            //     network: Network.BASE_MAINNET
+            // }
+            // const alchemy = new Alchemy(config)
+            // const assetTransfers = await alchemy.core.getAssetTransfers({
+            //     fromBlock: `0x${txDetail.blockNumber.toString(16)}`,
+            //     toBlock: `0x${txDetail.blockNumber.toString(16)}`,
+            //     fromAddress: txDetail.from,
+            //     toAddress: txDetail.to,
+            //     excludeZeroValue: true,
+            //     category: [AssetTransfersCategory.INTERNAL]
+            // })
+            // console.log('assetTransfers', assetTransfers)
+
+            // Try get internal transactions
+            if (tokenTransfers.length == 0) {
+                const internalTxsRes = await this.callApi(API_URL[network], {
+                    module: 'account',
+                    action: 'txlistinternal',
+                    txhash: txDetail.transactionHash,
+                    // address: txDetail.to,
+                    // startblock: txDetail.blockNumber,
+                    // endblock: txDetail.blockNumber,
+                    apikey: API_KEY[network],
+                    page: 1,
+                    offset: 10,
+                    sort: 'asc'
+                })
+                if (internalTxsRes && internalTxsRes.data) {
+                    for (let i = 0; i < internalTxsRes.data.result.length; i++) {
+                        const internalTx = internalTxsRes.data.result[i]
+
+                        const nativeAssetSymbol = NATIVE_ASSETS[network][0]
+                        const nativeAsset = ASSET_MAP[nativeAssetSymbol]
+                        tokenTransfers.push({
+                            asset: {
+                                name: nativeAssetSymbol,
+                                symbol: nativeAssetSymbol
+                            },
+                            amount: this.formatUnits(internalTx.value.toString(), nativeAsset.decimals)
+                        })
+                    }
+                }
+            }
         }
 
         // in case of AVAX missing logs
@@ -607,14 +656,19 @@ export class MsgActionParser {
                 detail: {
                     type: 'Transfer',
                     src_network: fromNetwork,
-                    src_asset: srcTokenTransfer.asset,
-                    src_amount: srcTokenTransfer.amount,
+                    src_asset: srcTokenTransfer ? srcTokenTransfer.asset : ({ name: '', symbol: '' } as TokenInfo),
+                    src_amount: srcTokenTransfer ? srcTokenTransfer.amount : '0',
                     dest_network: toNetwork,
                     dest_asset: destTokenTransfer ? destTokenTransfer.asset : ({ name: '', symbol: '' } as TokenInfo),
                     dest_amount: destTokenTransfer ? destTokenTransfer.amount : '0'
                 },
-                amount_usd: await this.convertAmountUsd(srcTokenTransfer.amount, srcTokenTransfer.asset.symbol)
+                amount_usd: '0'
             }
+
+            msgAction.amount_usd = await this.convertAmountUsd(
+                msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '0',
+                msgAction.detail?.src_asset.symbol || msgAction.detail?.src_asset.symbol || ''
+            )
         }
 
         // xtransfer - swap - loan
@@ -645,6 +699,8 @@ export class MsgActionParser {
                         msgAction.detail.src_amount = ethers.utils.formatEther(BigNumber.from(JSON.parse(xtransfer.data)[1]).toString()).toString()
                         msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
                     }
+
+                    //
                 }
 
                 // LOAN
@@ -687,13 +743,14 @@ export class MsgActionParser {
                             msgAction.detail!.dest_amount = destTokenTransfer.amount
                         }
 
-                        // swap from native assets
-                        const srcTokenTransfer = fromTokenTransfers.find((t) => NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol))
+                        // swap from native assets & erc20 assets
+                        const srcTokenTransfer = fromTokenTransfers.find(
+                            (t) =>
+                                t.asset.symbol != destTokenTransfer.asset.symbol &&
+                                (NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol) || NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
+                        )
                         if (srcTokenTransfer) {
-                            msgAction.detail!.src_asset = {
-                                name: NATIVE_ASSETS[fromNetwork][0],
-                                symbol: NATIVE_ASSETS[fromNetwork][0]
-                            }
+                            msgAction.detail!.src_asset = srcTokenTransfer.asset
                             msgAction.detail!.src_amount = srcTokenTransfer.amount
                         }
                     }
