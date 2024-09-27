@@ -574,13 +574,23 @@ export class MsgActionParser {
         if (tx && tx.balanceChanges) {
             for (let index = 0; index < tx.balanceChanges.length; index++) {
                 const balance = tx.balanceChanges[index]
-                const symbol = balance.coinType.split('::').pop()
+                const amount = Math.abs(Number(balance.amount.toString()))
+
+                let symbol = balance.coinType.split('::').pop()
+                // fix wrong symbol
+                symbol = symbol == 'BALANCED_DOLLAR' ? 'bnUSD' : symbol
+
+                // don't care tiny amount
+                // 10000000 ~ 0.01
+                const tinyAmount = 10000000
+                if (symbol == 'SUI' && amount < tinyAmount) continue
+
                 tokenTransfer.push({
                     asset: {
                         name: symbol,
                         symbol: symbol
                     },
-                    amount: this.formatUnits(balance.amount.toString(), networkDecimals)
+                    amount: this.formatUnits(amount.toString(), networkDecimals)
                 } as TokenTransfer)
             }
         }
@@ -639,17 +649,22 @@ export class MsgActionParser {
                 type: '',
                 src_network: fromNetwork,
                 src_asset: { name: '', symbol: '' },
-                src_amount: '0',
+                src_amount: '',
                 dest_network: toNetwork,
                 dest_asset: { name: '', symbol: '' },
-                dest_amount: '0'
+                dest_amount: ''
             }
         }
 
         // transfer
         if (fromTokenTransfers.length == 1 || toTokenTransfers.length == 1) {
-            const srcTokenTransfer = fromTokenTransfers[0]
-            const destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol == srcTokenTransfer?.asset.symbol)
+            let srcTokenTransfer = fromTokenTransfers[0]
+            let destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol == srcTokenTransfer?.asset.symbol)
+            // const tokenTransfer = toTokenTransfers.find((t) => fromTokenTransfers.filter(from => from.asset.symbol == t.asset.symbol).length > 0 )
+            // console.log('tokenTransfer', tokenTransfer)
+
+            // fix for sui cases
+            if (!destTokenTransfer) destTokenTransfer = toTokenTransfers[0]
 
             msgAction = {
                 type: 'Transfer',
@@ -657,17 +672,18 @@ export class MsgActionParser {
                     type: 'Transfer',
                     src_network: fromNetwork,
                     src_asset: srcTokenTransfer ? srcTokenTransfer.asset : ({ name: '', symbol: '' } as TokenInfo),
-                    src_amount: srcTokenTransfer ? srcTokenTransfer.amount : '0',
+                    src_amount: srcTokenTransfer ? srcTokenTransfer.amount : '',
                     dest_network: toNetwork,
                     dest_asset: destTokenTransfer ? destTokenTransfer.asset : ({ name: '', symbol: '' } as TokenInfo),
-                    dest_amount: destTokenTransfer ? destTokenTransfer.amount : '0'
+                    dest_amount: destTokenTransfer ? destTokenTransfer.amount : ''
                 },
                 amount_usd: '0'
             }
 
+           
             msgAction.amount_usd = await this.convertAmountUsd(
-                msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '0',
-                msgAction.detail?.src_asset.symbol || msgAction.detail?.src_asset.symbol || ''
+                msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '',
+                msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || ''
             )
         }
 
@@ -700,7 +716,14 @@ export class MsgActionParser {
                         msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
                     }
 
-                    //
+                    // console.log('test msgAction', msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || '')
+                    // console.log('test msgAction', msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '0')
+
+                
+                    msgAction.amount_usd = await this.convertAmountUsd(
+                        msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '',
+                        msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || ''
+                    )
                 }
 
                 // LOAN
