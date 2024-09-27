@@ -584,7 +584,7 @@ export class MsgActionParser {
         }
 
         let msgAction: MgsAction = {
-            type: '',
+            type: 'SendMsg',
             amount_usd: '0',
             detail: {
                 type: '',
@@ -741,14 +741,9 @@ export class MsgActionParser {
                     }
                 }
             }
-
-            return msgAction
         }
 
         // default as sending message
-        return {
-            type: 'SendMsg',
-            amount_usd: '0'
-        } as MgsAction
+        return msgAction
     }
 }
