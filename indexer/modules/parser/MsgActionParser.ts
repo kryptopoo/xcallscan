@@ -208,7 +208,12 @@ export class MsgActionParser {
 
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
-            const res = await axiosInstance.post(apiUrl, postData)
+            const res = await retryAsync(
+                async () => {
+                    return await axiosInstance.post(apiUrl, postData)
+                },
+                { delay: 1000, maxTry: 3 }
+            )
 
             return res.data.result
         } catch (error: any) {
@@ -331,7 +336,6 @@ export class MsgActionParser {
             }
         }
 
-        console.log('tokenTransfer', tokenTransfer)
         return tokenTransfer
     }
 
@@ -596,7 +600,7 @@ export class MsgActionParser {
         // transfer
         if (fromTokenTransfers.length == 1 || toTokenTransfers.length == 1) {
             const srcTokenTransfer = fromTokenTransfers[0]
-            const destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol == srcTokenTransfer.asset.symbol)
+            const destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol == srcTokenTransfer?.asset.symbol)
 
             msgAction = {
                 type: 'Transfer',
