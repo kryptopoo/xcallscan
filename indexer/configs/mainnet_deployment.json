@@ -128,9 +128,9 @@
             "block_timestamp": 0
         },
         "sui": {
-            "api": "https://sui-mainnet-endpoint.blockvision.org",
-            "uri": "https://sui-mainnet-endpoint.blockvision.org",
-            "uris": ["https://sui-mainnet-endpoint.blockvision.org"],
+            "api": "https://sui-mainnet.blockvision.org/v1",
+            "uri": "https://sui-mainnet.blockvision.org/v1",
+            "uris": ["https://sui-mainnet.blockvision.org/v1", "https://sui-mainnet-endpoint.blockvision.org"],
             "btp_network_id": "sui",
             "block_height": 0,
             "block_timestamp": 0

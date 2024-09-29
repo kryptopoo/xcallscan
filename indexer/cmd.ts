@@ -5,6 +5,7 @@ import { IScan } from './interfaces/IScan'
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
 import { ScanFactory } from './modules/scan/ScanFactory'
+import { MsgActionParser } from './modules/parser/MsgActionParser'
 
 const runCmd = async () => {
     // handle arguments
@@ -86,8 +87,10 @@ const runCmd = async () => {
             }
         }
     }
+
+    let snList: any[] = []
     if (cmd == 'sync') {
-        let snList = []
+        snList = []
         if (args[1].toString().indexOf(',') > 0) {
             snList = args[1].split(',')
         } else if (args[1].toString().indexOf('-') > 0) {
@@ -112,6 +115,49 @@ const runCmd = async () => {
             }
         } else {
             await syncer.syncNewMessages()
+        }
+    }
+
+    if (cmd == 'analyze') {
+        snList = []
+        if (args[1].toString().indexOf(',') > 0) {
+            snList = args[1].split(',')
+        } else if (args[1].toString().indexOf('-') > 0) {
+            const snFromTo = args[1].split('-')
+            const snFrom = Number(snFromTo[0])
+            const snTo = Number(snFromTo[1])
+            for (let index = snFrom; index <= snTo; index++) {
+                const sn = index
+                snList.push(sn)
+            }
+        } else {
+            const sn = Number(args[1])
+            snList.push(sn)
+        }
+        const srcNetwork = args[2] ?? ''
+        const destNetwork = args[3] ?? ''
+        const storedb = args[4] ? Boolean(args[4]) : false
+        const db = new Db()
+        const actionParser = new MsgActionParser()
+
+        for (let i = 0; i < snList.length; i++) {
+            const sn = snList[i]
+            const msgs = await db.getMessages(sn, srcNetwork, destNetwork)
+
+            for (let index = 0; index < msgs.length; index++) {
+                const msg = msgs[index]
+
+                if (msg.src_tx_hash && msg.dest_tx_hash) {
+                    console.log(`id:${msg.id} sn:${msg.sn} ${msg.src_network} ${msg.src_tx_hash} -> ${msg.dest_network} ${msg.dest_tx_hash}`)
+
+                    const act = await actionParser.parseMgsAction(msg.src_network, msg.src_tx_hash, msg.dest_network, msg.dest_tx_hash)
+                    console.log(`id:${msg.id} sn:${msg.sn} msg_action`, act)
+
+                    if (act && storedb) {
+                        await db.updateMessageAction(msg.sn, msg.src_network, msg.dest_network, act.type, JSON.stringify(act.detail), act.amount_usd)
+                    }
+                }
+            }
         }
     }
 }

@@ -1,12 +1,8 @@
-import { ethers } from 'ethers'
-
-import { API_URL, CONTRACT, EVENT } from '../../common/constants'
-import { sleep } from '../../common/helper'
+import { API_KEY, API_URL, CONTRACT, EVENT } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import logger from '../logger/logger'
 import AxiosCustomInstance from './AxiosCustomInstance'
-import { retryAsync } from 'ts-retry'
 import { SuiDecoder } from '../decoder/SuiDecoder'
 
 export class SuiVisionScan implements IScan {
@@ -33,7 +29,7 @@ export class SuiVisionScan implements IScan {
 
         let nextCursor: string = flag
 
-        const url = API_URL[this.network]
+        const url = `${API_URL[this.network]}/${API_KEY[this.network]}`
         const postData = {
             jsonrpc: '2.0',
             id: 8,
@@ -78,7 +74,7 @@ export class SuiVisionScan implements IScan {
                             const eventNameOfTx = e.type.split('::').pop()
                             return eventName === eventNameOfTx
                         })
-                        const decodeEventLog = this.decoder.decodeEventLog(eventLog?.parsedJson, eventName)
+                        const decodeEventLog = await this.decoder.decodeEventLog(eventLog?.parsedJson, eventName)
 
                         if (decodeEventLog) {
                             const log: EventLog = {
@@ -104,6 +100,4 @@ export class SuiVisionScan implements IScan {
 
         return { lastFlag: lastFlag, eventLogs: results }
     }
-
-
 }

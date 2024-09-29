@@ -1,5 +1,5 @@
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
+import { API_KEY, API_URL, CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
@@ -13,7 +13,7 @@ export class SuiSubscriber implements ISubscriber {
     contractAddress: string
 
     async queryTxBlocks(nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
-        const url = RPC_URLS[this.network][0]
+        const url = `${API_URL[this.network]}/${API_KEY[this.network]}`
         const postData = {
             jsonrpc: '2.0',
             id: 8,
@@ -55,7 +55,7 @@ export class SuiSubscriber implements ISubscriber {
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${WSS[this.network][0]}`)
+        logger.info(`${this.network} connect ${API_URL[this.network]}/${API_KEY[this.network]}`)
         logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddress)}`)
 
         const res = await retryAsync(
@@ -82,6 +82,8 @@ export class SuiSubscriber implements ISubscriber {
                         hasNextPage = txsRes.hasNextPage
 
                         const txs = txsRes?.data?.filter((t: any) => t.events?.length > 0) ?? []
+                        if (txs.length > 0) logger.info(`${this.network} ondata ${txs}`)
+
                         for (let i = 0; i < txs.length; i++) {
                             const tx = txs[i]
                             if (tx) {
@@ -121,7 +123,7 @@ export class SuiSubscriber implements ISubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`clear interval task ${JSON.stringify(error)}`)
+                    logger.error(`${this.network} clear interval task ${JSON.stringify(error)}`)
                     clearInterval(intervalId)
 
                     // retry with another task
