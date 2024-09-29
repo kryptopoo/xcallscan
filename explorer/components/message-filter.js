@@ -25,7 +25,7 @@ const MessageFilter = (props) => {
                     All Actions
                 </DropdownItem>
 
-                {['Transfer', 'Swap', 'Loan'].map((actType) => {
+                {helper.getMsgTypes().map((actType) => {
                     return (
                         <DropdownItem
                             key={actType}

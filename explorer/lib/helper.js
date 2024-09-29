@@ -114,6 +114,13 @@ const NATIVE_ASSET = {
     [NETWORK.POLYGON]: 'MATIC',
 }
 
+const MSG_ACTION_TYPES = {
+    SendMsg: "SendMsg",
+    Transfer: "Transfer",
+    Swap: "Swap",
+    Loan: "Loan",
+}
+
 const getNativeAsset = (network) => {
     return NATIVE_ASSET[network]
 }
@@ -122,7 +129,12 @@ const getNetworks = () => {
     return Object.values(NETWORK_DETAILS)
 }
 
+const getMsgTypes = () => {
+    return Object.values(MSG_ACTION_TYPES)
+}
+
 export default {
     getNativeAsset,
-    getNetworks
+    getNetworks,
+    getMsgTypes
 }
