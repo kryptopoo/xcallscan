@@ -7,6 +7,7 @@ import { Ws } from './modules/ws/ws'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
+import { SuiSubscriber } from './modules/subscriber/SuiSubscriber'
 import { IFetcher } from './interfaces/IFetcher'
 import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
 import { ISubscriber } from './interfaces/ISubcriber'
@@ -110,7 +111,10 @@ const startSubscriber = () => {
         // IBC
         [NETWORK.IBC_INJECTIVE]: new IbcSubscriber(NETWORK.IBC_INJECTIVE),
         [NETWORK.IBC_ARCHWAY]: new IbcSubscriber(NETWORK.IBC_ARCHWAY),
-        [NETWORK.IBC_NEUTRON]: new IbcSubscriber(NETWORK.IBC_NEUTRON)
+        [NETWORK.IBC_NEUTRON]: new IbcSubscriber(NETWORK.IBC_NEUTRON),
+
+        // SUI
+        [NETWORK.SUI]: new SuiSubscriber()
     }
 
     const fetchers: { [network: string]: IFetcher } = {
@@ -130,7 +134,10 @@ const startSubscriber = () => {
         // IBC
         [NETWORK.IBC_INJECTIVE]: new Fetcher(NETWORK.IBC_INJECTIVE),
         [NETWORK.IBC_ARCHWAY]: new Fetcher(NETWORK.IBC_ARCHWAY),
-        [NETWORK.IBC_NEUTRON]: new Fetcher(NETWORK.IBC_NEUTRON)
+        [NETWORK.IBC_NEUTRON]: new Fetcher(NETWORK.IBC_NEUTRON),
+
+        // SUI
+        [NETWORK.SUI]: new Fetcher(NETWORK.SUI)
     }
 
     // only subscribe networks in .env

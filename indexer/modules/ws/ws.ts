@@ -78,7 +78,7 @@ export class Ws {
         // websocket authentication
         this.server.on('upgrade', function upgrade(request, socket, head) {
             // handle whitelist IPs
-            const whitelistIPs: string[] = process.env.WS_WHITELIST_IPS?.split(';') || []
+            const whitelistIPs: string[] = process.env.WS_WHITELIST_IPS ? process.env.WS_WHITELIST_IPS.split(';') : []
             const ipAddr = request.socket.remoteAddress?.split(':').pop() || ''
             logger.info(`request from IP ${ipAddr}`)
             if (whitelistIPs.length > 0 && !whitelistIPs.includes(ipAddr)) {
