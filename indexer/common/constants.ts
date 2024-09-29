@@ -37,7 +37,9 @@ const RPC_URL: { [network: string]: string } = {
 
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uri,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uri
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -54,7 +56,9 @@ const RPC_URLS: { [network: string]: string[] } = {
 
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uris,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris
 }
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
@@ -143,7 +147,7 @@ const API_KEY: { [network: string]: string } = {
     [NETWORK.BASE]: process.env.SCAN_BASE_API_KEY ?? '',
     [NETWORK.ARBITRUM]: process.env.SCAN_ARBITRUM_API_KEY ?? '',
     [NETWORK.OPTIMISM]: process.env.SCAN_OPTIMISM_API_KEY ?? '',
-    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? '', 
+    [NETWORK.POLYGON]: process.env.SCAN_POLYGON_API_KEY ?? '',
 
     [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',

@@ -269,7 +269,7 @@ export class MsgActionParser {
             if (ASSET_MAP[assetNativeSymbol]?.symbols.includes(symbol)) nativeSymbol = assetNativeSymbol
         })
         if (!nativeSymbol) {
-            logger.error('Cannot found symbol', symbol)
+            logger.error(`Cannot found symbol ${symbol}`)
             return '0'
         }
 
@@ -290,7 +290,7 @@ export class MsgActionParser {
     }
 
     private async convertAmountUsd(amount: string, assetSymbol: string) {
-        if (this.isUsdAsset(assetSymbol)) return amount
+        if (!assetSymbol || this.isUsdAsset(assetSymbol)) return amount
 
         const priceUsd = await this.getPrice(assetSymbol)
         const amountNumber = Number(amount) * Number(priceUsd)
@@ -523,27 +523,38 @@ export class MsgActionParser {
             // try get transfer info
             if ((msgExecuteContract && msgExecuteContract.funds.length == 0) || (network == NETWORK.IBC_INJECTIVE && msgExecuteContractItem)) {
                 // assume transfer native
-                const transferLog = data.logs[0].events.find((e: any) => e.type == 'transfer')
-                if (!transferLog) {
-                    return []
+
+                let crossTransferLog = data.logs[0].events.find((e: any) => e.type == 'wasm-CrossTransfer')
+                if (crossTransferLog) {
+                    const transferAmount = crossTransferLog.attributes?.find((a: any) => a.key == 'value')?.value.toString()
+                    tokenTransfer = [
+                        {
+                            asset: { name: '', symbol: '' },
+                            amount: this.formatUnits(transferAmount, 18)
+                        } as TokenTransfer
+                    ]
+                } else {
+                    // try find transfer log
+                    let transferLog = data.logs[0].events.find((e: any) => e.type == 'transfer')
+                    if (!transferLog) return []
+                    const nativeAssetSymbol = NATIVE_ASSETS[network][0]
+                    const transferAmount = transferLog.attributes?.find((a: any) => a.key == 'amount')?.value.toString()
+                    const nativeDenom = ASSET_MAP[nativeAssetSymbol].denom
+                    const transferAssetDenom =
+                        transferAmount.indexOf(nativeDenom) > 0 ? nativeDenom : transferAmount.substring(transferAmount.indexOf('ibc/'))
+
+                    const assetInfo =
+                        transferAssetDenom == nativeDenom
+                            ? ({ name: nativeAssetSymbol, symbol: nativeAssetSymbol } as TokenInfo)
+                            : this.getAssetByContract(network, transferAssetDenom)
+
+                    tokenTransfer = [
+                        {
+                            asset: assetInfo,
+                            amount: this.formatUnits(transferAmount.replace(transferAssetDenom, ''), ASSET_MAP[nativeAssetSymbol].decimals)
+                        } as TokenTransfer
+                    ]
                 }
-
-                const nativeAssetSymbol = NATIVE_ASSETS[network][0]
-                const transferAmount = transferLog.attributes?.find((a: any) => a.key == 'amount')?.value.toString()
-                const nativeDenom = ASSET_MAP[nativeAssetSymbol].denom
-                const transferAssetDenom =
-                    transferAmount.indexOf(nativeDenom) > 0 ? nativeDenom : transferAmount.substring(transferAmount.indexOf('ibc/'))
-                const assetInfo =
-                    transferAssetDenom == nativeDenom
-                        ? ({ name: nativeAssetSymbol, symbol: nativeAssetSymbol } as TokenInfo)
-                        : this.getAssetByContract(network, transferAssetDenom)
-
-                tokenTransfer = [
-                    {
-                        asset: assetInfo,
-                        amount: this.formatUnits(transferAmount.replace(transferAssetDenom, ''), ASSET_MAP[nativeAssetSymbol].decimals)
-                    } as TokenTransfer
-                ]
             }
 
             if (msgExecuteContract && msgExecuteContract.funds.length > 0) {
@@ -661,7 +672,6 @@ export class MsgActionParser {
             let srcTokenTransfer = fromTokenTransfers[0]
             let destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol == srcTokenTransfer?.asset.symbol)
             // const tokenTransfer = toTokenTransfers.find((t) => fromTokenTransfers.filter(from => from.asset.symbol == t.asset.symbol).length > 0 )
-            // console.log('tokenTransfer', tokenTransfer)
 
             // fix for sui cases
             if (!destTokenTransfer) destTokenTransfer = toTokenTransfers[0]
@@ -680,7 +690,6 @@ export class MsgActionParser {
                 amount_usd: '0'
             }
 
-           
             msgAction.amount_usd = await this.convertAmountUsd(
                 msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '',
                 msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || ''
@@ -716,10 +725,6 @@ export class MsgActionParser {
                         msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
                     }
 
-                    // console.log('test msgAction', msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || '')
-                    // console.log('test msgAction', msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '0')
-
-                
                     msgAction.amount_usd = await this.convertAmountUsd(
                         msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '',
                         msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || ''
@@ -734,31 +739,9 @@ export class MsgActionParser {
 
                 // SWAP
                 if (swapData) {
-                    msgAction.type = `Swap`
-                    msgAction.detail!.type = 'Swap'
-
                     if (fromNetwork == NETWORK.ICON && fromTokenTransfers.length >= 2) {
-                        // const srcTokenTransfer = fromTokenTransfers.find((t) => NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
-                        // const destTokenTransfer = fromTokenTransfers.find((t) => NETWORK_ASSETS[toNetwork].includes(t.asset.symbol))
-
-                        // if (srcTokenTransfer) {
-                        //     msgAction.detail!.src_asset = srcTokenTransfer.asset
-                        //     msgAction.detail!.src_amount = srcTokenTransfer.amount
-                        // }
-
-                        // if (destTokenTransfer) {
-                        //     msgAction.detail!.dest_asset = destTokenTransfer.asset
-                        //     msgAction.detail!.dest_amount = destTokenTransfer.amount
-                        // }
-
-                        // for (let i = 0; i < fromTokenTransfers.length; i++) {
-                        //     const tokenTransfer = fromTokenTransfers[i]
-                        //     const destNativeAsset = this.getNativeAssetSymbol(tokenTransfer.asset.symbol, msgAction.detail!.dest_asset.symbol)
-                        //     if (destNativeAsset) {
-                        //         // correct dest_amount
-                        //         msgAction.detail!.dest_amount = tokenTransfer.amount
-                        //     }
-                        // }
+                        msgAction.type = `Swap`
+                        msgAction.detail!.type = 'Swap'
 
                         const destTokenTransfer = toTokenTransfers[0]
                         if (destTokenTransfer) {
@@ -769,6 +752,7 @@ export class MsgActionParser {
                         // swap from native assets & erc20 assets
                         const srcTokenTransfer = fromTokenTransfers.find(
                             (t) =>
+                                destTokenTransfer &&
                                 t.asset.symbol != destTokenTransfer.asset.symbol &&
                                 (NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol) || NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
                         )
@@ -779,6 +763,9 @@ export class MsgActionParser {
                     }
 
                     if (toNetwork == NETWORK.ICON && toTokenTransfers.length >= 2) {
+                        msgAction.type = `Swap`
+                        msgAction.detail!.type = 'Swap'
+
                         const srcTokenTransfer = fromTokenTransfers[0]
 
                         if (srcTokenTransfer) {
@@ -800,15 +787,6 @@ export class MsgActionParser {
                             msgAction.detail!.dest_asset = destTokenTransfer.asset
                             msgAction.detail!.dest_amount = destTokenTransfer.amount
                         }
-
-                        // for (let i = 0; i < toTokenTransfers.length; i++) {
-                        //     const tokenTransfer = toTokenTransfers[i]
-                        //     const fromNativeAsset = this.getNativeAssetSymbol(tokenTransfer.asset.symbol, msgAction.detail!.src_asset.symbol)
-                        //     if (fromNativeAsset) {
-                        //         // correct src_amount
-                        //         msgAction.detail!.src_amount = tokenTransfer.amount
-                        //     }
-                        // }
                     }
 
                     // correct amount
