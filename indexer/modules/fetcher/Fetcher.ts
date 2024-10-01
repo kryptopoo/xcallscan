@@ -50,7 +50,11 @@ export class Fetcher implements IFetcher {
                 eventModel.to_decoded = callMessageEvent.to_decoded
             }
         }
-        if (eventLog.eventName == EVENT.ResponseMessage || eventLog.eventName == EVENT.RollbackMessage || eventLog.eventName == EVENT.RollbackExecuted) {
+        if (
+            eventLog.eventName == EVENT.ResponseMessage ||
+            eventLog.eventName == EVENT.RollbackMessage ||
+            eventLog.eventName == EVENT.RollbackExecuted
+        ) {
             const callMessageSentEvent = await this._db.getEventBySn(this.scan.network, EVENT.CallMessageSent, eventModel.sn)
             if (callMessageSentEvent) {
                 eventModel.sn = callMessageSentEvent.sn
@@ -118,6 +122,7 @@ export class Fetcher implements IFetcher {
     private async fetchEventsByAddress(xcallAddress: string, eventNames: string[], flagNumber: string = '0', updateCounter: boolean = true) {
         // fetch all events once
         if (
+            this.network == NETWORK.STELLAR ||
             this.network == NETWORK.SUI ||
             this.network == NETWORK.HAVAH ||
             this.network == NETWORK.IBC_ARCHWAY ||

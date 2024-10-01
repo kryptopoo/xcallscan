@@ -29,7 +29,8 @@ const NETWORK = {
     ARBITRUM: 'arbitrum',
     OPTIMISM: 'optimism',
     SUI: 'sui',
-    POLYGON: 'polygon'
+    POLYGON: 'polygon',
+    STELLAR: 'stellar'
 }
 
 const metaUrls = {
@@ -48,7 +49,8 @@ const metaUrls = {
         [NETWORK.ARBITRUM]: useMainnet ? 'https://arbiscan.io/tx/' : 'https://sepolia.arbiscan.io/tx/',
         [NETWORK.OPTIMISM]: useMainnet ? 'https://optimistic.etherscan.io/tx/' : 'https://sepolia-optimism.etherscan.io/tx/',
         [NETWORK.SUI]: useMainnet ? 'https://suiscan.xyz/mainnet/tx/' : 'https://suiscan.xyz/testnet/tx/',
-        [NETWORK.POLYGON]: useMainnet ? 'https://polygonscan.com/tx/' : 'https://amoy.polygonscan.com/tx/'
+        [NETWORK.POLYGON]: useMainnet ? 'https://polygonscan.com/tx/' : 'https://amoy.polygonscan.com/tx/',
+        [NETWORK.STELLAR]: useMainnet ? 'https://stellar.expert/explorer/public/tx/' : 'https://stellar.expert/explorer/testnet/tx/'
     }
 }
 

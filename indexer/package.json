@@ -30,6 +30,8 @@
   },
   "dependencies": {
     "@cosmjs/stargate": "^0.32.4",
+    "@stellar-expert/tx-meta-effects-parser": "^6.2.0",
+    "@stellar/stellar-sdk": "^12.3.0",
     "axios": "^1.6.8",
     "dotenv": "^16.3.1",
     "ethers": "^5.7.2",

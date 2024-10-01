@@ -20,7 +20,8 @@ const NETWORK = {
     ARBITRUM: 'arbitrum',
     OPTIMISM: 'optimism',
     SUI: 'sui',
-    POLYGON: 'polygon'
+    POLYGON: 'polygon',
+    STELLAR: 'stellar'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -39,7 +40,9 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uri
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uri,
+
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uri
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -58,7 +61,9 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris,
+
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uris
 }
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
@@ -103,39 +108,44 @@ const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? Number(process.env
 
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.api,
+
     [NETWORK.BSC]: CONFIG_NETWORKS.bsc.api,
     [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.api,
-    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.api,
+    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.api,
+    [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
+    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
+    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
+    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api,
 
     [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.api,
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.api,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.api,
 
-    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.api,
-    [NETWORK.BASE]: CONFIG_NETWORKS.base.api,
-    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.api,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.api,
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.api
+
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.btp_network_id,
-    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.btp_network_id,
-    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.btp_network_id,
     [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.btp_network_id,
 
-    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.btp_network_id,
-    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.btp_network_id,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
-
+    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.btp_network_id,
+    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.btp_network_id,
     [NETWORK.AVAX]: CONFIG_NETWORKS.avax.btp_network_id,
     [NETWORK.BASE]: CONFIG_NETWORKS.base.btp_network_id,
     [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.btp_network_id,
     [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.btp_network_id,
     [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.btp_network_id,
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.btp_network_id
+    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.btp_network_id,
+    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.btp_network_id,
+    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
+
+    [NETWORK.SUI]: CONFIG_NETWORKS.sui.btp_network_id,
+
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -164,14 +174,31 @@ const CONTRACT: { [network: string]: { xcall: string[] } } = {
     [NETWORK.ICON]: {
         xcall: CONFIG_CONTRACTS.icon.xcall
     },
+    [NETWORK.HAVAH]: {
+        xcall: CONFIG_CONTRACTS.havah.xcall
+    },
+
+    // EVM
     [NETWORK.BSC]: {
         xcall: CONFIG_CONTRACTS.bsc.xcall
     },
     [NETWORK.ETH2]: {
         xcall: CONFIG_CONTRACTS.eth2.xcall
     },
-    [NETWORK.HAVAH]: {
-        xcall: CONFIG_CONTRACTS.havah.xcall
+    [NETWORK.AVAX]: {
+        xcall: CONFIG_CONTRACTS.avax.xcall
+    },
+    [NETWORK.POLYGON]: {
+        xcall: CONFIG_CONTRACTS.polygon.xcall
+    },
+    [NETWORK.BASE]: {
+        xcall: CONFIG_CONTRACTS.base.xcall
+    },
+    [NETWORK.ARBITRUM]: {
+        xcall: CONFIG_CONTRACTS.arbitrum.xcall
+    },
+    [NETWORK.OPTIMISM]: {
+        xcall: CONFIG_CONTRACTS.optimism.xcall
     },
 
     // IBC
@@ -185,26 +212,14 @@ const CONTRACT: { [network: string]: { xcall: string[] } } = {
         xcall: CONFIG_CONTRACTS.ibc_injective.xcall
     },
 
-    // AVAX
-    [NETWORK.AVAX]: {
-        xcall: CONFIG_CONTRACTS.avax.xcall
-    },
-
-    [NETWORK.BASE]: {
-        xcall: CONFIG_CONTRACTS.base.xcall
-    },
-    [NETWORK.ARBITRUM]: {
-        xcall: CONFIG_CONTRACTS.arbitrum.xcall
-    },
-    [NETWORK.OPTIMISM]: {
-        xcall: CONFIG_CONTRACTS.optimism.xcall
-    },
-
+    // SUI
     [NETWORK.SUI]: {
         xcall: CONFIG_CONTRACTS.sui.xcall
     },
-    [NETWORK.POLYGON]: {
-        xcall: CONFIG_CONTRACTS.polygon.xcall
+
+    // STELLAR
+    [NETWORK.STELLAR]: {
+        xcall: CONFIG_CONTRACTS.stellar.xcall
     }
 }
 
