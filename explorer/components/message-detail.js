@@ -26,6 +26,9 @@ export default async function MessageDetail({ msgData, meta }) {
         case 'Loan':
             msgAction = `${msgActionDetail.type} ${round(msgActionDetail?.dest_amount)} ${msgActionDetail?.dest_asset?.symbol}`
             break
+        case 'SendMsg':
+            msgAction = `${msgActionDetail.type}`
+            break
         default:
             break
     }
@@ -147,7 +150,7 @@ export default async function MessageDetail({ msgData, meta }) {
                         <div className="table-row bg-white border-b">
                             <div className="table-cell xl:w-96 px-3 py-2 xl:px-6 xl:py-4 font-medium whitespace-normal xl:whitespace-nowrap">Action:</div>
                             <div className="table-cell px-3 py-2 xl:px-6 xl:py-4">
-                                {msgAction} 
+                                {msgAction}
                                 {/* <br /><br />{JSON.stringify(msgActionDetail)} */}
                             </div>
                         </div>

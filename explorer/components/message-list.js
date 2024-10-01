@@ -34,8 +34,8 @@ export default function MessageList({ data, meta, showPagination }) {
                         ))}
                     </div>
                     {data?.length == 0 && (
-                        <div className="table-row-group w-full">
-                            <div className='absolute left-0 w-full text-center'>No messages found. Please try again!</div>
+                        <div className="table-row-group w-full h-32">
+                            <div className='absolute left-0 w-full text-center mt-12'>No messages found. Please try again!</div>
                         </div>
                     )}
                 </div>
