@@ -12,22 +12,23 @@ export class StellarSubscriber implements ISubscriber {
     decoder: StellarDecoder
     interval = SUBSCRIBER_INTERVAL
     contractAddress: string
+    rpcUrl: string
 
     constructor() {
+        this.rpcUrl = RPC_URLS[this.network].filter((u) => u.includes('soroban'))[0]
         this.contractAddress = CONTRACT[this.network].xcall[0]
         this.decoder = new StellarDecoder()
     }
 
     async callApi(postData: any): Promise<any> {
-        const sorobanUrl = RPC_URLS[this.network].filter((u) => u.includes('soroban'))[0]
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
 
-            const res = await axiosInstance.post(sorobanUrl, postData)
+            const res = await axiosInstance.post(this.rpcUrl, postData)
 
             return res.data.result
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${sorobanUrl} ${error.code}`)
+            logger.error(`${this.network} called api failed ${this.rpcUrl} ${error.code}`)
         }
 
         return undefined
@@ -76,7 +77,7 @@ export class StellarSubscriber implements ISubscriber {
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${API_URL[this.network]}`)
+        logger.info(`${this.network} connect ${this.rpcUrl}`)
         logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddress)}`)
 
         const latestLedgerRes = await retryAsync(
