@@ -10,7 +10,7 @@ export default async function MessageDetail({ msgData, meta }) {
         return parseFloat(Number(str).toFixed(8))
     }
 
-    const msgActionDetail = JSON.parse(msgData.action_detail)
+    const msgActionDetail = msgData.action_detail ? JSON.parse(msgData.action_detail) : {}
     let msgAction = ''
     switch (msgData.action_type) {
         case 'Transfer':

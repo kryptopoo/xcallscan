@@ -147,6 +147,17 @@
             "btp_network_id": "0x89.polygon",
             "block_height": 0,
             "block_timestamp": 0
+        },
+        "stellar": {
+            "api": "",
+            "uri": "",
+            "uris": [
+                "https://rpc.ankr.com/stellar_soroban/3dcbb639c95c6fdb05ab6f03fe9ec31f2c6eebe808f13063b690747933188765",
+                "https://soroban-rpc.mainnet.stellar.gateway.fm"
+            ],
+            "btp_network_id": "stellar",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -192,6 +203,9 @@
         },
         "polygon": {
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"]
+        },
+        "stellar": {
+            "xcall": ["CB6IJRLOWGQXUDSYGFOAAZYVOESQ6TVSTU3242I7PG3LH7F43PPX2HE6"]
         }
     }
 }

@@ -15,6 +15,7 @@ import { getNetwork, sleep } from './common/helper'
 
 import dotenv from 'dotenv'
 import { Analyzer } from './modules/analyzer/Analyzer'
+import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -69,7 +70,7 @@ const startIndexer = async () => {
     // fetch sui network
     cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
-            [NETWORK.SUI].map((network) => {
+            [NETWORK.SUI, NETWORK.STELLAR].map((network) => {
                 return fetch(network)
             })
         )
@@ -115,7 +116,10 @@ const startSubscriber = () => {
         [NETWORK.IBC_NEUTRON]: new IbcSubscriber(NETWORK.IBC_NEUTRON),
 
         // SUI
-        [NETWORK.SUI]: new SuiSubscriber()
+        [NETWORK.SUI]: new SuiSubscriber(),
+
+        // STELLAR
+        [NETWORK.STELLAR]: new StellarSubscriber()
     }
 
     const fetchers: { [network: string]: IFetcher } = {
@@ -138,7 +142,10 @@ const startSubscriber = () => {
         [NETWORK.IBC_NEUTRON]: new Fetcher(NETWORK.IBC_NEUTRON),
 
         // SUI
-        [NETWORK.SUI]: new Fetcher(NETWORK.SUI)
+        [NETWORK.SUI]: new Fetcher(NETWORK.SUI),
+
+        // STELLAR
+        [NETWORK.STELLAR]: new Fetcher(NETWORK.STELLAR)
     }
 
     // only subscribe networks in .env

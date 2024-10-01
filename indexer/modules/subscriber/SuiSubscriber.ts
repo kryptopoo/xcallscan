@@ -9,7 +9,7 @@ import { retryAsync } from 'ts-retry'
 export class SuiSubscriber implements ISubscriber {
     network: string = NETWORK.SUI
     decoder: SuiDecoder
-    interval = 1000
+    interval = SUBSCRIBER_INTERVAL
     contractAddress: string
 
     async queryTxBlocks(nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
@@ -129,7 +129,7 @@ export class SuiSubscriber implements ISubscriber {
                     // retry with another task
                     task()
                 }
-            }, SUBSCRIBER_INTERVAL)
+            }, this.interval)
         }
 
         // run task
