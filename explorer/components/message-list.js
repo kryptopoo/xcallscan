@@ -33,6 +33,11 @@ export default function MessageList({ data, meta, showPagination }) {
                             </Link>
                         ))}
                     </div>
+                    {data?.length == 0 && (
+                        <div className="table-row-group w-full">
+                            <div className='absolute left-0 w-full text-center'>No messages found. Please try again!</div>
+                        </div>
+                    )}
                 </div>
                 {/* {showPagination ? (
                     <Pagination totalPages={meta.pagination.total} pageNumber={meta.pagination.number} pageSize={meta.pagination.size} />

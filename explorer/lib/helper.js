@@ -11,7 +11,8 @@ const NETWORK = {
     ARBITRUM: 'arbitrum',
     OPTIMISM: 'optimism',
     SUI: 'sui',
-    POLYGON: 'polygon'
+    POLYGON: 'polygon',
+    STELLAR: 'stellar'
 }
 
 const NETWORK_DETAILS  = {
@@ -32,7 +33,7 @@ const NETWORK_DETAILS  = {
         id: NETWORK.ETH2,
         name: 'Ethereum',
         logo: `/images/network-${NETWORK.ETH2}.png`,
-        nativeAsset: 'ICX'
+        nativeAsset: 'ETH'
     },
     [NETWORK.BSC]: {
         id: NETWORK.BSC,
@@ -96,22 +97,13 @@ const NETWORK_DETAILS  = {
         logo: `/images/network-${NETWORK.SUI}.png`,
         nativeAsset: 'SUI'
     },
-}
 
-const NATIVE_ASSET = {
-    [NETWORK.ICON]: 'ICX',
-    [NETWORK.ETH2]: 'ETH',
-    [NETWORK.BSC]: 'BNB',
-    [NETWORK.HAVAH]: 'HVH',
-    [NETWORK.IBC_ARCHWAY]: 'ARCH',
-    [NETWORK.IBC_NEUTRON]: 'NTRN',
-    [NETWORK.IBC_INJECTIVE]: 'INJ',
-    [NETWORK.AVAX]: 'AVAX',
-    [NETWORK.BASE]: 'ETH',
-    [NETWORK.ARBITRUM]: 'ETH',
-    [NETWORK.OPTIMISM]: 'ETH',
-    [NETWORK.SUI]: 'SUI',
-    [NETWORK.POLYGON]: 'MATIC',
+    [NETWORK.STELLAR]: {
+        id: NETWORK.STELLAR,
+        name: 'Stellar',
+        logo: `/images/network-${NETWORK.STELLAR}.png`,
+        nativeAsset: 'XLM'
+    },
 }
 
 const MSG_ACTION_TYPES = {
@@ -122,7 +114,7 @@ const MSG_ACTION_TYPES = {
 }
 
 const getNativeAsset = (network) => {
-    return NATIVE_ASSET[network]
+    return NETWORK_DETAILS[network].nativeAsset
 }
 
 const getNetworks = () => {
