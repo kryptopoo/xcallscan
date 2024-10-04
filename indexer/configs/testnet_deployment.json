@@ -110,6 +110,14 @@
             "btp_network_id": "stellar",
             "block_height": 0,
             "block_timestamp": 0
+        },
+        "solana": {
+            "api": "",
+            "uri": "",
+            "uris": ["https://api.testnet.solana.com/"],
+            "btp_network_id": "solana",
+            "block_height": 0,
+            "block_timestamp": 0
         }
     },
     "contracts": {
@@ -154,6 +162,9 @@
         },
         "stellar": {
             "xcall": ["CCBML52W3LR4OGKB7F5RJCADHET6QV3MX6PKWPFPWZVGCZSS6XZXMQIP"]
+        },
+        "solana": {
+            "xcall": ["BknkMw3sonNXVTW2mzuhKEJmmt4PSVei1HbQiDuWVny4"]
         }
     }
 }

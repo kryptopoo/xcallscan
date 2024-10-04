@@ -7,8 +7,8 @@ import { IconScan } from './IconScan'
 import { InjectiveScan } from './InjectiveScan'
 import { MintAccountScan } from './MintAccountScan'
 import { MintScanV2 } from './MintScanV2'
+import { SolanaScan } from './SolanaScan'
 import { StellarScan } from './StellarScan'
-import { SuiScan } from './SuiScan'
 import { SuiVisionScan } from './SuiVisionScan'
 
 export class ScanFactory {
@@ -46,6 +46,9 @@ export class ScanFactory {
         }
         if (network == NETWORK.STELLAR) {
             scan = new StellarScan(network)
+        }
+        if (network == NETWORK.SOLANA) {
+            scan = new SolanaScan(network)
         }
 
         return scan

@@ -56,12 +56,13 @@ function renderHashLink(scanUrl, network, hash, isFull = false) {
     let link = <div>-</div>
     let copyButton = <ClipboardDocumentIcon width={20} height={20} className={'opacity-75 text-gray-900 cursor-pointer'} />
 
+    let href = network == 'solana' ? scanUrl.replace('{txHash', hash) : scanUrl + hash
     networkImg = <Image alt={network} src={`/images/network-${network}.png`} width={24} height={24} />
     link = !isFull ? (
         <div className={linkClass}>{hash}</div>
     ) : (
         <div className="flex">
-            <Link className={linkClass} href={scanUrl + hash} target="_blank">
+            <Link className={linkClass} href={href} target="_blank">
                 {hash}
             </Link>
             {copyButton}

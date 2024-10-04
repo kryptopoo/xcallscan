@@ -16,6 +16,7 @@ import { getNetwork, sleep } from './common/helper'
 import dotenv from 'dotenv'
 import { Analyzer } from './modules/analyzer/Analyzer'
 import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
+import { SolanaSubscriber } from './modules/subscriber/SolanaSubscriber'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -117,9 +118,10 @@ const startSubscriber = () => {
 
         // SUI
         [NETWORK.SUI]: new SuiSubscriber(),
-
         // STELLAR
-        [NETWORK.STELLAR]: new StellarSubscriber()
+        [NETWORK.STELLAR]: new StellarSubscriber(),
+        // SOLANA
+        [NETWORK.SOLANA]: new SolanaSubscriber()
     }
 
     const fetchers: { [network: string]: IFetcher } = {
@@ -143,9 +145,10 @@ const startSubscriber = () => {
 
         // SUI
         [NETWORK.SUI]: new Fetcher(NETWORK.SUI),
-
         // STELLAR
-        [NETWORK.STELLAR]: new Fetcher(NETWORK.STELLAR)
+        [NETWORK.STELLAR]: new Fetcher(NETWORK.STELLAR),
+        // SOLANA
+        [NETWORK.SOLANA]: new Fetcher(NETWORK.SOLANA)
     }
 
     // only subscribe networks in .env

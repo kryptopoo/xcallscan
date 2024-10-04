@@ -21,7 +21,8 @@ const NETWORK = {
     OPTIMISM: 'optimism',
     SUI: 'sui',
     POLYGON: 'polygon',
-    STELLAR: 'stellar'
+    STELLAR: 'stellar',
+    SOLANA: 'solana'
 }
 
 const RPC_URL: { [network: string]: string } = {
@@ -41,8 +42,8 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
 
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.uri,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uri
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uri,
+    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.uri
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
@@ -62,13 +63,14 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
 
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uris
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uris,
+    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.uris
 }
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
 const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
 const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
+const WEB3_BLOCKVISION_API_KEY = process.env.WEB3_BLOCKVISION_API_KEY
 const WSS: { [network: string]: string[] } = {
     [NETWORK.ICON]: ['https://ctz.solidwallet.io/api/v3/icon_dex'],
     [NETWORK.HAVAH]: ['https://ctz.havah.io/api/v3/icon_dex'],
@@ -100,7 +102,9 @@ const WSS: { [network: string]: string[] } = {
         'wss://rpc.neutron.quokkastake.io:443/websocket',
         'wss://neutron-rpc.publicnode.com:443/websocket',
         'wss://rpc-neutron.whispernode.com:443/websocket'
-    ]
+    ],
+
+    [NETWORK.SOLANA]: ['wss://go.getblock.io/0c9e5684582a477385a481fc4c64bfa6']
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
@@ -123,8 +127,8 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.api,
 
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.api
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.api,
+    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -144,8 +148,8 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
 
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.btp_network_id,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.btp_network_id
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.btp_network_id,
+    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -161,9 +165,7 @@ const API_KEY: { [network: string]: string } = {
 
     [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',
-    [NETWORK.IBC_INJECTIVE]: '',
-
-    [NETWORK.SUI]: process.env.WEB3_BLOCKVISION_API_KEY ?? ''
+    [NETWORK.IBC_INJECTIVE]: ''
 }
 
 const SERVICE_API_KEY = {
@@ -216,10 +218,13 @@ const CONTRACT: { [network: string]: { xcall: string[] } } = {
     [NETWORK.SUI]: {
         xcall: CONFIG_CONTRACTS.sui.xcall
     },
-
     // STELLAR
     [NETWORK.STELLAR]: {
         xcall: CONFIG_CONTRACTS.stellar.xcall
+    },
+    // SOLANA
+    [NETWORK.SOLANA]: {
+        xcall: CONFIG_CONTRACTS.solana.xcall
     }
 }
 
@@ -275,5 +280,6 @@ export {
     SUBSCRIBER_INTERVAL,
     WEB3_ALCHEMY_API_KEY,
     WEB3_CHAINSTACK_API_KEY,
-    WEB3_BLAST_API_KEY
+    WEB3_BLAST_API_KEY,
+    WEB3_BLOCKVISION_API_KEY
 }
