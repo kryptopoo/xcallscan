@@ -7,6 +7,11 @@ const USE_MAINNET = process.env.USE_MAINNET == 'true'
 const CONFIG_NETWORKS = USE_MAINNET ? MainnetDeployment.networks : TestnetDeployment.networks
 const CONFIG_CONTRACTS = USE_MAINNET ? MainnetDeployment.contracts : TestnetDeployment.contracts
 
+const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
+const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
+const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
+const WEB3_BLOCKVISION_API_KEY = process.env.WEB3_BLOCKVISION_API_KEY
+
 const NETWORK = {
     ICON: 'icon',
     BSC: 'bsc',
@@ -46,6 +51,19 @@ const RPC_URL: { [network: string]: string } = {
     [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.uri
 }
 
+const buildRpcUrls = (rpcUrls: string[]) => {
+    const correctRpcUrls: string[] = []
+    rpcUrls.forEach((rpcUrl) => {
+        if (rpcUrl.includes('blockvision')) correctRpcUrls.push(`${rpcUrl}/${WEB3_BLOCKVISION_API_KEY}`)
+        else if (rpcUrl.includes('alchemy')) correctRpcUrls.push(`${rpcUrl}/${WEB3_ALCHEMY_API_KEY}`)
+        else if (rpcUrl.includes('chainstack')) correctRpcUrls.push(`${rpcUrl}/${WEB3_CHAINSTACK_API_KEY}`)
+        else if (rpcUrl.includes('blastapi')) correctRpcUrls.push(`${rpcUrl}/${WEB3_BLAST_API_KEY}`)
+        else correctRpcUrls.push(rpcUrl)
+    })
+
+    return correctRpcUrls
+}
+
 const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.uris,
     [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
@@ -62,15 +80,11 @@ const RPC_URLS: { [network: string]: string[] } = {
     [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris,
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uris,
-    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.uris
+    [NETWORK.SUI]: buildRpcUrls(CONFIG_NETWORKS.sui.uris),
+    [NETWORK.STELLAR]: buildRpcUrls(CONFIG_NETWORKS.stellar.uris),
+    [NETWORK.SOLANA]: buildRpcUrls(CONFIG_NETWORKS.solana.uris)
 }
 
-const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
-const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
-const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
-const WEB3_BLOCKVISION_API_KEY = process.env.WEB3_BLOCKVISION_API_KEY
 const WSS: { [network: string]: string[] } = {
     [NETWORK.ICON]: ['https://ctz.solidwallet.io/api/v3/icon_dex'],
     [NETWORK.HAVAH]: ['https://ctz.havah.io/api/v3/icon_dex'],

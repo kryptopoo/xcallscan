@@ -31,7 +31,7 @@ export class SolanaSubscriber implements ISubscriber {
             subscriptionId = this.solanaConnection.onLogs(
                 publicKey,
                 (logs: any, context: any) => {
-                    logger.info(`Event detected ${JSON.stringify(logs)}, Context: ${JSON.stringify(context)}`)
+                    logger.info(`logs: ${JSON.stringify(logs)}, context: ${JSON.stringify(context)}`)
                 },
                 'confirmed'
             )

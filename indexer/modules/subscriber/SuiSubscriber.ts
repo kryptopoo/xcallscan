@@ -19,78 +19,85 @@ import { retryAsync } from 'ts-retry'
 
 export class SuiSubscriber implements ISubscriber {
     network: string = NETWORK.SUI
-    rpcUrl: string
+    rpcUrls: string[]
     decoder: SuiDecoder
     interval = SUBSCRIBER_INTERVAL
     contractAddress: string
 
-    async queryTxBlocks(nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
-        const postData = {
-            jsonrpc: '2.0',
-            id: 8,
-            method: 'suix_queryTransactionBlocks',
-            params: [
-                {
-                    filter: {
-                        InputObject: this.contractAddress
-                    },
-                    options: {
-                        showBalanceChanges: true,
-                        showEffects: true,
-                        showEvents: true,
-                        showInput: true
-                    }
-                },
-                nextCursor && nextCursor != '0' ? nextCursor : null,
-                limit,
-                descendingOrder
-            ]
-        }
-
+    async queryTxBlocks(rpcUrl: string, nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
 
-            const res = await axiosInstance.post(this.rpcUrl, postData)
+            const res = await axiosInstance.post(rpcUrl, {
+                jsonrpc: '2.0',
+                id: 8,
+                method: 'suix_queryTransactionBlocks',
+                params: [
+                    {
+                        filter: {
+                            InputObject: this.contractAddress
+                        },
+                        options: {
+                            showBalanceChanges: true,
+                            showEffects: true,
+                            showEvents: true,
+                            showInput: true
+                        }
+                    },
+                    nextCursor && nextCursor != '0' ? nextCursor : null,
+                    limit,
+                    descendingOrder
+                ]
+            })
 
             return res.data.result
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${this.rpcUrl} ${error.code}`)
+            logger.error(`${this.network} called api failed ${rpcUrl} ${error.code}`)
         }
 
         return { data: [], nextCursor: undefined }
     }
 
     constructor() {
-        this.rpcUrl = `${RPC_URLS[this.network].find((u) => u.includes('blockvision'))}/${WEB3_BLOCKVISION_API_KEY}`
+        this.rpcUrls = RPC_URLS[this.network]
         this.contractAddress = CONTRACT[this.network].xcall[0]
         this.decoder = new SuiDecoder()
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${this.rpcUrl}`)
+        logger.info(`${this.network} connect ${JSON.stringify(this.rpcUrls)}`)
         logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddress)}`)
 
-        const res = await retryAsync(
+        let res = await retryAsync(
             async () => {
-                return await this.queryTxBlocks('', true, 1)
+                let rpcUrl = this.rpcUrls[0]
+                return await this.queryTxBlocks(rpcUrl, '', true, 1)
             },
             { delay: 1000, maxTry: 3 }
         )
+
         let nextCursor = res.nextCursor
         logger.info(`${this.network} nextCursor ${nextCursor}`)
 
         const task = () => {
             const intervalId = setInterval(async () => {
                 try {
-                    const txsRes = await retryAsync(
-                        async () => {
-                            return this.queryTxBlocks(nextCursor, false)
-                        },
-                        { delay: 1000, maxTry: 3 }
-                    )
+                    // try rotating other rpcs if failed
+                    let txsRes: any
+                    for (let rpcUrlIndex = 0; rpcUrlIndex < this.rpcUrls.length; rpcUrlIndex++) {
+                        txsRes = await retryAsync(
+                            async () => {
+                                let rpcUrl = this.rpcUrls[rpcUrlIndex]
+                                return this.queryTxBlocks(rpcUrl, nextCursor, false)
+                            },
+                            { delay: 1000, maxTry: 3 }
+                        )
+
+                        if (!txsRes) logger.error(`${this.network} try changing rpc...`)
+                        else break
+                    }
 
                     if (txsRes?.nextCursor) nextCursor = txsRes.nextCursor
-
                     const txs = txsRes?.data?.filter((t: any) => t.events?.length > 0) ?? []
                     if (txs.length > 0) logger.info(`${this.network} ondata ${txs}`)
 
