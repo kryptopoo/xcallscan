@@ -133,7 +133,7 @@
             "uris": [
                 "https://sui-mainnet.blockvision.org/v1",
                 "https://go.getblock.io/9d1dc99638d94dbcb1446fc3cfeaacfc",
-                "https://sui-mainnet.blastapi.io/"
+                "https://sui-mainnet.blastapi.io"
             ],
             "btp_network_id": "sui",
             "block_height": 0,
