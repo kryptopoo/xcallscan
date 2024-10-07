@@ -62,8 +62,9 @@ export class StellarSubscriber implements ISubscriber {
                 },
                 { delay: 1000, maxTry: 3 }
             )
-            if (!res) logger.error(`${this.network} try changing rpc...`)
-            else break
+            if (!res && rpcUrlIndex < this.rpcUrls.length) {
+                logger.error(`${this.network} try changing rpc ${this.rpcUrls[rpcUrlIndex + 1]}`)
+            } else break
         }
 
         return res
@@ -85,8 +86,9 @@ export class StellarSubscriber implements ISubscriber {
                 },
                 { delay: 1000, maxTry: 3 }
             )
-            if (!res) logger.error(`${this.network} try changing rpc...`)
-            else break
+            if (!res && rpcUrlIndex < this.rpcUrls.length) {
+                logger.error(`${this.network} try changing rpc ${this.rpcUrls[rpcUrlIndex + 1]}`)
+            } else break
         }
 
         return res
@@ -111,8 +113,9 @@ export class StellarSubscriber implements ISubscriber {
                 },
                 { delay: 1000, maxTry: 3 }
             )
-            if (!res) logger.error(`${this.network} try changing rpc...`)
-            else break
+            if (!res && rpcUrlIndex < this.rpcUrls.length) {
+                logger.error(`${this.network} try changing rpc ${this.rpcUrls[rpcUrlIndex + 1]}`)
+            } else break
         }
 
         return res

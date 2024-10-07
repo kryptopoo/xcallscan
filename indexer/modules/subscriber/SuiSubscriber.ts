@@ -1,16 +1,5 @@
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import {
-    API_KEY,
-    API_URL,
-    CONTRACT,
-    EVENT,
-    NETWORK,
-    RPC_URL,
-    RPC_URLS,
-    SUBSCRIBER_INTERVAL,
-    WEB3_BLOCKVISION_API_KEY,
-    WSS
-} from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
@@ -99,7 +88,7 @@ export class SuiSubscriber implements ISubscriber {
 
                     if (txsRes?.nextCursor) nextCursor = txsRes.nextCursor
                     const txs = txsRes?.data?.filter((t: any) => t.events?.length > 0) ?? []
-                    if (txs.length > 0) logger.info(`${this.network} ondata ${txs}`)
+                    if (txs.length > 0) logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
 
                     for (let i = 0; i < txs.length; i++) {
                         const tx = txs[i]
