@@ -157,8 +157,8 @@
             "api": "",
             "uri": "",
             "uris": [
-                "https://rpc.ankr.com/stellar_soroban/3dcbb639c95c6fdb05ab6f03fe9ec31f2c6eebe808f13063b690747933188765",
                 "https://mainnet.stellar.validationcloud.io/v1/9O_ZB5sCUQ0A2tW9BkIKXAPeCnHvnAZOmdC7exhxfr8",
+                "https://rpc.ankr.com/stellar_soroban",
                 "https://soroban-rpc.mainnet.stellar.gateway.fm"
             ],
             "btp_network_id": "stellar",
