@@ -1,30 +1,29 @@
+import { retryAsync } from 'ts-retry'
+
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { IDecoder } from '../../interfaces/IDecoder'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { SuiDecoder } from '../decoder/SuiDecoder'
-import { retryAsync } from 'ts-retry'
+import { RpcSubscriber } from './BaseSubscriber'
 
-export class SuiSubscriber implements ISubscriber {
-    network: string = NETWORK.SUI
-    rpcUrls: string[]
-    decoder: SuiDecoder
-    interval = SUBSCRIBER_INTERVAL
-    contractAddress: string
+export class SuiSubscriber extends RpcSubscriber {
+    decoder: IDecoder = new SuiDecoder()
 
-    async queryTxBlocks(rpcUrl: string, nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
+    async queryTxBlocks(nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
 
-            const res = await axiosInstance.post(rpcUrl, {
+            const res = await axiosInstance.post(this.rpcUrl, {
                 jsonrpc: '2.0',
                 id: 8,
                 method: 'suix_queryTransactionBlocks',
                 params: [
                     {
                         filter: {
-                            InputObject: this.contractAddress
+                            InputObject: this.xcallContracts[0]
                         },
                         options: {
                             showBalanceChanges: true,
@@ -41,26 +40,23 @@ export class SuiSubscriber implements ISubscriber {
 
             return res.data.result
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${rpcUrl} ${error.code}`)
+            logger.error(`${this.network} called rpc failed ${this.rpcUrl} ${error.code}`)
         }
 
         return { data: [], nextCursor: undefined }
     }
 
     constructor() {
-        this.rpcUrls = RPC_URLS[this.network]
-        this.contractAddress = CONTRACT[this.network].xcall[0]
-        this.decoder = new SuiDecoder()
+        super(NETWORK.SUI)
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${JSON.stringify(this.rpcUrls)}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddress)}`)
+        logger.info(`${this.network} connect ${JSON.stringify(this.rpcUrl)}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         let res = await retryAsync(
             async () => {
-                let rpcUrl = this.rpcUrls[0]
-                return await this.queryTxBlocks(rpcUrl, '', true, 1)
+                return await this.queryTxBlocks('', true, 1)
             },
             { delay: 1000, maxTry: 3 }
         )
@@ -72,18 +68,20 @@ export class SuiSubscriber implements ISubscriber {
             const intervalId = setInterval(async () => {
                 try {
                     // try rotating other rpcs if failed
+                    const rotateRpcRetries = 3
                     let txsRes: any
-                    for (let rpcUrlIndex = 0; rpcUrlIndex < this.rpcUrls.length; rpcUrlIndex++) {
+                    for (let retry = 1; retry <= rotateRpcRetries; retry++) {
                         txsRes = await retryAsync(
                             async () => {
-                                let rpcUrl = this.rpcUrls[rpcUrlIndex]
-                                return this.queryTxBlocks(rpcUrl, nextCursor, false)
+                                return this.queryTxBlocks(nextCursor, false)
                             },
                             { delay: 1000, maxTry: 3 }
                         )
 
-                        if (!txsRes) logger.error(`${this.network} try changing rpc...`)
-                        else break
+                        if (!res) {
+                            const rotatedRpc = this.rotateRpcUrl()
+                            logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
+                        } else break
                     }
 
                     if (txsRes?.nextCursor) nextCursor = txsRes.nextCursor

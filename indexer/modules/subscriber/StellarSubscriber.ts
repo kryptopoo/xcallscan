@@ -1,37 +1,49 @@
+import { retryAsync } from 'ts-retry'
+
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { IDecoder } from '../../interfaces/IDecoder'
 import { API_KEY, API_URL, CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
-import { retryAsync } from 'ts-retry'
 import { StellarDecoder } from '../decoder/StellarDecoder'
+import { RpcSubscriber } from './BaseSubscriber'
+
 const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
-export class StellarSubscriber implements ISubscriber {
-    network: string = NETWORK.STELLAR
-    decoder: StellarDecoder
-    interval = SUBSCRIBER_INTERVAL
-    contractAddress: string
-    rpcUrls: string[]
+export class StellarSubscriber extends RpcSubscriber {
+    decoder: IDecoder = new StellarDecoder()
 
     constructor() {
-        this.rpcUrls = RPC_URLS[this.network]
-        this.contractAddress = CONTRACT[this.network].xcall[0]
-        this.decoder = new StellarDecoder()
+        super(NETWORK.STELLAR)
     }
 
-    async callApi(rpcUrl: string, postData: any): Promise<any> {
-        try {
-            const axiosInstance = AxiosCustomInstance.getInstance()
+    async callRpc(postData: any): Promise<any> {
+        const axiosInstance = AxiosCustomInstance.getInstance()
+        const rotateRpcRetries = 3
 
-            const res = await axiosInstance.post(rpcUrl, postData)
+        let res: any = undefined
+        for (let retry = 1; retry <= rotateRpcRetries; retry++) {
+            res = await retryAsync(
+                async () => {
+                    try {
+                        const rpcRes = await axiosInstance.post(this.rpcUrl, postData)
+                        return rpcRes.data.result
+                    } catch (error) {
+                        logger.error(`${this.network} called rpc failed ${error}`)
+                    }
 
-            return res.data.result
-        } catch (error: any) {
-            logger.error(`${this.network} called api failed ${rpcUrl} ${error.code}`)
+                    return undefined
+                },
+                { delay: 1000, maxTry: 3 }
+            )
+            if (!res) {
+                const rotatedRpc = this.rotateRpcUrl()
+                logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
+            } else break
         }
 
-        return undefined
+        return res
     }
 
     async getEvents(startLedger: number): Promise<any> {
@@ -44,7 +56,7 @@ export class StellarSubscriber implements ISubscriber {
                 filters: [
                     {
                         type: 'contract',
-                        contractIds: [this.contractAddress]
+                        contractIds: this.xcallContracts
                     }
                 ],
                 pagination: {
@@ -53,21 +65,7 @@ export class StellarSubscriber implements ISubscriber {
             }
         }
 
-        let res: any = undefined
-        for (let rpcUrlIndex = 0; rpcUrlIndex < this.rpcUrls.length; rpcUrlIndex++) {
-            res = await retryAsync(
-                async () => {
-                    let rpcUrl = this.rpcUrls[rpcUrlIndex]
-                    return await this.callApi(rpcUrl, postData)
-                },
-                { delay: 1000, maxTry: 3 }
-            )
-            if (!res && rpcUrlIndex < this.rpcUrls.length) {
-                logger.error(`${this.network} try changing rpc ${this.rpcUrls[rpcUrlIndex + 1]}`)
-            } else break
-        }
-
-        return res
+        return this.callRpc(postData)
     }
 
     async getLatestLedger() {
@@ -77,21 +75,7 @@ export class StellarSubscriber implements ISubscriber {
             method: 'getLatestLedger'
         }
 
-        let res: any = undefined
-        for (let rpcUrlIndex = 0; rpcUrlIndex < this.rpcUrls.length; rpcUrlIndex++) {
-            res = await retryAsync(
-                async () => {
-                    let rpcUrl = this.rpcUrls[rpcUrlIndex]
-                    return await this.callApi(rpcUrl, postData)
-                },
-                { delay: 1000, maxTry: 3 }
-            )
-            if (!res && rpcUrlIndex < this.rpcUrls.length) {
-                logger.error(`${this.network} try changing rpc ${this.rpcUrls[rpcUrlIndex + 1]}`)
-            } else break
-        }
-
-        return res
+        return this.callRpc(postData)
     }
 
     async getTx(txHash: string) {
@@ -104,26 +88,12 @@ export class StellarSubscriber implements ISubscriber {
             }
         }
 
-        let res: any = undefined
-        for (let rpcUrlIndex = 0; rpcUrlIndex < this.rpcUrls.length; rpcUrlIndex++) {
-            res = await retryAsync(
-                async () => {
-                    let rpcUrl = this.rpcUrls[rpcUrlIndex]
-                    return await this.callApi(rpcUrl, postData)
-                },
-                { delay: 1000, maxTry: 3 }
-            )
-            if (!res && rpcUrlIndex < this.rpcUrls.length) {
-                logger.error(`${this.network} try changing rpc ${this.rpcUrls[rpcUrlIndex + 1]}`)
-            } else break
-        }
-
-        return res
+        return this.callRpc(postData)
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${JSON.stringify(this.rpcUrls)}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddress)}`)
+        logger.info(`${this.network} connect ${this.rpcUrl}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const latestLedgerRes = await this.getLatestLedger()
         let latestLedger = latestLedgerRes?.sequence
