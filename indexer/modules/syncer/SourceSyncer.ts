@@ -275,7 +275,11 @@ export class SourceSyncer implements ISourceSyncer {
 
                     // check if msg rollbacked
                     const isRollbacked = await this._db.validateRollbackedStatus(event.sn, srcNetwork, destNetwork, srcDapp)
-                    const status = isRollbacked ? MSG_STATUS.Rollbacked : MSG_STATUS.Executed
+                    let status = isRollbacked ? MSG_STATUS.Rollbacked : MSG_STATUS.Executed
+
+                    // exception case: no rollback, should be failed
+                    // dest_error is not null AND dest_error != ''  AND dest_error != 'success';
+                    if (event.msg != undefined && event.msg != '' && event.msg != 'success') status = MSG_STATUS.Failed
 
                     const updateCount = await this._db.updateExecutedMessage(
                         event.sn,

@@ -2,11 +2,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ClipboardDocumentIcon } from '@heroicons/react/24/solid'
 
-function renderMessageStatus(msgData) {
-    if (msgData.rollback_tx_hash) return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-red-300 text-center">Rollbacked</span>
-    if (msgData.status == 'pending') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-gray-300 text-center">{msgData.status}</span>
-    if (msgData.status == 'executed') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-green-300 text-center">{msgData.status}</span>
-    if (msgData.status == 'delivered') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-blue-300 text-center">{msgData.status}</span>
+function renderMessageStatus(status) {
+    if (status.toLowerCase() == 'failed') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-red-600 text-neutral-50 text-center">{status}</span>
+    if (status.toLowerCase() == 'rollbacked') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-red-300 text-center">{status}</span>
+    if (status.toLowerCase() == 'pending') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-gray-300 text-center">{status}</span>
+    if (status.toLowerCase() == 'executed') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-green-300 text-center">{status}</span>
+    if (status.toLowerCase() == 'delivered') return <span className="uppercase text-xs rounded-2xl p-1 inline-block w-24 bg-blue-300 text-center">{status}</span>
 }
 
 function renderDestHashLink(item, meta) {

@@ -15,14 +15,15 @@ export default function Home() {
     const [srcNetwork, setSrcNetwork] = useState('')
     const [destNetwork, setDestNetwork] = useState('')
     const [actionType, setActionType] = useState('')
+    const [status, setStatus] = useState('')
 
     // pagination
     const [pageSize, setPageSize] = useState(10)
     const [pageNumber, setPageNumber] = useState(1)
 
     let messagesRes = useSWR(
-        ['messages', pageSize, pageNumber, srcNetwork, destNetwork, actionType],
-        () => FetchData.getMessages(pageSize, pageNumber, srcNetwork, destNetwork, actionType),
+        ['messages', pageSize, pageNumber, status, srcNetwork, destNetwork, actionType],
+        () => FetchData.getMessages(pageSize, pageNumber, status, srcNetwork, destNetwork, actionType),
         { refreshInterval: 2000 }
     )
     const totalMsgRes = useSWR('statistics/total_messages', () => FetchData.getTotalMessages(), {
@@ -58,10 +59,14 @@ export default function Home() {
                 actionTypeChanged={(value) => {
                     setActionType(value)
                 }}
+                statusChanged={(value) => {
+                    setStatus(value)
+                }}
                 resetClicked={() => {
                     setSrcNetwork('')
                     setDestNetwork('')
                     setActionType('')
+                    setStatus('')
                 }}
             />
 
