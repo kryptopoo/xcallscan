@@ -29,7 +29,7 @@ export class SuiVisionScan implements IScan {
 
         let nextCursor: string = flag
 
-        const rpcUrl = `${RPC_URLS[this.network].find((u) => u.includes('blockvision'))}/${WEB3_BLOCKVISION_API_KEY}`
+        const rpcUrl = RPC_URLS[this.network][0]
         const postData = {
             jsonrpc: '2.0',
             id: 8,

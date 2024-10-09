@@ -131,6 +131,7 @@
             "api": "",
             "uri": "",
             "uris": [
+                "https://rpc.ankr.com/sui",
                 "https://sui-mainnet.blockvision.org/v1",
                 "https://go.getblock.io/9d1dc99638d94dbcb1446fc3cfeaacfc",
                 "https://sui-mainnet.blastapi.io"

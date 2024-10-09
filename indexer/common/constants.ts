@@ -11,6 +11,7 @@ const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
 const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
 const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
 const WEB3_BLOCKVISION_API_KEY = process.env.WEB3_BLOCKVISION_API_KEY
+const WEB3_ANKR_API_KEY = process.env.WEB3_ANKR_API_KEY
 
 const NETWORK = {
     ICON: 'icon',
@@ -58,6 +59,7 @@ const buildRpcUrls = (rpcUrls: string[]) => {
         else if (rpcUrl.includes('alchemy')) correctRpcUrls.push(`${rpcUrl}/${WEB3_ALCHEMY_API_KEY}`)
         else if (rpcUrl.includes('chainstack')) correctRpcUrls.push(`${rpcUrl}/${WEB3_CHAINSTACK_API_KEY}`)
         else if (rpcUrl.includes('blastapi')) correctRpcUrls.push(`${rpcUrl}/${WEB3_BLAST_API_KEY}`)
+        else if (rpcUrl.includes('ankr')) correctRpcUrls.push(`${rpcUrl}/${WEB3_ANKR_API_KEY}`)
         else correctRpcUrls.push(rpcUrl)
     })
 
@@ -295,5 +297,6 @@ export {
     WEB3_ALCHEMY_API_KEY,
     WEB3_CHAINSTACK_API_KEY,
     WEB3_BLAST_API_KEY,
-    WEB3_BLOCKVISION_API_KEY
+    WEB3_BLOCKVISION_API_KEY,
+    WEB3_ANKR_API_KEY
 }
