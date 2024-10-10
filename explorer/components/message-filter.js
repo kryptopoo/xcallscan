@@ -2,6 +2,7 @@
 
 import { Dropdown, DropdownItem } from 'flowbite-react'
 import helper from '@/lib/helper'
+import Render from '@/lib/render'
 import Image from 'next/image'
 
 const MessageFilter = (props) => {
@@ -87,6 +88,31 @@ const MessageFilter = (props) => {
                         >
                             <Image className="relative inline-block mr-2" alt={network.name} src={network.logo} width={16} height={16} />
                             {network.name}
+                        </DropdownItem>
+                    )
+                })}
+            </Dropdown>
+
+            <Dropdown label="Status" inline className="rounded-md" theme={dropdownTheme}>
+                <DropdownItem
+                    className={`min-w-32 ${props.status == '' ? 'bg-gray-100' : ''}`}
+                    onClick={() => {
+                        props.statusChanged('')
+                    }}
+                >
+                    All Status
+                </DropdownItem>
+
+                {['Pending', 'Delivered', 'Executed', 'Rollbacked', 'Failed'].map((status) => {
+                    return (
+                        <DropdownItem
+                            key={status}
+                            className={`${props.status == status ? 'bg-gray-100' : ''}`}
+                            onClick={() => {
+                                props.statusChanged(status)
+                            }}
+                        >
+                            {Render.renderMessageStatus(status)}
                         </DropdownItem>
                     )
                 })}

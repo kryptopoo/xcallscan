@@ -253,7 +253,8 @@ const MSG_STATUS = {
     Pending: 'pending',
     Delivered: 'delivered',
     Executed: 'executed',
-    Rollbacked: 'rollbacked'
+    Rollbacked: 'rollbacked',
+    Failed: 'failed'
 }
 
 export {
