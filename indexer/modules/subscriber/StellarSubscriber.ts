@@ -1,21 +1,18 @@
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { IDecoder } from '../../interfaces/IDecoder'
-import { API_KEY, API_URL, CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
+import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { StellarDecoder } from '../decoder/StellarDecoder'
-import { RpcSubscriber } from './BaseSubscriber'
+import { BaseSubscriber } from './BaseSubscriber'
 
 const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
-export class StellarSubscriber extends RpcSubscriber {
-    decoder: IDecoder = new StellarDecoder()
-
+export class StellarSubscriber extends BaseSubscriber {
     constructor() {
-        super(NETWORK.STELLAR)
+        super(NETWORK.STELLAR, RPC_URLS[NETWORK.STELLAR], new StellarDecoder())
     }
 
     async callRpc(postData: any): Promise<any> {
@@ -27,7 +24,7 @@ export class StellarSubscriber extends RpcSubscriber {
             res = await retryAsync(
                 async () => {
                     try {
-                        const rpcRes = await axiosInstance.post(this.rpcUrl, postData)
+                        const rpcRes = await axiosInstance.post(this.url, postData)
                         return rpcRes.data.result
                     } catch (error) {
                         logger.error(`${this.network} called rpc failed ${error}`)
@@ -38,7 +35,7 @@ export class StellarSubscriber extends RpcSubscriber {
                 { delay: 1000, maxTry: 3 }
             )
             if (!res) {
-                const rotatedRpc = this.rotateRpcUrl()
+                const rotatedRpc = this.rotateUrl()
                 logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
             } else break
         }
@@ -92,7 +89,7 @@ export class StellarSubscriber extends RpcSubscriber {
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${this.rpcUrl}`)
+        logger.info(`${this.network} connect ${this.url}`)
         logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const latestLedgerRes = await this.getLatestLedger()

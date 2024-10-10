@@ -1,36 +1,30 @@
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WEB3_ALCHEMY_API_KEY, WSS } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WEB3_ALCHEMY_API_KEY, WSS_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
 import solanaWeb3, { Connection, ParsedInnerInstruction, PublicKey, SignaturesForAddressOptions } from '@solana/web3.js'
 import * as anchor from '@coral-xyz/anchor'
 import { BorshCoder, EventParser, Program } from '@coral-xyz/anchor'
+import { IDecoder } from '../../interfaces/IDecoder'
+import { BaseSubscriber } from './BaseSubscriber'
 const xcallIdl = require('../../abi/xcall.idl.json')
 
-export class SolanaSubscriber implements ISubscriber {
-    network: string
-    decoder = new SolanaDecoder()
+export class SolanaSubscriber extends BaseSubscriber {
     solanaConnection: Connection
-    contractAddress: string
-    wssUrl: string
-    rpcUrl: string
 
     constructor() {
-        this.network = NETWORK.SOLANA
-        this.contractAddress = CONTRACT[this.network].xcall[0]
+        super(NETWORK.SOLANA, WSS_URLS[NETWORK.SOLANA], new SolanaDecoder())
 
-        this.wssUrl = WSS[this.network][0]
-        this.rpcUrl = `${RPC_URLS[this.network].find((u) => u.includes('alchemy'))}/${WEB3_ALCHEMY_API_KEY}`
-        this.solanaConnection = new solanaWeb3.Connection(this.rpcUrl, { wsEndpoint: this.wssUrl })
+        this.solanaConnection = new solanaWeb3.Connection(RPC_URLS[NETWORK.SOLANA][0], { wsEndpoint: this.url })
     }
 
     subscribe(callback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${this.wssUrl}`)
-        logger.info(`${this.network} listen events on ${this.contractAddress}`)
+        logger.info(`${this.network} connect ${this.url}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         let subscriptionId = 0
         try {
-            const publicKey = new PublicKey(this.contractAddress)
+            const publicKey = new PublicKey(this.xcallContracts[0])
             subscriptionId = this.solanaConnection.onLogs(
                 publicKey,
                 (logs: any, context: any) => {

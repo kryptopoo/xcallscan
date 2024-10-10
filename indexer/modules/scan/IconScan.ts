@@ -1,6 +1,6 @@
 import logger from '../logger/logger'
 import IconService from 'icon-sdk-js'
-import { API_URL, EVENT, NETWORK, CONTRACT } from '../../common/constants'
+import { API_URL, EVENT, NETWORK } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import AxiosCustomInstance from './AxiosCustomInstance'
@@ -58,10 +58,9 @@ export class IconScan implements IScan {
             const blockStartRes = await this.callApi(`${API_URL[this.network]}/logs`, {
                 address: xcallAddress,
                 limit: 1,
-                skip: this.totalCount - 1
+                skip: this.totalCount - 10
             })
-
-            blockStart = blockStartRes.data[blockStartRes.data.length - 1].block_number
+            blockStart = blockStartRes.data[0].block_number
         }
 
         // assume 5 blocks = 1 msg

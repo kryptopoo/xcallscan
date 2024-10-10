@@ -1,7 +1,7 @@
 import logger from '../logger/logger'
 import { BigNumber, ethers } from 'ethers'
 import axios from 'axios'
-import { API_KEY, API_URL, NETWORK, RPC_URL, RPC_URLS, USE_MAINNET, WEB3_ALCHEMY_API_KEY } from '../../common/constants'
+import { API_KEY, API_URL, NETWORK, RPC_URLS } from '../../common/constants'
 import { cosmosHash, sleep } from '../../common/helper'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { retryAsync } from 'ts-retry'

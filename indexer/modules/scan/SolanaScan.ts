@@ -12,7 +12,7 @@ export class SolanaScan implements IScan {
     solanaConnection: Connection
 
     constructor(public network: string) {
-        const rpcUrl = `${RPC_URLS[this.network].find((u) => u.includes('alchemy'))}/${WEB3_ALCHEMY_API_KEY}`
+        const rpcUrl = RPC_URLS[this.network][0]
         this.solanaConnection = new solanaWeb3.Connection(rpcUrl)
     }
 
@@ -37,10 +37,8 @@ export class SolanaScan implements IScan {
             // sort slot/block asc
             txs = txs.sort((a, b) => a.slot - b.slot)
             const txSignatures = txs.map((t) => t.signature)
-            const txDetails = await this.solanaConnection.getParsedTransactions(txSignatures, { maxSupportedTransactionVersion: 0 })
-
-            for (let i = 0; i < txDetails.length; i++) {
-                const txDetail = txDetails[i]
+            for (let i = 0; i < txSignatures.length; i++) {
+                const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
 
                 if (txDetail) {
                     const txHash = txDetail.transaction.signatures[0]

@@ -1,6 +1,6 @@
 import { WebSocket } from 'ws'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
+import { CONTRACT, EVENT, RPC_URLS, SUBSCRIBER_INTERVAL, WSS_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { IbcDecoder } from '../decoder/IbcDecoder'
 import { v4 as uuidv4 } from 'uuid'
@@ -8,21 +8,18 @@ import { toHex } from '@cosmjs/encoding'
 import { sha256 } from '@cosmjs/crypto'
 import { StargateClient } from '@cosmjs/stargate'
 import { EventLogData } from '../../types/EventLog'
-import { IDecoder } from '../../interfaces/IDecoder'
+import { BaseSubscriber } from './BaseSubscriber'
+import { retryAsync } from 'ts-retry'
 
-export class IbcSubscriber implements ISubscriber {
+export class IbcSubscriber extends BaseSubscriber {
     ws!: WebSocket
     wsQuery: any
-    decoder: IDecoder
-    contractAddress: string
 
     reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
     disconnectedCount: number = 0
-    wssUrl = WSS[this.network][0]
 
     constructor(public network: string) {
-        this.contractAddress = CONTRACT[this.network].xcall[0]
-        this.decoder = new IbcDecoder()
+        super(network, WSS_URLS[network], new IbcDecoder())
     }
 
     private getEventName(events: any[]) {
@@ -108,17 +105,31 @@ export class IbcSubscriber implements ISubscriber {
 
                     if (eventLogData && txRaw) {
                         const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
-                        const client = await StargateClient.connect(RPC_URL[this.network])
-                        const tx = await client.getTx(txHash)
 
-                        if (tx) {
-                            const block = await client.getBlock(tx?.height)
-                            const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
-                            client.disconnect()
+                        const rpcUrls = RPC_URLS[this.network]
+                        for (let i = 0; i < rpcUrls.length; i++) {
+                            const rpcUrl = rpcUrls[i]
 
-                            callback(eventLog)
-                        } else {
-                            logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                            const { tx, block } = await retryAsync(
+                                async () => {
+                                    const client = await StargateClient.connect(rpcUrl)
+                                    const getTxRs = await client.getTx(txHash)
+                                    const getBlockRs = await client.getBlock(getTxRs?.height)
+                                    client.disconnect()
+                                    return { tx: getTxRs, block: getBlockRs }
+                                },
+                                { delay: 1000, maxTry: 3 }
+                            )
+
+                            if (!tx || !block) {
+                                // try changing to next rpc
+                                if (i < rpcUrls.length - 1) logger.error(`${this.network} changing rpc to ${rpcUrls[i + 1]}`)
+                                if (i == rpcUrls.length - 1) logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                            } else {
+                                const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
+                                callback(eventLog)
+                                break
+                            }
                         }
                     } else {
                         logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
@@ -139,9 +150,7 @@ export class IbcSubscriber implements ISubscriber {
 
         if (this.disconnectedCount >= 5) {
             this.disconnectedCount = 0
-            const wssUrlIndex = WSS[this.network].indexOf(this.wssUrl)
-            this.wssUrl = WSS[this.network][wssUrlIndex >= WSS[this.network].length - 1 ? 0 : wssUrlIndex + 1]
-            // this.wssUrl = WSS[this.network][Math.floor(Math.random() * WSS[this.network].length)]
+            this.url = this.rotateUrl()
         }
 
         // If the WebSocket isn't open, exit the function.
@@ -154,11 +163,11 @@ export class IbcSubscriber implements ISubscriber {
 
     private connect(onmessage: (data: any) => Promise<void>) {
         try {
-            logger.info(`${this.network} connect ${this.wssUrl}`)
-            logger.info(`${this.network} listen events on ${this.contractAddress}`)
+            logger.info(`${this.network} connect ${this.url}`)
+            logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
             // Open a new WebSocket connection to the specified URL.
-            this.ws = new WebSocket(this.wssUrl)
+            this.ws = new WebSocket(this.url)
 
             // Define the subscription request. It asks for transactions where the recipient address, and checks for transactions to be published.
             this.wsQuery = {
@@ -166,7 +175,7 @@ export class IbcSubscriber implements ISubscriber {
                 method: 'subscribe',
                 id: uuidv4().toString(),
                 params: {
-                    query: `tm.event = 'Tx' AND wasm._contract_address = '${this.contractAddress}'`
+                    query: `tm.event = 'Tx' AND wasm._contract_address = '${this.xcallContracts[0]}'`
                 }
             }
             // When the WebSocket connection is established, send the subscription request.

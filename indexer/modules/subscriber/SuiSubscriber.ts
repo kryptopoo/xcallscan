@@ -1,22 +1,19 @@
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { IDecoder } from '../../interfaces/IDecoder'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { SuiDecoder } from '../decoder/SuiDecoder'
-import { RpcSubscriber } from './BaseSubscriber'
+import { BaseSubscriber } from './BaseSubscriber'
 
-export class SuiSubscriber extends RpcSubscriber {
-    decoder: IDecoder = new SuiDecoder()
-
+export class SuiSubscriber extends BaseSubscriber {
     async queryTxBlocks(nextCursor: string, descendingOrder: boolean, limit: number = 20): Promise<any> {
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
 
-            const res = await axiosInstance.post(this.rpcUrl, {
+            const res = await axiosInstance.post(this.url, {
                 jsonrpc: '2.0',
                 id: 8,
                 method: 'suix_queryTransactionBlocks',
@@ -40,18 +37,18 @@ export class SuiSubscriber extends RpcSubscriber {
 
             return res.data.result
         } catch (error: any) {
-            logger.error(`${this.network} called rpc failed ${this.rpcUrl} ${error.code}`)
+            logger.error(`${this.network} called rpc failed ${this.url} ${error.code}`)
         }
 
         return { data: [], nextCursor: undefined }
     }
 
     constructor() {
-        super(NETWORK.SUI)
+        super(NETWORK.SUI, RPC_URLS[NETWORK.SUI], new SuiDecoder())
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${JSON.stringify(this.rpcUrl)}`)
+        logger.info(`${this.network} connect ${JSON.stringify(this.url)}`)
         logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         let res = await retryAsync(
@@ -79,7 +76,7 @@ export class SuiSubscriber extends RpcSubscriber {
                         )
 
                         if (!res) {
-                            const rotatedRpc = this.rotateRpcUrl()
+                            const rotatedRpc = this.rotateUrl()
                             logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
                         } else break
                     }

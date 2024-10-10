@@ -1,15 +1,12 @@
 import logger from '../logger/logger'
 import { ethers } from 'ethers'
-import { API_URL, RPC_URL, EVENT, CONTRACT, API_KEY, BTP_NETWORK_ID, NETWORK, RPC_URLS } from '../../common/constants'
+import { API_URL, API_KEY, RPC_URLS } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { sleep } from '../../common/helper'
 import AxiosCustomInstance from './AxiosCustomInstance'
-import xcallAbi from '../../abi/xcall.abi.json'
-import assetManagerAbi from '../../abi/AssetManager.abi.json'
-import oracleProxyAbi from '../../abi/OracleProxy.abi.json'
-import balancedDollarAbi from '../../abi/BalancedDollar.abi.json'
 import { EvmDecoder } from '../decoder/EvmDecoder'
+import xcallAbi from '../../abi/xcall.abi.json'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 
 export class EvmScan implements IScan {
@@ -18,7 +15,7 @@ export class EvmScan implements IScan {
     decoder: EvmDecoder
 
     constructor(public network: string) {
-        this.provider = new ethers.providers.JsonRpcProvider(RPC_URL[this.network])
+        this.provider = new ethers.providers.JsonRpcProvider(RPC_URLS[this.network][0])
         this.decoder = new EvmDecoder(this.network)
     }
 

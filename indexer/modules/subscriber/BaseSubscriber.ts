@@ -1,25 +1,28 @@
-import { CONTRACT, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
-import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { CONTRACT, SUBSCRIBER_INTERVAL } from '../../common/constants'
+import { IDecoder } from '../../interfaces/IDecoder'
+import { ISubscriberCallback } from '../../interfaces/ISubcriber'
 
-export abstract class RpcSubscriber {
+export abstract class BaseSubscriber {
     interval = SUBSCRIBER_INTERVAL
     network: string = ''
-    rpcUrl: string = ''
+    url: string = ''
     xcallContracts: string[] = []
+    decoder: IDecoder
 
-    private rpcUrls: string[] = []
+    private urls: string[] = []
 
-    constructor(network: string) {
+    constructor(network: string, urls: string[], decoder: IDecoder) {
         this.network = network
-        this.rpcUrls = RPC_URLS[this.network]
-        this.rpcUrl = this.rpcUrls[0]
+        this.urls = urls
+        this.url = this.urls[0] 
         this.xcallContracts = CONTRACT[this.network].xcall
+        this.decoder = decoder
     }
 
-    rotateRpcUrl(): string {
-        const currentIndex = this.rpcUrls.indexOf(this.rpcUrl)
-        this.rpcUrl = currentIndex === this.rpcUrls.length - 1 ? this.rpcUrls[0] : this.rpcUrls[currentIndex + 1]
-        return this.rpcUrl
+    rotateUrl(): string {
+        const currentIndex = this.urls.indexOf(this.url)
+        this.url = currentIndex === this.urls.length - 1 ? this.urls[0] : this.urls[currentIndex + 1]
+        return this.url
     }
 
     abstract subscribe(callback: ISubscriberCallback): void

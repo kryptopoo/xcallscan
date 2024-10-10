@@ -1,4 +1,4 @@
-import { API_KEY, API_URL, CONTRACT, EVENT, RPC_URLS, WEB3_BLOCKVISION_API_KEY } from '../../common/constants'
+import { EVENT, RPC_URLS } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import logger from '../logger/logger'
@@ -37,7 +37,7 @@ export class SuiVisionScan implements IScan {
             params: [
                 {
                     filter: {
-                        InputObject: CONTRACT[this.network].xcall[0]
+                        InputObject: xcallAddress
                     },
                     options: {
                         showBalanceChanges: true,
