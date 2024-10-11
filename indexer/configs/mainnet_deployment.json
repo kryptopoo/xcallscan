@@ -196,7 +196,7 @@
                 "https://api.mainnet-beta.solana.com",
                 "https://go.getblock.io/3ee6c6dd547b401f9225ccd91a90abc7"
             ],
-            "wss": [],
+            "wss": ["wss://go.getblock.io/0c9e5684582a477385a481fc4c64bfa6"],
             "btp_network_id": "solana",
             "block_height": 0,
             "block_timestamp": 0
