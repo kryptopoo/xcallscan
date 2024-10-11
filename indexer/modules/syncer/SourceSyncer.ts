@@ -290,7 +290,7 @@ export class SourceSyncer implements ISourceSyncer {
                         event.block_number,
                         event.block_timestamp,
                         event.tx_hash,
-                        event.msg,
+                        MSG_STATUS.Executed ? undefined : event.msg,
                         status
                     )
                     if (updateCount > 0) {
