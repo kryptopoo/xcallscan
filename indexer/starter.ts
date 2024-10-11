@@ -99,8 +99,8 @@ const startSubscriber = () => {
 
     const subscribers: { [network: string]: ISubscriber } = {
         // ICON
-        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON, CONTRACT[NETWORK.ICON].xcall),
-        [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH, CONTRACT[NETWORK.HAVAH].xcall),
+        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON),
+        [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH),
 
         // EVM
         [NETWORK.ARBITRUM]: new EvmSubscriber(NETWORK.ARBITRUM),
