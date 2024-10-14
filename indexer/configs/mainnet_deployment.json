@@ -178,9 +178,9 @@
         "stellar": {
             "api": "",
             "rpcs": [
+                "https://rpc.ankr.com/stellar_soroban",
                 "https://soroban-rpc.mainnet.stellar.gateway.fm",
-                "https://mainnet.stellar.validationcloud.io/v1/9O_ZB5sCUQ0A2tW9BkIKXAPeCnHvnAZOmdC7exhxfr8",
-                "https://rpc.ankr.com/stellar_soroban"
+                "https://mainnet.stellar.validationcloud.io/v1/9O_ZB5sCUQ0A2tW9BkIKXAPeCnHvnAZOmdC7exhxfr8"
             ],
             "wss": [],
             "btp_network_id": "stellar",
@@ -193,10 +193,17 @@
             "rpcs": [
                 "https://solana-api.instantnodes.io",
                 "https://solana-mainnet.g.alchemy.com/v2",
+                "https://rpc.ankr.com/solana",
+                "https://powerful-neat-glade.solana-mainnet.quiknode.pro",
                 "https://api.mainnet-beta.solana.com",
                 "https://go.getblock.io/3ee6c6dd547b401f9225ccd91a90abc7"
             ],
-            "wss": ["wss://go.getblock.io/0c9e5684582a477385a481fc4c64bfa6"],
+            "wss": [
+                "wss://solana-api.instantnodes.io",
+                "wss://rpc.ankr.com/solana",
+                "wss://powerful-neat-glade.solana-mainnet.quiknode.pro",
+                "wss://go.getblock.io/0c9e5684582a477385a481fc4c64bfa6"
+            ],
             "btp_network_id": "solana",
             "block_height": 0,
             "block_timestamp": 0
