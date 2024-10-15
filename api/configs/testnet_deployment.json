@@ -1,0 +1,175 @@
+{
+    "networks": {
+        "icon": {
+            "api": "https://tracker.lisbon.icon.community/api/v1",
+            "rpcs": ["https://lisbon.net.solidwallet.io/api/v3/icon_dex"],
+            "wss": [],
+            "btp_network_id": "0x2.icon",
+            "block_height": 28149874
+        },
+        "bsc": {
+            "api": "https://api-testnet.bscscan.com/api",
+            "rpcs": ["https://data-seed-prebsc-1-s1.binance.org:8545"],
+            "wss": [],
+            "btp_network_id": "0x61.bsc",
+            "block_height": 0
+        },
+        "eth2": {
+            "api": "https://api-sepolia.etherscan.io/api",
+            "rpcs": ["https://sepolia.infura.io/v3/ffbf8ebe228f4758ae82e175640275e0"],
+            "wss": [],
+            "btp_network_id": "0xaa36a7.eth2",
+            "block_height": 0
+        },
+        "havah": {
+            "api": "https://scan.vega.havah.io/v3",
+            "rpcs": ["https://ctz.vega.havah.io/api/v3"],
+            "wss": [],
+            "btp_network_id": "0x101.icon",
+            "block_height": 0
+        },
+        "ibc_archway": {
+            "api": "https://front.api.mintscan.io/v1/archway-testnet",
+            "rpcs": [],
+            "wss": [],
+            "btp_network_id": "archway",
+            "block_height": 0,
+            "block_timestamp": 1694476800
+        },
+        "ibc_neutron": {
+            "api": "https://celatone-api-prod.alleslabs.dev/v1/neutron/pion-1",
+            "rpcs": [],
+            "wss": [],
+            "btp_network_id": "neutron",
+            "block_height": 0,
+            "block_timestamp": 1691971200
+        },
+        "ibc_injective": {
+            "api": "https://testnet.sentry.exchange.grpc-web.injective.network/api/explorer/v1",
+            "rpcs": [],
+            "wss": [],
+            "btp_network_id": "injective",
+            "block_height": 0,
+            "block_timestamp": 1699833600
+        },
+        "avax": {
+            "api": "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan/ap",
+            "rpcs": ["https://rpc.ankr.com/avalanche_fuji"],
+            "wss": [],
+            "btp_network_id": "0xa869.fuji",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "base": {
+            "api": "https://api-sepolia.basescan.org/api",
+            "rpcs": ["https://base-sepolia.blockpi.network/v1/rpc/public"],
+            "wss": [],
+            "btp_network_id": "0x14a34.base",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "arbitrum": {
+            "api": "https://api-sepolia.arbiscan.io/api",
+            "rpcs": ["https://arbitrum-sepolia.blockpi.network/v1/rpc/public"],
+            "wss": [],
+            "btp_network_id": "0xaa37dc.arbitrum",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "optimism": {
+            "api": "https://api-sepolia-optimistic.etherscan.io/api",
+            "rpcs": ["https://optimism-sepolia.blockpi.network/v1/rpc/public"],
+            "wss": [],
+            "btp_network_id": "0x66eee.optimism",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "sui": {
+            "api": "https://sui-testnet-endpoint.blockvision.org",
+            "rpcs": [],
+            "wss": [],
+            "btp_network_id": "sui-test",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "polygon": {
+            "api": "https://api-amoy.polygonscan.com/api",
+            "rpcs": [
+                "https://rpc-amoy.polygon.technology",
+                "https://polygon-amoy.blockpi.network/v1/rpc/public",
+                "https://rpc.ankr.com/polygon_amoy",
+                "https://polygon-amoy.drpc.org"
+            ],
+            "wss": [],
+            "btp_network_id": "0x13882.polygon",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "stellar": {
+            "api": "",
+            "rpcs": [
+                "https://soroban-rpc.testnet.stellar.gateway.fm",
+                "https://rpc.ankr.com/stellar_testnet_soroban/3dcbb639c95c6fdb05ab6f03fe9ec31f2c6eebe808f13063b690747933188765"
+            ],
+            "wss": [],
+            "btp_network_id": "stellar",
+            "block_height": 0,
+            "block_timestamp": 0
+        },
+        "solana": {
+            "api": "",
+            "rpcs": ["https://api.testnet.solana.com/"],
+            "wss": [],
+            "btp_network_id": "solana",
+            "block_height": 0,
+            "block_timestamp": 0
+        }
+    },
+    "contracts": {
+        "icon": {
+            "xcall": ["cx15a339fa60bd86225050b22ea8cd4a9d7cd8bb83"]
+        },
+        "bsc": {
+            "xcall": ["0xD59C71E42a1Fc070e4c2c94f0eAE0840043681D0"]
+        },
+        "eth2": {
+            "xcall": ["0xB7039f15fFa33A6f44cA4913f33cE2adC0dbe71D"]
+        },
+        "havah": {
+            "xcall": ["cxd34a83458cb4adb49f48e411105f69ec35e3c3d5", "cxbc156dbb9ce60e64d9ff02e5b95e206980b5cf5f"]
+        },
+        "ibc_archway": {
+            "xcall": ["archway1h04c8eqr99dnsw6wqx80juj2vtuxth70eh65cf6pnj4zan6ms4jqshc5wk"]
+        },
+        "ibc_neutron": {
+            "xcall": ["neutron164uehrt5zp6y9atz3x595zwad2vtk7gr5tpvmnj8nqqlc9a0g4xs4sqg0m"]
+        },
+        "ibc_injective": {
+            "xcall": ["inj1mxqp64mphz2t79hz7dr4xl9593v7mrpy3srehm"]
+        },
+        "avax": {
+            "xcall": ["0x28ecb198e86a7FcA1cf51032635967fc26cDDAaD"]
+        },
+        "base": {
+            "xcall": ["0x0B59764C48297E768c135b8D072F9884a37EB84c"]
+        },
+        "arbitrum": {
+            "xcall": ["0x52eC9a532439AAB34FbbD20aFb3D2351fA982583"]
+        },
+        "optimism": {
+            "xcall": ["0x9835d02616f76Dc5f92E689F49b08566CFAFafcA"]
+        },
+        "sui": {
+            "xcall": ["0x60add4475c91742470074396ba29b6d62572abd1ac08c18abe228be949c21420"]
+        },
+        "polygon": {
+            "xcall": ["0x0B59764C48297E768c135b8D072F9884a37EB84c"]
+        },
+        "stellar": {
+            "xcall": ["CCBML52W3LR4OGKB7F5RJCADHET6QV3MX6PKWPFPWZVGCZSS6XZXMQIP"]
+        },
+        "solana": {
+            "xcall": ["BknkMw3sonNXVTW2mzuhKEJmmt4PSVei1HbQiDuWVny4"]
+        }
+    }
+}
