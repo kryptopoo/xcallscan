@@ -4,76 +4,88 @@ This documentation describes how to use the `xcallscan` REST APIs
 
 ## Network Supported
 
-| Name  | Id  |
-|--|--|
-| ICON | icon |
-| Binance Smart Chain | bsc |
-| Ethereum | eth2  |
-| Havah | havah |
-| Archway | ibc_archway |
-| Neutron | ibc_neutron |
-| Injective | ibc_injective |
-| Avalanche | avax |
-| Base | base |
-| Arbitrum | arbitrum |
-| Optimism | optimism |
+| Name                | Id            |
+| ------------------- | ------------- |
+| ICON                | icon          |
+| Havah               | havah         |
+| Binance Smart Chain | bsc           |
+| Ethereum            | eth2          |
+| Avalanche           | avax          |
+| Base                | base          |
+| Arbitrum            | arbitrum      |
+| Optimism            | optimism      |
+| Polygon             | polygon       |
+| Archway             | ibc_archway   |
+| Neutron             | ibc_neutron   |
+| Injective           | ibc_injective |
+| Sui                 | sui           |
+| Stellar             | stellar       |
+| Solana              | solana        |
 
 ## Base URLs
 
 #### Mainnet: https://xcallscan.xyz/api
+
 #### Testnet: https://testnet.xcallscan.xyz/api
 
 ## /messages
 
 Listing messages
 
-#### *GET* `base_url/messages`
+#### _GET_ `base_url/messages`
 
 #### Params:
 
-- `limit`: the maximum number of items
-- `skip`: starting point within the collection of resource results
-- `src_network`: *(optional)* source network
-- `dest_network`: *(optional)* dest network
-- `src_address`: *(optional)* sender address
-- `dest_address`: *(optional)* recipient address
-- `from_timestamp`: *(optional)* from block timestamp
-- `to_timestamp`: *(optional)* to block timestamp
-- `status`: *(optional)* message status, one of values `pending`, `delivered`, `executed`, `rollbacked`
+-   `limit`: the maximum number of items
+-   `skip`: starting point within the collection of resource results
+-   `src_network`: _(optional)_ source network
+-   `dest_network`: _(optional)_ dest network
+-   `src_address`: _(optional)_ sender address
+-   `dest_address`: _(optional)_ recipient address
+-   `from_timestamp`: _(optional)_ from block timestamp
+-   `to_timestamp`: _(optional)_ to block timestamp
+-   `status`: _(optional)_ message status, one of values `pending`, `delivered`, `executed`, `rollbacked`
 
 ## /messages/:id
 
 Get message by id
 
-#### *GET* `base_url/messages/:id`
+#### _GET_ `base_url/messages/:id`
 
 #### Params:
 
-- `:id`: message id
-
+-   `:id`: message id
 
 ## /search
 
 Search messages by tx hash or serial number
 
-#### *GET* `base_url/search`
+#### _GET_ `base_url/search`
 
 #### Params:
 
-- `value`: tx hash OR sn
-
+-   `value`: tx hash OR sn
 
 ## /statistics/total_messages
 
 Get total number of messages
 
-#### *GET* `base_url/statistics/total_messages`
+#### _GET_ `base_url/statistics/total_messages`
 
 #### Params:
 
-- `src_networks`: *(optional)* source networks separated by `,`, eg: `icon,bsc`...
-- `dest_networks`: *(optional)* destination networks separated by `,`, eg: `icon,bsc`...
-- `from_timestamp`: *(optional)* from block timestamp
-- `to_timestamp`: *(optional)* to block timestamp
-- `status`: *(optional)* message status, one of values `pending`, `delivered`, `executed`, `rollbacked`
+-   `src_networks`: _(optional)_ source networks separated by `,`, eg: `icon,bsc`...
+-   `dest_networks`: _(optional)_ destination networks separated by `,`, eg: `icon,bsc`...
+-   `from_timestamp`: _(optional)_ from block timestamp
+-   `to_timestamp`: _(optional)_ to block timestamp
+-   `status`: _(optional)_ message status, one of values `pending`, `delivered`, `executed`, `rollbacked`
 
+## /rpc/block_height
+
+Get latest block height of networks
+
+#### _GET_ `base_url/rpc/block_height`
+
+#### Params:
+
+-   `networks`: _(optional)_ networks separated by `,`, eg: `icon,bsc`...

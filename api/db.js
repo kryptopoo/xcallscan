@@ -2,6 +2,7 @@ const Pool = require('pg').Pool
 const dotenv = require('dotenv')
 dotenv.config()
 const logger = require('./logger')
+const { NETWORK } = require('./constants')
 
 const pool = new Pool({
     user: process.env.PGUSER,
@@ -15,23 +16,6 @@ pool.on('error', function (error, client) {
 })
 
 const useMainnet = process.env.USE_MAINNET == 'true'
-
-const NETWORK = {
-    ICON: 'icon',
-    BSC: 'bsc',
-    ETH2: 'eth2',
-    HAVAH: 'havah',
-    IBC_ARCHWAY: 'ibc_archway',
-    IBC_NEUTRON: 'ibc_neutron',
-    IBC_INJECTIVE: 'ibc_injective',
-    AVAX: 'avax',
-    BASE: 'base',
-    ARBITRUM: 'arbitrum',
-    OPTIMISM: 'optimism',
-    SUI: 'sui',
-    POLYGON: 'polygon',
-    STELLAR: 'stellar'
-}
 
 const metaUrls = {
     tx: {

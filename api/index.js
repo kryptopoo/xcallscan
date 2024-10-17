@@ -4,6 +4,8 @@ const app = express()
 const port = process.env.PORT || 4000
 const db = require('./db')
 const logger = require('./logger')
+const rpc = require('./rpc')
+const { NETWORK } = require('./constants')
 const rateLimiter = require('./middlewares/rate-limiter')
 const cors = require('cors')
 
@@ -81,7 +83,18 @@ app.get('/api/messages', async (req, res) => {
     const action_type = req.query.action_type
 
     try {
-        const rs = await db.getMessages(skip, limit, status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp, action_type)
+        const rs = await db.getMessages(
+            skip,
+            limit,
+            status,
+            src_network,
+            dest_network,
+            src_address,
+            dest_address,
+            from_timestamp,
+            to_timestamp,
+            action_type
+        )
 
         res.status(200).json(rs)
     } catch (error) {
@@ -115,17 +128,6 @@ app.get('/api/search', async (req, res) => {
     }
 })
 
-// TODO: to be removed
-app.get('/api/statistic', async (req, res) => {
-    try {
-        const rs = await db.getStatistic()
-
-        res.status(200).json(rs)
-    } catch (error) {
-        res.status(400)
-    }
-})
-
 app.get('/api/statistics/total_messages', async (req, res) => {
     const status = req.query.status
     const src_networks = req.query.src_networks
@@ -137,6 +139,18 @@ app.get('/api/statistics/total_messages', async (req, res) => {
 
     try {
         const rs = await db.getTotalMessages(status, src_networks, dest_networks, src_address, dest_address, from_timestamp, to_timestamp)
+
+        res.status(200).json(rs)
+    } catch (error) {
+        logger.error(error)
+        res.status(400).json({ error: error.message })
+    }
+})
+
+app.get('/api/rpc/block_height', async (req, res) => {
+    const networks = req.query.networks ? req.query.networks.split(',') : Object.values(NETWORK)
+    try {
+        const rs = await rpc.getBlockHeight(networks)
 
         res.status(200).json(rs)
     } catch (error) {
