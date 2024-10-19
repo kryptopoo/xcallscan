@@ -1,24 +1,22 @@
-import { ContractInterface, ethers } from 'ethers'
-import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
-import { IDecoder } from '../../interfaces/IDecoder'
-import { EventLog, EventLogData } from '../../types/EventLog'
-import { EvmDecoder } from '../decoder/EvmDecoder'
+import { ethers } from 'ethers'
 import { retryAsync } from 'ts-retry'
 
-export class EvmSubscriber implements ISubscriber {
+import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
+import { subscriberLogger as logger } from '../logger/logger'
+import { EventLog, EventLogData } from '../../types/EventLog'
+import { EvmDecoder } from '../decoder/EvmDecoder'
+import { BaseSubscriber } from './BaseSubscriber'
+
+export class EvmSubscriber extends BaseSubscriber {
     private provider: ethers.providers.StaticJsonRpcProvider
-    private decoder: IDecoder
 
-    public contractAddress: string
+    constructor(network: string) {
+        super(network, RPC_URLS[network], new EvmDecoder(network))
 
-    constructor(public network: string) {
-        this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[this.network][0])
+        this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
         // // pollingInterval default is 4000 ms
         this.provider.pollingInterval = SUBSCRIBER_INTERVAL
-        this.decoder = new EvmDecoder(this.network)
-        this.contractAddress = CONTRACT[this.network].xcall[0]
     }
 
     private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
@@ -50,8 +48,8 @@ export class EvmSubscriber implements ISubscriber {
     }
 
     subscribe(callback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${WSS[this.network][0]}`)
-        logger.info(`${this.network} listen events on ${this.contractAddress}`)
+        logger.info(`${this.network} connect ${this.url}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const topics = [
             [
@@ -64,7 +62,7 @@ export class EvmSubscriber implements ISubscriber {
             ]
         ]
         const filter = {
-            address: this.contractAddress,
+            address: this.xcallContracts[0],
             topics: topics
         }
         this.provider.on(filter, async (log: any, event: any) => {

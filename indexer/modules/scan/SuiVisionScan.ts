@@ -1,4 +1,4 @@
-import { API_KEY, API_URL, CONTRACT, EVENT } from '../../common/constants'
+import { EVENT, RPC_URLS } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import logger from '../logger/logger'
@@ -29,7 +29,7 @@ export class SuiVisionScan implements IScan {
 
         let nextCursor: string = flag
 
-        const url = `${API_URL[this.network]}/${API_KEY[this.network]}`
+        const rpcUrl = RPC_URLS[this.network][0]
         const postData = {
             jsonrpc: '2.0',
             id: 8,
@@ -37,7 +37,7 @@ export class SuiVisionScan implements IScan {
             params: [
                 {
                     filter: {
-                        InputObject: CONTRACT[this.network].xcall[0]
+                        InputObject: xcallAddress
                     },
                     options: {
                         showBalanceChanges: true,
@@ -52,7 +52,7 @@ export class SuiVisionScan implements IScan {
             ]
         }
 
-        const txsRes = await this.callApi(url, postData)
+        const txsRes = await this.callApi(rpcUrl, postData)
         const txs = txsRes.data
         const lastFlag = txsRes.nextCursor ?? undefined
 

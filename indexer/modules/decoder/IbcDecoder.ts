@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
-import { IDecoder } from "../../interfaces/IDecoder";
-import { EventLogData } from "../../types/EventLog";
+import { IDecoder } from '../../interfaces/IDecoder'
+import { EventLogData } from '../../types/EventLog'
 
 export class IbcDecoder implements IDecoder {
     async decodeEventLog(eventLogs: any, eventName: string): Promise<EventLogData | undefined> {
@@ -52,7 +52,5 @@ export class IbcDecoder implements IDecoder {
         }
 
         return undefined
-    } 
-
-    
+    }
 }

@@ -3,19 +3,20 @@ import { CONTRACT, EVENT, NETWORK, SUBSCRIBER_NETWORKS, USE_MAINNET } from './co
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
 import logger, { subscriberLogger as ssLogger } from './modules/logger/logger'
+import { getNetwork, sleep } from './common/helper'
 import { Ws } from './modules/ws/ws'
+import { IFetcher } from './interfaces/IFetcher'
+import { ISubscriber } from './interfaces/ISubcriber'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
 import { SuiSubscriber } from './modules/subscriber/SuiSubscriber'
-import { IFetcher } from './interfaces/IFetcher'
+import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
+import { SolanaSubscriber } from './modules/subscriber/SolanaSubscriber'
 import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
-import { ISubscriber } from './interfaces/ISubcriber'
-import { getNetwork, sleep } from './common/helper'
+import { Analyzer } from './modules/analyzer/Analyzer'
 
 import dotenv from 'dotenv'
-import { Analyzer } from './modules/analyzer/Analyzer'
-import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -67,10 +68,10 @@ const startIndexer = async () => {
         )
     })
 
-    // fetch sui network
+    // fetch others network
     cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
-            [NETWORK.SUI, NETWORK.STELLAR].map((network) => {
+            [NETWORK.SUI, NETWORK.STELLAR, NETWORK.SOLANA].map((network) => {
                 return fetch(network)
             })
         )
@@ -98,8 +99,8 @@ const startSubscriber = () => {
 
     const subscribers: { [network: string]: ISubscriber } = {
         // ICON
-        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON, CONTRACT[NETWORK.ICON].xcall),
-        [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH, CONTRACT[NETWORK.HAVAH].xcall),
+        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON),
+        [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH),
 
         // EVM
         [NETWORK.ARBITRUM]: new EvmSubscriber(NETWORK.ARBITRUM),
@@ -117,9 +118,10 @@ const startSubscriber = () => {
 
         // SUI
         [NETWORK.SUI]: new SuiSubscriber(),
-
         // STELLAR
-        [NETWORK.STELLAR]: new StellarSubscriber()
+        [NETWORK.STELLAR]: new StellarSubscriber(),
+        // SOLANA
+        [NETWORK.SOLANA]: new SolanaSubscriber()
     }
 
     const fetchers: { [network: string]: IFetcher } = {
@@ -143,9 +145,10 @@ const startSubscriber = () => {
 
         // SUI
         [NETWORK.SUI]: new Fetcher(NETWORK.SUI),
-
         // STELLAR
-        [NETWORK.STELLAR]: new Fetcher(NETWORK.STELLAR)
+        [NETWORK.STELLAR]: new Fetcher(NETWORK.STELLAR),
+        // SOLANA
+        [NETWORK.SOLANA]: new Fetcher(NETWORK.SOLANA)
     }
 
     // only subscribe networks in .env

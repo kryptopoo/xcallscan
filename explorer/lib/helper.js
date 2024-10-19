@@ -12,10 +12,11 @@ const NETWORK = {
     OPTIMISM: 'optimism',
     SUI: 'sui',
     POLYGON: 'polygon',
-    STELLAR: 'stellar'
+    STELLAR: 'stellar',
+    SOLANA: 'solana'
 }
 
-const NETWORK_DETAILS  = {
+const NETWORK_DETAILS = {
     [NETWORK.ICON]: {
         id: NETWORK.ICON,
         name: 'Icon',
@@ -90,27 +91,32 @@ const NETWORK_DETAILS  = {
         logo: `/images/network-${NETWORK.IBC_INJECTIVE}.png`,
         nativeAsset: 'INJ'
     },
-  
+
     [NETWORK.SUI]: {
         id: NETWORK.SUI,
         name: 'Sui',
         logo: `/images/network-${NETWORK.SUI}.png`,
         nativeAsset: 'SUI'
     },
-
     [NETWORK.STELLAR]: {
         id: NETWORK.STELLAR,
         name: 'Stellar',
         logo: `/images/network-${NETWORK.STELLAR}.png`,
         nativeAsset: 'XLM'
     },
+    [NETWORK.SOLANA]: {
+        id: NETWORK.SOLANA,
+        name: 'Solana',
+        logo: `/images/network-${NETWORK.SOLANA}.png`,
+        nativeAsset: 'SOL'
+    }
 }
 
 const MSG_ACTION_TYPES = {
-    SendMsg: "SendMsg",
-    Transfer: "Transfer",
-    Swap: "Swap",
-    Loan: "Loan",
+    SendMsg: 'SendMsg',
+    Transfer: 'Transfer',
+    Swap: 'Swap',
+    Loan: 'Loan'
 }
 
 const getNativeAsset = (network) => {

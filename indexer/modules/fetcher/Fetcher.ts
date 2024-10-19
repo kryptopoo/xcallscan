@@ -122,6 +122,7 @@ export class Fetcher implements IFetcher {
     private async fetchEventsByAddress(xcallAddress: string, eventNames: string[], flagNumber: string = '0', updateCounter: boolean = true) {
         // fetch all events once
         if (
+            this.network == NETWORK.SOLANA ||
             this.network == NETWORK.STELLAR ||
             this.network == NETWORK.SUI ||
             this.network == NETWORK.HAVAH ||

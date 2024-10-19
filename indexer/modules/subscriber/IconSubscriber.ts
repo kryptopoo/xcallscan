@@ -1,25 +1,24 @@
 import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFilter, BigNumber } from 'icon-sdk-js'
-import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
-import { IconDecoder } from '../decoder/IconDecoder'
-import { IDecoder } from '../../interfaces/IDecoder'
-import { EventLog, EventLogData } from '../../types/EventLog'
 import { retryAsync } from 'ts-retry'
 
-export class IconSubscriber implements ISubscriber {
+import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WSS_URLS } from '../../common/constants'
+import { subscriberLogger as logger } from '../logger/logger'
+import { IconDecoder } from '../decoder/IconDecoder'
+import { EventLog, EventLogData } from '../../types/EventLog'
+import { BaseSubscriber } from './BaseSubscriber'
+
+export class IconSubscriber extends BaseSubscriber {
     iconService: IconService
+
     // default interval is 20 block
     interval = Math.round(SUBSCRIBER_INTERVAL / 2000) // block time ~2s
-    decoder: IDecoder
-
     reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
 
-    constructor(public network: string, public contractAddresses: string[]) {
-        const provider: HttpProvider = new HttpProvider(WSS[network][0])
+    constructor(network: string) {
+        super(network, WSS_URLS[network], new IconDecoder())
+        const provider: HttpProvider = new HttpProvider(this.url)
         this.iconService = new IconService(provider)
-        this.decoder = new IconDecoder()
-        // this.contractAddress = CONTRACT[this.network].xcall[0]
     }
 
     private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
@@ -89,8 +88,8 @@ export class IconSubscriber implements ISubscriber {
     }
 
     async subscribe(calbback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${WSS[this.network][0]}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddresses)}`)
+        logger.info(`${this.network} connect ${this.url}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const iconEventNames = [
             'CallMessageSent(Address,str,int)',
@@ -120,7 +119,7 @@ export class IconSubscriber implements ISubscriber {
 
                 if (decodeEventLog) {
                     // init another iconService to avoid conflict
-                    const iconService = new IconService(new HttpProvider(WSS[this.network][0]))
+                    const iconService = new IconService(new HttpProvider(this.url))
 
                     let blockHash = notification.hash
                     let blockNumber = notification.height
@@ -148,8 +147,8 @@ export class IconSubscriber implements ISubscriber {
 
         const monitorEvent = async () => {
             const allEventFilters: EventFilter[] = []
-            for (let i = 0; i < this.contractAddresses.length; i++) {
-                const contractAddr = this.contractAddresses[i]
+            for (let i = 0; i < this.xcallContracts.length; i++) {
+                const contractAddr = this.xcallContracts[i]
                 iconEventNames.forEach((eventName) => {
                     allEventFilters.push(new EventFilter(eventName, contractAddr))
                 })

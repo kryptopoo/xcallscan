@@ -1,5 +1,5 @@
 const getAssets = async () => {
-    const assetIds = `icon,binancecoin,ethereum,bitcoin,havah,archway,neutron-3,injective-protocol,avalanche-2,arbitrum,optimism,matic-network,sui,stellar`
+    const assetIds = `icon,binancecoin,ethereum,bitcoin,havah,archway,neutron-3,injective-protocol,avalanche-2,arbitrum,optimism,matic-network,sui,stellar,solana`
     const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${assetIds}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
     const res = await fetch(url, {
         next: { revalidate: 600 }
@@ -22,14 +22,10 @@ const getMessages = async (pageSize, pageNumber, status, srcNetwork, destNetwork
         limit
     }
 
-    console.log('status', status, srcNetwork, destNetwork, actionType)
-
     if (status) params.status = status.toLowerCase()
     if (srcNetwork) params.src_network = srcNetwork.toLowerCase()
     if (destNetwork) params.dest_network = destNetwork.toLowerCase()
     if (actionType) params.action_type = actionType.toLowerCase()
-
-    console.log('params', params)
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/messages?${new URLSearchParams(params)}`, { cache: 'no-store' })
 

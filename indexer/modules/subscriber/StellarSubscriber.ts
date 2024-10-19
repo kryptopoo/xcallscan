@@ -1,37 +1,46 @@
+import { retryAsync } from 'ts-retry'
+
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { API_KEY, API_URL, CONTRACT, EVENT, NETWORK, RPC_URL, RPC_URLS, SUBSCRIBER_INTERVAL, WSS } from '../../common/constants'
+import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
-import { retryAsync } from 'ts-retry'
 import { StellarDecoder } from '../decoder/StellarDecoder'
+import { BaseSubscriber } from './BaseSubscriber'
+
 const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
-export class StellarSubscriber implements ISubscriber {
-    network: string = NETWORK.STELLAR
-    decoder: StellarDecoder
-    interval = SUBSCRIBER_INTERVAL
-    contractAddress: string
-    rpcUrl: string
-
+export class StellarSubscriber extends BaseSubscriber {
     constructor() {
-        this.rpcUrl = RPC_URLS[this.network].filter((u) => u.includes('soroban'))[0]
-        this.contractAddress = CONTRACT[this.network].xcall[0]
-        this.decoder = new StellarDecoder()
+        super(NETWORK.STELLAR, RPC_URLS[NETWORK.STELLAR], new StellarDecoder())
     }
 
-    async callApi(postData: any): Promise<any> {
-        try {
-            const axiosInstance = AxiosCustomInstance.getInstance()
+    async callRpc(postData: any): Promise<any> {
+        const axiosInstance = AxiosCustomInstance.getInstance()
+        const rotateRpcRetries = 3
 
-            const res = await axiosInstance.post(this.rpcUrl, postData)
+        let res: any = undefined
+        for (let retry = 1; retry <= rotateRpcRetries; retry++) {
+            res = await retryAsync(
+                async () => {
+                    try {
+                        const rpcRes = await axiosInstance.post(this.url, postData)
+                        return rpcRes.data.result
+                    } catch (error) {
+                        logger.error(`${this.network} called rpc failed ${error}`)
+                    }
 
-            return res.data.result
-        } catch (error: any) {
-            logger.error(`${this.network} called api failed ${this.rpcUrl} ${error.code}`)
+                    return undefined
+                },
+                { delay: 1000, maxTry: 3 }
+            )
+            if (!res) {
+                const rotatedRpc = this.rotateUrl()
+                logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
+            } else break
         }
 
-        return undefined
+        return res
     }
 
     async getEvents(startLedger: number): Promise<any> {
@@ -44,7 +53,7 @@ export class StellarSubscriber implements ISubscriber {
                 filters: [
                     {
                         type: 'contract',
-                        contractIds: [this.contractAddress]
+                        contractIds: this.xcallContracts
                     }
                 ],
                 pagination: {
@@ -52,7 +61,8 @@ export class StellarSubscriber implements ISubscriber {
                 }
             }
         }
-        return this.callApi(postData)
+
+        return this.callRpc(postData)
     }
 
     async getLatestLedger() {
@@ -61,7 +71,8 @@ export class StellarSubscriber implements ISubscriber {
             id: 8675309,
             method: 'getLatestLedger'
         }
-        return this.callApi(postData)
+
+        return this.callRpc(postData)
     }
 
     async getTx(txHash: string) {
@@ -73,19 +84,15 @@ export class StellarSubscriber implements ISubscriber {
                 hash: txHash
             }
         }
-        return this.callApi(postData)
+
+        return this.callRpc(postData)
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${this.rpcUrl}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.contractAddress)}`)
+        logger.info(`${this.network} connect ${this.url}`)
+        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
-        const latestLedgerRes = await retryAsync(
-            async () => {
-                return await this.getLatestLedger()
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        const latestLedgerRes = await this.getLatestLedger()
         let latestLedger = latestLedgerRes?.sequence
 
         const task = () => {
@@ -93,12 +100,7 @@ export class StellarSubscriber implements ISubscriber {
                 try {
                     if (latestLedger) {
                         // get events given contract
-                        const eventsRes = await retryAsync(
-                            async () => {
-                                return this.getEvents(latestLedger)
-                            },
-                            { delay: 1000, maxTry: 3 }
-                        )
+                        const eventsRes = await this.getEvents(latestLedger)
                         const events = eventsRes.events
 
                         if (eventsRes && events && events.length > 0) {
@@ -110,12 +112,7 @@ export class StellarSubscriber implements ISubscriber {
 
                                 // get transaction
                                 const txHash = event.txHash
-                                const tx = await retryAsync(
-                                    async () => {
-                                        return await this.getTx(txHash)
-                                    },
-                                    { delay: 1000, maxTry: 3 }
-                                )
+                                const tx = await this.getTx(txHash)
 
                                 // parse xrd
                                 const res = parseTxOperationsMeta({

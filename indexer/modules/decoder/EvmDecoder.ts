@@ -1,6 +1,6 @@
 import { IDecoder } from '../../interfaces/IDecoder'
 import { ethers } from 'ethers'
-import { API_URL, EVENT, NETWORK, CONTRACT, WSS } from '../../common/constants'
+import { EVENT, RPC_URLS } from '../../common/constants'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import xcallAbi from '../../abi/xcall.abi.json'
 import assetManagerAbi from '../../abi/AssetManager.abi.json'
@@ -13,7 +13,7 @@ export class EvmDecoder implements IDecoder {
     private provider: ethers.providers.StaticJsonRpcProvider
 
     constructor(network: string) {
-        this.provider = new ethers.providers.StaticJsonRpcProvider(WSS[network][0])
+        this.provider = new ethers.providers.StaticJsonRpcProvider(RPC_URLS[network][0])
     }
 
     public decodeFunction(abi: any, funcName: string, data: string) {

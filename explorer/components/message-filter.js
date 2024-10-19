@@ -60,7 +60,7 @@ const MessageFilter = (props) => {
                                 props.destNetworkChanged(network.id)
                             }}
                         >
-                            <Image className="relative inline-block mr-2" alt={network.name} src={network.logo} width={16} height={16} />
+                            <Image className="relative inline-block mr-2 rounded-full bg-transparent" alt={network.name} src={network.logo} width={16} height={16} />
                             {network.name}
                         </DropdownItem>
                     )
@@ -86,7 +86,7 @@ const MessageFilter = (props) => {
                                 props.srcNetworkChanged(network.id)
                             }}
                         >
-                            <Image className="relative inline-block mr-2" alt={network.name} src={network.logo} width={16} height={16} />
+                            <Image className="relative inline-block mr-2 rounded-full bg-transparent" alt={network.name} src={network.logo} width={16} height={16} />
                             {network.name}
                         </DropdownItem>
                     )

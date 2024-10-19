@@ -7,6 +7,14 @@ const USE_MAINNET = process.env.USE_MAINNET == 'true'
 const CONFIG_NETWORKS = USE_MAINNET ? MainnetDeployment.networks : TestnetDeployment.networks
 const CONFIG_CONTRACTS = USE_MAINNET ? MainnetDeployment.contracts : TestnetDeployment.contracts
 
+const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
+const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
+const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
+const WEB3_BLOCKVISION_API_KEY = process.env.WEB3_BLOCKVISION_API_KEY
+const WEB3_ANKR_API_KEY = process.env.WEB3_ANKR_API_KEY
+const WEB3_INSTANTNODES_API_KEY = process.env.WEB3_INSTANTNODES_API_KEY
+const WEB3_QUICKNODE_API_KEY = process.env.WEB3_QUICKNODE_API_KEY
+
 const NETWORK = {
     ICON: 'icon',
     BSC: 'bsc',
@@ -21,86 +29,70 @@ const NETWORK = {
     OPTIMISM: 'optimism',
     SUI: 'sui',
     POLYGON: 'polygon',
-    STELLAR: 'stellar'
+    STELLAR: 'stellar',
+    SOLANA: 'solana'
 }
 
-const RPC_URL: { [network: string]: string } = {
-    [NETWORK.ICON]: CONFIG_NETWORKS.icon.uri,
-    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uri,
+const buildProviderUrls = (urls: string[]) => {
+    const correctUrls: string[] = []
+    urls.forEach((url) => {
+        // trim /
+        url = url.replace(/\/+$/, '')
 
-    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uri,
-    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uri,
-    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uri,
-    [NETWORK.BASE]: CONFIG_NETWORKS.base.uri,
-    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uri,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uri,
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uri,
+        if (url.includes('blockvision')) correctUrls.push(`${url}/${WEB3_BLOCKVISION_API_KEY}`)
+        else if (url.includes('alchemy')) correctUrls.push(`${url}/${WEB3_ALCHEMY_API_KEY}`)
+        else if (url.includes('chainstack')) correctUrls.push(`${url}/${WEB3_CHAINSTACK_API_KEY}`)
+        else if (url.includes('blastapi')) correctUrls.push(`${url}/${WEB3_BLAST_API_KEY}`)
+        else if (url.includes('ankr')) correctUrls.push(`${url}/${WEB3_ANKR_API_KEY}`)
+        else if (url.includes('instantnodes')) correctUrls.push(`${url}/token-${WEB3_INSTANTNODES_API_KEY}`)
+        else if (url.includes('quiknode')) correctUrls.push(`${url}/${WEB3_QUICKNODE_API_KEY}`)
+        else correctUrls.push(url)
+    })
 
-    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uri,
-    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uri,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uri,
-
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uri,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uri
+    return correctUrls
 }
 
 const RPC_URLS: { [network: string]: string[] } = {
-    [NETWORK.ICON]: CONFIG_NETWORKS.icon.uris,
-    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.uris,
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.rpcs,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.rpcs,
 
-    [NETWORK.BSC]: CONFIG_NETWORKS.bsc.uris,
-    [NETWORK.ETH2]: CONFIG_NETWORKS.eth2.uris,
-    [NETWORK.AVAX]: CONFIG_NETWORKS.avax.uris,
-    [NETWORK.BASE]: CONFIG_NETWORKS.base.uris,
-    [NETWORK.ARBITRUM]: CONFIG_NETWORKS.arbitrum.uris,
-    [NETWORK.OPTIMISM]: CONFIG_NETWORKS.optimism.uris,
-    [NETWORK.POLYGON]: CONFIG_NETWORKS.polygon.uris,
+    [NETWORK.BSC]: buildProviderUrls(CONFIG_NETWORKS.bsc.rpcs),
+    [NETWORK.ETH2]: buildProviderUrls(CONFIG_NETWORKS.eth2.rpcs),
+    [NETWORK.AVAX]: buildProviderUrls(CONFIG_NETWORKS.avax.rpcs),
+    [NETWORK.BASE]: buildProviderUrls(CONFIG_NETWORKS.base.rpcs),
+    [NETWORK.ARBITRUM]: buildProviderUrls(CONFIG_NETWORKS.arbitrum.rpcs),
+    [NETWORK.OPTIMISM]: buildProviderUrls(CONFIG_NETWORKS.optimism.rpcs),
+    [NETWORK.POLYGON]: buildProviderUrls(CONFIG_NETWORKS.polygon.rpcs),
 
-    [NETWORK.IBC_ARCHWAY]: CONFIG_NETWORKS.ibc_archway.uris,
-    [NETWORK.IBC_NEUTRON]: CONFIG_NETWORKS.ibc_neutron.uris,
-    [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.uris,
+    [NETWORK.IBC_ARCHWAY]: buildProviderUrls(CONFIG_NETWORKS.ibc_archway.rpcs),
+    [NETWORK.IBC_NEUTRON]: buildProviderUrls(CONFIG_NETWORKS.ibc_neutron.rpcs),
+    [NETWORK.IBC_INJECTIVE]: buildProviderUrls(CONFIG_NETWORKS.ibc_injective.rpcs),
 
-    [NETWORK.SUI]: CONFIG_NETWORKS.sui.uris,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.uris
+    [NETWORK.SUI]: buildProviderUrls(CONFIG_NETWORKS.sui.rpcs),
+    [NETWORK.STELLAR]: buildProviderUrls(CONFIG_NETWORKS.stellar.rpcs),
+    [NETWORK.SOLANA]: buildProviderUrls(CONFIG_NETWORKS.solana.rpcs)
 }
 
-const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
-const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
-const WEB3_CHAINSTACK_API_KEY = process.env.WEB3_CHAINSTACK_API_KEY
-const WSS: { [network: string]: string[] } = {
-    [NETWORK.ICON]: ['https://ctz.solidwallet.io/api/v3/icon_dex'],
-    [NETWORK.HAVAH]: ['https://ctz.havah.io/api/v3/icon_dex'],
+const WSS_URLS: { [network: string]: string[] } = {
+    // https will be auto replaced wss in iconService
+    [NETWORK.ICON]: CONFIG_NETWORKS.icon.wss,
+    [NETWORK.HAVAH]: CONFIG_NETWORKS.havah.wss,
 
-    [NETWORK.BSC]: [`https://bnb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.ETH2]: [`https://eth-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    // [NETWORK.AVAX]: [`https://avax-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.AVAX]: [`https://avalanche-mainnet.core.chainstack.com/ext/bc/C/rpc/${WEB3_CHAINSTACK_API_KEY}`],
-    [NETWORK.BASE]: [`https://base-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.ARBITRUM]: [`https://arb-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.OPTIMISM]: [`https://opt-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
-    [NETWORK.POLYGON]: [`https://polygon-mainnet.g.alchemy.com/v2/${WEB3_ALCHEMY_API_KEY}`],
+    [NETWORK.BSC]: buildProviderUrls(CONFIG_NETWORKS.bsc.wss),
+    [NETWORK.ETH2]: buildProviderUrls(CONFIG_NETWORKS.eth2.wss),
+    [NETWORK.AVAX]: buildProviderUrls(CONFIG_NETWORKS.avax.wss),
+    [NETWORK.BASE]: buildProviderUrls(CONFIG_NETWORKS.base.wss),
+    [NETWORK.ARBITRUM]: buildProviderUrls(CONFIG_NETWORKS.arbitrum.wss),
+    [NETWORK.OPTIMISM]: buildProviderUrls(CONFIG_NETWORKS.optimism.wss),
+    [NETWORK.POLYGON]: buildProviderUrls(CONFIG_NETWORKS.polygon.wss),
 
-    [NETWORK.IBC_INJECTIVE]: [
-        'wss://sentry.tm.injective.network:443/websocket',
-        'wss://rpc-injective.whispernode.com:443/websocket',
-        'wss://injective-rpc.lavenderfive.com:443/websocket',
-        'wss://rpc-injective.ecostake.com:443/websocket',
-        'wss://injective-rpc.highstakes.ch:443/websocket'
-    ],
-    [NETWORK.IBC_ARCHWAY]: [
-        'wss://rpc.mainnet.archway.io:443/websocket',
-        'wss://rpc-archway.mzonder.com:443/websocket',
-        'wss://archway-mainnet.rpc.l0vd.com:443/websocket',
-        'wss://rpc-archway.whispernode.com:443/websocket',
-        'wss://archway-rpc.lavenderfive.com:443/websocket'
-    ],
-    [NETWORK.IBC_NEUTRON]: [
-        'wss://rpc.neutron.quokkastake.io:443/websocket',
-        'wss://neutron-rpc.publicnode.com:443/websocket',
-        'wss://rpc-neutron.whispernode.com:443/websocket'
-    ]
+    [NETWORK.IBC_INJECTIVE]: buildProviderUrls(CONFIG_NETWORKS.ibc_injective.wss),
+    [NETWORK.IBC_ARCHWAY]: buildProviderUrls(CONFIG_NETWORKS.ibc_archway.wss),
+    [NETWORK.IBC_NEUTRON]: buildProviderUrls(CONFIG_NETWORKS.ibc_neutron.wss),
+
+    [NETWORK.SUI]: buildProviderUrls(CONFIG_NETWORKS.solana.wss),
+    [NETWORK.STELLAR]: buildProviderUrls(CONFIG_NETWORKS.stellar.wss),
+    [NETWORK.SOLANA]: buildProviderUrls(CONFIG_NETWORKS.solana.wss)
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
@@ -123,8 +115,8 @@ const API_URL: { [network: string]: string } = {
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.api,
 
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.api,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.api
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.api,
+    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.api
 }
 
 const BTP_NETWORK_ID: { [network: string]: string } = {
@@ -144,8 +136,8 @@ const BTP_NETWORK_ID: { [network: string]: string } = {
     [NETWORK.IBC_INJECTIVE]: CONFIG_NETWORKS.ibc_injective.btp_network_id,
 
     [NETWORK.SUI]: CONFIG_NETWORKS.sui.btp_network_id,
-
-    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.btp_network_id
+    [NETWORK.STELLAR]: CONFIG_NETWORKS.stellar.btp_network_id,
+    [NETWORK.SOLANA]: CONFIG_NETWORKS.solana.btp_network_id
 }
 
 const API_KEY: { [network: string]: string } = {
@@ -161,9 +153,7 @@ const API_KEY: { [network: string]: string } = {
 
     [NETWORK.IBC_ARCHWAY]: process.env.SCAN_MINTSCAN_API_KEY ?? '',
     [NETWORK.IBC_NEUTRON]: '',
-    [NETWORK.IBC_INJECTIVE]: '',
-
-    [NETWORK.SUI]: process.env.WEB3_BLOCKVISION_API_KEY ?? ''
+    [NETWORK.IBC_INJECTIVE]: ''
 }
 
 const SERVICE_API_KEY = {
@@ -216,10 +206,13 @@ const CONTRACT: { [network: string]: { xcall: string[] } } = {
     [NETWORK.SUI]: {
         xcall: CONFIG_CONTRACTS.sui.xcall
     },
-
     // STELLAR
     [NETWORK.STELLAR]: {
         xcall: CONFIG_CONTRACTS.stellar.xcall
+    },
+    // SOLANA
+    [NETWORK.SOLANA]: {
+        xcall: CONFIG_CONTRACTS.solana.xcall
     }
 }
 
@@ -265,15 +258,16 @@ export {
     CONTRACT,
     EVENT,
     MSG_STATUS,
-    RPC_URL,
     RPC_URLS,
     BTP_NETWORK_ID,
     SERVICE_API_KEY,
     SCAN_FROM_FLAG_NUMBER,
-    WSS,
+    WSS_URLS,
     SUBSCRIBER_NETWORKS,
     SUBSCRIBER_INTERVAL,
     WEB3_ALCHEMY_API_KEY,
     WEB3_CHAINSTACK_API_KEY,
-    WEB3_BLAST_API_KEY
+    WEB3_BLAST_API_KEY,
+    WEB3_BLOCKVISION_API_KEY,
+    WEB3_ANKR_API_KEY
 }

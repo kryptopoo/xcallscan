@@ -34,7 +34,7 @@ function renderDestHashLink(item, meta) {
         link = <div className={linkClass}>{item.rollback_tx_hash}</div>
     } else if (item.dest_tx_hash) {
         scanUrl = meta.urls.tx[item.dest_network]
-        networkImg = <Image alt={item.dest_network} src={`/images/network-${item.dest_network}.png`} width={24} height={24} />
+        networkImg = <Image alt={item.dest_network} src={`/images/network-${item.dest_network}.png`} width={24} height={24} className="rounded-full bg-transparent" />
         link = <div className={linkClass}>{item.dest_tx_hash}</div>
     } else {
         link = <div>-</div>
@@ -52,16 +52,18 @@ function renderHashLink(scanUrl, network, hash, isFull = false) {
     if (!hash) return <div>-</div>
 
     let networkImg
-    let linkClass = isFull ? 'hover:underline inline-block w-[37rem]' : 'hover:underline inline-block text-ellipsis overflow-hidden w-64'
+    let linkClass = isFull ? 'hover:underline inline-block' : 'hover:underline inline-block text-ellipsis overflow-hidden w-64'
     let link = <div>-</div>
-    let copyButton = <ClipboardDocumentIcon width={20} height={20} className={'opacity-75 text-gray-900 cursor-pointer'} />
+    let copyButton = <ClipboardDocumentIcon width={20} height={20} className={'opacity-75 text-gray-900 cursor-pointer ml-2'} />
 
-    networkImg = <Image alt={network} src={`/images/network-${network}.png`} width={24} height={24} />
+    scanUrl = scanUrl ? scanUrl.replace(/\/+$/, '') : ''
+    let href = network == 'solana' ? scanUrl.replace('{txHash}', hash) : `${scanUrl}/${hash}`
+    networkImg = <Image alt={network} src={`/images/network-${network}.png`} width={24} height={24} className="rounded-full bg-transparent" />
     link = !isFull ? (
         <div className={linkClass}>{hash}</div>
     ) : (
         <div className="flex">
-            <Link className={linkClass} href={scanUrl + hash} target="_blank">
+            <Link className={linkClass} href={href} target="_blank">
                 {hash}
             </Link>
             {copyButton}

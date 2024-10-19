@@ -10,7 +10,7 @@ export class IconDecoder implements IDecoder {
         if (typeof eventLog.indexed !== 'string') eventLog.indexed = JSON.stringify(eventLog.indexed)
         if (typeof eventLog.data !== 'string') eventLog.data = JSON.stringify(eventLog.data)
         let eventData = [...JSON.parse(eventLog.indexed), ...JSON.parse(eventLog.data == 'null' ? '[]' : eventLog.data)]
- 
+
         const hasXcallEvent =
             eventLog.indexed.includes('CallMessageSent(Address,str,int)') ||
             eventLog.indexed.includes('CallMessage(str,str,int,int,bytes)') ||
@@ -19,8 +19,7 @@ export class IconDecoder implements IDecoder {
             eventLog.indexed.includes('RollbackMessage(int)') ||
             eventLog.indexed.includes('RollbackExecuted(int)')
 
-        if (!hasXcallEvent)
-            return undefined
+        if (!hasXcallEvent) return undefined
 
         switch (eventName) {
             case EVENT.CallMessageSent:
