@@ -108,7 +108,7 @@ const NETWORK_DETAILS = {
         id: NETWORK.SOLANA,
         name: 'Solana',
         logo: `/images/network-${NETWORK.SOLANA}.png`,
-        nativeAsset: 'XLM'
+        nativeAsset: 'SOL'
     }
 }
 
