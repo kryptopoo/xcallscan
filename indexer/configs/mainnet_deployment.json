@@ -106,8 +106,9 @@
         "base": {
             "api": "https://api.basescan.org/api",
             "rpcs": [
-                "https://mainnet.base.org",
                 "https://base-mainnet.g.alchemy.com/v2",
+                "https://rpc.ankr.com/base",
+                "https://mainnet.base.org",
                 "https://base.llamarpc.com",
                 "https://base-rpc.publicnode.com",
                 "https://1rpc.io/base",
@@ -166,6 +167,7 @@
             "api": "https://api-amoy.polygonscan.com/api",
             "rpcs": [
                 "https://polygon-mainnet.g.alchemy.com/v2",
+                "https://rpc.ankr.com/polygon",
                 "https://polygon.llamarpc.com",
                 "https://polygon.blockpi.network/v1/rpc/public",
                 "https://rpc-mainnet.matic.quiknode.pro"
@@ -200,8 +202,8 @@
             ],
             "wss": [
                 "wss://solana-api.instantnodes.io",
-                "wss://rpc.ankr.com/solana",
                 "wss://powerful-neat-glade.solana-mainnet.quiknode.pro",
+                "wss://rpc.ankr.com/solana",
                 "wss://go.getblock.io/0c9e5684582a477385a481fc4c64bfa6"
             ],
             "btp_network_id": "solana",

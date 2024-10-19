@@ -3,72 +3,103 @@ import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WEB3_ALCHEMY_A
 import { subscriberLogger as logger } from '../logger/logger'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
 import solanaWeb3, { Connection, ParsedInnerInstruction, PublicKey, SignaturesForAddressOptions } from '@solana/web3.js'
-import * as anchor from '@coral-xyz/anchor'
-import { BorshCoder, EventParser, Program } from '@coral-xyz/anchor'
-import { IDecoder } from '../../interfaces/IDecoder'
 import { BaseSubscriber } from './BaseSubscriber'
-const xcallIdl = require('../../abi/xcall.idl.json')
+import { retryAsync } from 'ts-retry'
+import { EventLog } from '../../types/EventLog'
 
 export class SolanaSubscriber extends BaseSubscriber {
     solanaConnection: Connection
 
     constructor() {
-        super(NETWORK.SOLANA, WSS_URLS[NETWORK.SOLANA], new SolanaDecoder())
+        super(NETWORK.SOLANA, RPC_URLS[NETWORK.SOLANA], new SolanaDecoder())
 
-        this.solanaConnection = new solanaWeb3.Connection(RPC_URLS[NETWORK.SOLANA][0], { wsEndpoint: this.url })
+        this.solanaConnection = new solanaWeb3.Connection(this.url)
     }
 
-    subscribe(callback: ISubscriberCallback) {
+    async subscribe(callback: ISubscriberCallback) {
         logger.info(`${this.network} connect ${this.url}`)
         logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
-        let subscriptionId = 0
-        try {
-            const publicKey = new PublicKey(this.xcallContracts[0])
-            subscriptionId = this.solanaConnection.onLogs(
-                publicKey,
-                (logs: any, context: any) => {
-                    logger.info(`logs: ${JSON.stringify(logs)}, context: ${JSON.stringify(context)}`)
-                },
-                'confirmed'
-            )
+        const addressPubkey = new solanaWeb3.PublicKey(this.xcallContracts[0])
+        const latestTxs = await retryAsync(
+            async () => {
+                return await this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 1 })
+            },
+            { delay: 1000, maxTry: 3 }
+        )
 
-            // listen from anchor lib
-            const keypair = anchor.web3.Keypair.generate()
-            const wallet = new anchor.Wallet(keypair)
-            const provider = new anchor.AnchorProvider(this.solanaConnection, wallet)
-            const program = new anchor.Program(xcallIdl, provider)
+        let latestSignature = latestTxs[0].signature
+        logger.info(`${this.network} latestSignature ${latestSignature}`)
 
-            // "events": [
-            //     { "name": "CallExecuted", "discriminator": [237, 120, 238, 142, 189, 37, 65, 128] },
-            //     { "name": "CallMessage", "discriminator": [125, 100, 225, 111, 72, 201, 186, 123] },
-            //     { "name": "CallMessageSent", "discriminator": [255, 161, 224, 203, 154, 117, 117, 126] },
-            //     { "name": "ResponseMessage", "discriminator": [125, 230, 224, 74, 135, 185, 132, 218] },
-            //     { "name": "RollbackExecuted", "discriminator": [50, 154, 60, 223, 193, 198, 62, 240] },
-            //     { "name": "RollbackMessage", "discriminator": [207, 120, 146, 208, 75, 64, 28, 168] }
-            // ],
-            program.addEventListener('CallExecuted', (event, slot) => {
-                logger.info(`CallExecuted slot ${JSON.stringify(slot)} event value ${JSON.stringify(event)}`)
-            })
-            program.addEventListener('CallMessage', (event, slot) => {
-                logger.info(`CallMessage slot ${JSON.stringify(slot)} event value ${JSON.stringify(event)}`)
-            })
-            program.addEventListener('CallMessageSent', (event, slot) => {
-                logger.info(`CallMessageSent slot ${JSON.stringify(slot)} event value ${JSON.stringify(event)}`)
-            })
-            program.addEventListener('ResponseMessage', (event, slot) => {
-                logger.info(`ResponseMessage slot ${JSON.stringify(slot)} event value ${JSON.stringify(event)}`)
-            })
-            program.addEventListener('RollbackExecuted', (event, slot) => {
-                logger.info(`RollbackExecuted slot ${JSON.stringify(slot)} event value ${JSON.stringify(event)}`)
-            })
-            program.addEventListener('RollbackMessage', (event, slot) => {
-                logger.info(`RollbackMessage slot ${JSON.stringify(slot)} event value ${JSON.stringify(event)}`)
-            })
-        } catch (error) {
-            this.solanaConnection.removeOnLogsListener(subscriptionId)
+        const task = () => {
+            const intervalId = setInterval(async () => {
+                try {
+                    // try rotating other rpcs if failed
+                    const rotateRpcRetries = 3
+                    let txs: any
+                    for (let retry = 1; retry <= rotateRpcRetries; retry++) {
+                        txs = await retryAsync(
+                            async () => {
+                                const options: SignaturesForAddressOptions = { limit: 20, until: latestSignature }
 
-            this.subscribe(callback)
+                                return await this.solanaConnection.getSignaturesForAddress(addressPubkey, options)
+                            },
+                            { delay: 1000, maxTry: 3 }
+                        )
+
+                        if (!txs) {
+                            const rotatedRpc = this.rotateUrl()
+                            logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
+                        } else break
+                    }
+
+                    if (txs) {
+                        if (txs.length > 0) logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
+
+                        // sort slot/block asc
+                        txs = txs.sort((a: any, b: any) => a.slot - b.slot)
+                        const txSignatures = txs.map((t: any) => t.signature)
+                        for (let i = 0; i < txSignatures.length; i++) {
+                            const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
+                            if (txDetail) {
+                                const eventNames = Object.values(EVENT)
+                                for (let j = 0; j < eventNames.length; j++) {
+                                    const decodedEventName = eventNames[i]
+                                    const decodeEventLog = await this.decoder.decodeEventLog(txDetail, decodedEventName)
+                                    if (decodeEventLog) {
+                                        const txHash = txDetail.transaction.signatures[0]
+                                        const log: EventLog = {
+                                            // txRaw: tx.transaction,
+                                            blockNumber: Number(txDetail.slot),
+                                            blockTimestamp: Number(txDetail.blockTime),
+                                            txHash: txHash,
+                                            txFrom: txDetail.transaction.message.accountKeys.find((k) => k.signer)?.pubkey.toString() ?? '',
+                                            txTo: this.xcallContracts[0],
+                                            txFee: txDetail.meta?.fee.toString(),
+                                            // // txValue: tx.value.toString(),
+                                            eventName: decodedEventName,
+                                            eventData: decodeEventLog
+                                        }
+
+                                        callback(log)
+                                    }
+                                }
+                            }
+                        }
+
+                        if (txs.length > 0) latestSignature = txs[txs.length - 1].signature
+                    }
+                } catch (error) {
+                    logger.error(`${this.network} clear interval task ${JSON.stringify(error)}`)
+                    clearInterval(intervalId)
+
+                    // retry with another task
+                    task()
+                }
+            }, this.interval)
         }
+
+        // run task
+        task()
     }
 }

@@ -22,14 +22,10 @@ const getMessages = async (pageSize, pageNumber, status, srcNetwork, destNetwork
         limit
     }
 
-    console.log('status', status, srcNetwork, destNetwork, actionType)
-
     if (status) params.status = status.toLowerCase()
     if (srcNetwork) params.src_network = srcNetwork.toLowerCase()
     if (destNetwork) params.dest_network = destNetwork.toLowerCase()
     if (actionType) params.action_type = actionType.toLowerCase()
-
-    console.log('params', params)
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/messages?${new URLSearchParams(params)}`, { cache: 'no-store' })
 

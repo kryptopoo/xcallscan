@@ -77,8 +77,31 @@ const RPC_URLS = {
     [NETWORK.SOLANA]: buildProviderUrls(CONFIG_NETWORKS.solana.rpcs)
 }
 
+const META_URLS = {
+    tx: {
+        [NETWORK.BSC]: USE_MAINNET ? 'https://bscscan.com/tx/' : 'https://testnet.bscscan.com/tx/',
+        [NETWORK.ICON]: USE_MAINNET ? 'https://tracker.icon.community/transaction/' : 'https://tracker.lisbon.icon.community/transaction/',
+        [NETWORK.ETH2]: USE_MAINNET ? 'https://etherscan.io/tx/' : 'https://sepolia.etherscan.io/tx/',
+        [NETWORK.HAVAH]: USE_MAINNET ? 'https://scan.havah.io/txn/' : 'https://scan.vega.havah.io/txn/',
+        [NETWORK.IBC_ARCHWAY]: USE_MAINNET ? 'https://mintscan.io/archway/txs/' : 'https://testnet.mintscan.io/archway-testnet/txs/',
+        [NETWORK.IBC_NEUTRON]: USE_MAINNET ? 'https://neutron.celat.one/neutron-1/txs/' : 'https://neutron.celat.one/pion-1/txs/',
+        [NETWORK.IBC_INJECTIVE]: USE_MAINNET
+            ? 'https://explorer.injective.network/transaction/'
+            : 'https://testnet.explorer.injective.network/transaction/',
+        [NETWORK.AVAX]: USE_MAINNET ? 'https://snowtrace.io/tx/' : 'https://testnet.snowtrace.io/tx/',
+        [NETWORK.BASE]: USE_MAINNET ? 'https://basescan.org/tx/' : 'https://sepolia.basescan.org/tx/',
+        [NETWORK.ARBITRUM]: USE_MAINNET ? 'https://arbiscan.io/tx/' : 'https://sepolia.arbiscan.io/tx/',
+        [NETWORK.OPTIMISM]: USE_MAINNET ? 'https://optimistic.etherscan.io/tx/' : 'https://sepolia-optimism.etherscan.io/tx/',
+        [NETWORK.SUI]: USE_MAINNET ? 'https://suiscan.xyz/mainnet/tx/' : 'https://suiscan.xyz/testnet/tx/',
+        [NETWORK.POLYGON]: USE_MAINNET ? 'https://polygonscan.com/tx/' : 'https://amoy.polygonscan.com/tx/',
+        [NETWORK.STELLAR]: USE_MAINNET ? 'https://stellar.expert/explorer/public/tx/' : 'https://stellar.expert/explorer/testnet/tx/',
+        [NETWORK.SOLANA]: USE_MAINNET ? 'https://solscan.io/tx/{txHash}' : 'https://solscan.io/tx/{txHash}?cluster=testnet'
+    }
+}
+
 module.exports = {
     USE_MAINNET,
     NETWORK,
-    RPC_URLS
+    RPC_URLS,
+    META_URLS
 }

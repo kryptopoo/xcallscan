@@ -3,20 +3,20 @@ import { CONTRACT, EVENT, NETWORK, SUBSCRIBER_NETWORKS, USE_MAINNET } from './co
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
 import logger, { subscriberLogger as ssLogger } from './modules/logger/logger'
+import { getNetwork, sleep } from './common/helper'
 import { Ws } from './modules/ws/ws'
+import { IFetcher } from './interfaces/IFetcher'
+import { ISubscriber } from './interfaces/ISubcriber'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
 import { SuiSubscriber } from './modules/subscriber/SuiSubscriber'
-import { IFetcher } from './interfaces/IFetcher'
-import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
-import { ISubscriber } from './interfaces/ISubcriber'
-import { getNetwork, sleep } from './common/helper'
-
-import dotenv from 'dotenv'
-import { Analyzer } from './modules/analyzer/Analyzer'
 import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
 import { SolanaSubscriber } from './modules/subscriber/SolanaSubscriber'
+import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
+import { Analyzer } from './modules/analyzer/Analyzer'
+
+import dotenv from 'dotenv'
 dotenv.config()
 
 const startIndexer = async () => {
@@ -68,10 +68,10 @@ const startIndexer = async () => {
         )
     })
 
-    // fetch sui network
+    // fetch others network
     cron.schedule(`30 */${interval} * * * *`, async () => {
         await Promise.all(
-            [NETWORK.SUI, NETWORK.STELLAR].map((network) => {
+            [NETWORK.SUI, NETWORK.STELLAR, NETWORK.SOLANA].map((network) => {
                 return fetch(network)
             })
         )

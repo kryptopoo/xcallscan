@@ -2,7 +2,7 @@ const Pool = require('pg').Pool
 const dotenv = require('dotenv')
 dotenv.config()
 const logger = require('./logger')
-const { NETWORK } = require('./constants')
+const { NETWORK, META_URLS } = require('./constants')
 
 const pool = new Pool({
     user: process.env.PGUSER,
@@ -14,29 +14,6 @@ const pool = new Pool({
 pool.on('error', function (error, client) {
     logger.error(error)
 })
-
-const useMainnet = process.env.USE_MAINNET == 'true'
-
-const metaUrls = {
-    tx: {
-        [NETWORK.BSC]: useMainnet ? 'https://bscscan.com/tx/' : 'https://testnet.bscscan.com/tx/',
-        [NETWORK.ICON]: useMainnet ? 'https://tracker.icon.community/transaction/' : 'https://tracker.lisbon.icon.community/transaction/',
-        [NETWORK.ETH2]: useMainnet ? 'https://etherscan.io/tx/' : 'https://sepolia.etherscan.io/tx/',
-        [NETWORK.HAVAH]: useMainnet ? 'https://scan.havah.io/txn/' : 'https://scan.vega.havah.io/txn/',
-        [NETWORK.IBC_ARCHWAY]: useMainnet ? 'https://mintscan.io/archway/txs/' : 'https://testnet.mintscan.io/archway-testnet/txs/',
-        [NETWORK.IBC_NEUTRON]: useMainnet ? 'https://neutron.celat.one/neutron-1/txs/' : 'https://neutron.celat.one/pion-1/txs/',
-        [NETWORK.IBC_INJECTIVE]: useMainnet
-            ? 'https://explorer.injective.network/transaction/'
-            : 'https://testnet.explorer.injective.network/transaction/',
-        [NETWORK.AVAX]: useMainnet ? 'https://snowtrace.io/tx/' : 'https://testnet.snowtrace.io/tx/',
-        [NETWORK.BASE]: useMainnet ? 'https://basescan.org/tx/' : 'https://sepolia.basescan.org/tx/',
-        [NETWORK.ARBITRUM]: useMainnet ? 'https://arbiscan.io/tx/' : 'https://sepolia.arbiscan.io/tx/',
-        [NETWORK.OPTIMISM]: useMainnet ? 'https://optimistic.etherscan.io/tx/' : 'https://sepolia-optimism.etherscan.io/tx/',
-        [NETWORK.SUI]: useMainnet ? 'https://suiscan.xyz/mainnet/tx/' : 'https://suiscan.xyz/testnet/tx/',
-        [NETWORK.POLYGON]: useMainnet ? 'https://polygonscan.com/tx/' : 'https://amoy.polygonscan.com/tx/',
-        [NETWORK.STELLAR]: useMainnet ? 'https://stellar.expert/explorer/public/tx/' : 'https://stellar.expert/explorer/testnet/tx/'
-    }
-}
 
 const buildWhereSql = (status, src_network, dest_network, src_address, dest_address, from_timestamp, to_timestamp, action_type) => {
     let values = []
@@ -116,7 +93,7 @@ const getMessages = async (skip, limit, status, src_network, dest_network, src_a
     return {
         data: messagesRs.rows,
         meta: {
-            urls: metaUrls,
+            urls: META_URLS,
             pagination: {
                 total: Math.ceil(Number(totalRs.rows[0].count) / Number(limit)),
                 size: Number(limit),
@@ -138,7 +115,7 @@ const getMessageById = async (id) => {
     return {
         data: messagesRs.rows,
         meta: {
-            urls: metaUrls
+            urls: META_URLS
         }
     }
 }
@@ -161,7 +138,7 @@ const searchMessages = async (value) => {
     return {
         data: messagesRs.rows,
         meta: {
-            urls: metaUrls
+            urls: META_URLS
         }
     }
 }
@@ -185,7 +162,7 @@ const getStatistic = async () => {
             fees
         },
         meta: {
-            urls: metaUrls
+            urls: META_URLS
         }
     }
 }
