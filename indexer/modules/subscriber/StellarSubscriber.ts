@@ -1,5 +1,4 @@
 import { retryAsync } from 'ts-retry'
-
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
@@ -17,28 +16,20 @@ export class StellarSubscriber extends BaseSubscriber {
 
     async callRpc(postData: any): Promise<any> {
         const axiosInstance = AxiosCustomInstance.getInstance()
-        const rotateRpcRetries = 3
 
-        let res: any = undefined
-        for (let retry = 1; retry <= rotateRpcRetries; retry++) {
-            res = await retryAsync(
-                async () => {
-                    try {
-                        const rpcRes = await axiosInstance.post(this.url, postData)
-                        return rpcRes.data.result
-                    } catch (error) {
-                        logger.error(`${this.network} called rpc failed ${error}`)
-                    }
+        let res = await retryAsync(
+            async () => {
+                try {
+                    const rpcRes = await axiosInstance.post(this.url, postData)
+                    return rpcRes.data.result
+                } catch (error) {
+                    logger.error(`${this.network} called rpc ${this.url} failed ${error}`)
+                }
 
-                    return undefined
-                },
-                { delay: 1000, maxTry: 3 }
-            )
-            if (!res) {
-                const rotatedRpc = this.rotateUrl()
-                logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
-            } else break
-        }
+                return undefined
+            },
+            { delay: 1000, maxTry: 10 }
+        )
 
         return res
     }
@@ -96,7 +87,7 @@ export class StellarSubscriber extends BaseSubscriber {
         let latestLedger = latestLedgerRes?.sequence
 
         const task = () => {
-            const intervalId = setInterval(async () => {
+            let intervalId = setInterval(async () => {
                 try {
                     if (latestLedger) {
                         // get events given contract
@@ -159,11 +150,13 @@ export class StellarSubscriber extends BaseSubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`${this.network} clear interval task ${JSON.stringify(error)}`)
+                    logger.error(`${this.network} clear interval task ${intervalId} ${JSON.stringify(error)}`)
                     clearInterval(intervalId)
 
                     // retry with another task
-                    task()
+                    setTimeout(() => {
+                        task()
+                    }, this.interval)
                 }
             }, this.interval)
         }
