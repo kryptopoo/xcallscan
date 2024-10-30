@@ -150,13 +150,7 @@ export class StellarSubscriber extends BaseSubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`${this.network} clear interval task ${intervalId} ${JSON.stringify(error)}`)
-                    clearInterval(intervalId)
-
-                    // retry with another task
-                    setTimeout(() => {
-                        task()
-                    }, this.interval)
+                    logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
                 }
             }, this.interval)
         }

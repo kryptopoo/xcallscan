@@ -6,12 +6,24 @@ import { cosmosHash, sleep } from '../../common/helper'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { retryAsync } from 'ts-retry'
 import IconService from 'icon-sdk-js'
-// import { Alchemy, AssetTransfersCategory, Network } from 'alchemy-sdk'
+import solanaWeb3 from '@solana/web3.js'
 
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
 // map native tokens to wrapped tokens
 const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; priceUsd: string; denom?: string; cmcId?: number } } = {
+    SOL: {
+        symbols: ['SOL'],
+        decimals: 9,
+        priceUsd: '',
+        cmcId: 5426
+    },
+    XLM: {
+        symbols: ['XLM'],
+        decimals: 9,
+        priceUsd: '',
+        cmcId: 512
+    },
     MATIC: {
         symbols: ['MATIC'],
         decimals: 18,
@@ -112,7 +124,8 @@ const NATIVE_ASSETS: { [network: string]: string[] } = {
     [NETWORK.ARBITRUM]: ['ETH'],
     [NETWORK.OPTIMISM]: ['ETH'],
     [NETWORK.SUI]: ['SUI'],
-    [NETWORK.POLYGON]: ['MATIC']
+    [NETWORK.POLYGON]: ['MATIC'],
+    [NETWORK.SOLANA]: ['SOL']
 }
 
 const NETWORK_ASSETS: { [network: string]: string[] } = {
@@ -128,7 +141,8 @@ const NETWORK_ASSETS: { [network: string]: string[] } = {
     [NETWORK.ARBITRUM]: ['ETH', 'WBTC', 'tBTC', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.OPTIMISM]: ['ETH'],
     [NETWORK.SUI]: ['SUI'],
-    [NETWORK.POLYGON]: ['MATIC']
+    [NETWORK.POLYGON]: ['MATIC'],
+    [NETWORK.SOLANA]: ['SOL']
 }
 
 interface TokenInfo {
@@ -261,7 +275,7 @@ export class MsgActionParser {
         //         'X-CMC_PRO_API_KEY': process.env.COINMARKETCAP_API_KEY
         //     }
         // })
-        // const cmcMapData = cmcMapRes.data.data.filter((d: any) => ['MATIC', 'SUI'].includes(d.symbol))
+        // const cmcMapData = cmcMapRes.data.data.filter((d: any) => ['SOL', "XLM"].includes(d.symbol))
         // console.log('cmcMapData', cmcMapData)
 
         let nativeSymbol = ''
@@ -299,6 +313,21 @@ export class MsgActionParser {
 
     private formatUnits(amount: string, decimals: number) {
         return ethers.utils.formatUnits(amount, decimals)
+    }
+
+    private async getIconAmountDeposit(txhash: string) {
+        const network = NETWORK.ICON
+        const txHashRes = await retryAsync(
+            async () => {
+                return await this.callApi(`${API_URL[network]}/transactions/details/${txhash}`, {})
+            },
+            { delay: 1000, maxTry: 3 }
+        )
+        const rs = txHashRes?.data
+
+        const amount = rs?.value_decimal.toString()
+
+        return amount
     }
 
     private async parseIconTokenTransfers(txHash: string) {
@@ -609,6 +638,46 @@ export class MsgActionParser {
         return tokenTransfer
     }
 
+    // TODO: parseStellarTokenTransfers
+    private async parseStellarTokenTransfers(txhash: string) {
+        const tokenTransfer: TokenTransfer[] = []
+
+        return tokenTransfer
+    }
+
+    private async parseSolanaTokenTransfers(txhash: string) {
+        const network = NETWORK.SOLANA
+        const networkDecimals = 9
+        const tokenTransfer: TokenTransfer[] = []
+
+        const rpcUrl = RPC_URLS[network][0]
+        const solanaConnection = new solanaWeb3.Connection(rpcUrl)
+        const txDetail = await solanaConnection.getParsedTransaction(txhash, { maxSupportedTransactionVersion: 0 })
+
+        if (txDetail) {
+            if (txDetail.meta?.innerInstructions) {
+                const innerInstructions = txDetail.meta?.innerInstructions[0].instructions as any[]
+                for (let i = 0; i < innerInstructions.length; i++) {
+                    try {
+                        // system transfer
+                        if (innerInstructions[i].parsed.type == 'transfer') {
+                            const amount = Number(innerInstructions[i].parsed.info.lamports)
+                            tokenTransfer.push({
+                                asset: {
+                                    name: 'SOL',
+                                    symbol: 'SOL'
+                                },
+                                amount: this.formatUnits(amount.toString(), networkDecimals)
+                            } as TokenTransfer)
+                        }
+                    } catch (error) {}
+                }
+            }
+        }
+
+        return tokenTransfer
+    }
+
     async parseTokenTransfers(network: string, txHash: string): Promise<TokenTransfer[] | undefined> {
         if (network == NETWORK.ICON) {
             return await this.parseIconTokenTransfers(txHash)
@@ -636,9 +705,15 @@ export class MsgActionParser {
             return await this.parseCosmosTokenTransfers(network, txHash)
         }
 
-        // SUI
+        // others
         if (network == NETWORK.SUI) {
             return await this.parseSuiTokenTransfers(txHash)
+        }
+        if (network == NETWORK.STELLAR) {
+            return await this.parseStellarTokenTransfers(txHash)
+        }
+        if (network == NETWORK.SOLANA) {
+            return await this.parseSolanaTokenTransfers(txHash)
         }
     }
 
@@ -739,26 +814,37 @@ export class MsgActionParser {
 
                 // SWAP
                 if (swapData) {
-                    if (fromNetwork == NETWORK.ICON && fromTokenTransfers.length >= 2) {
+                    // TODO: review conditions
+                    if (fromNetwork == NETWORK.ICON) {
+                        const isTokenSwap = fromTokenTransfers.length >= 2
+                        const isNativeSwap = fromTokenTransfers.length == 1 && fromTokenTransfers[0].asset.symbol == 'sICX'
+
                         msgAction.type = `Swap`
                         msgAction.detail!.type = 'Swap'
-
                         const destTokenTransfer = toTokenTransfers[0]
                         if (destTokenTransfer) {
                             msgAction.detail!.dest_asset = destTokenTransfer.asset
                             msgAction.detail!.dest_amount = destTokenTransfer.amount
                         }
 
-                        // swap from native assets & erc20 assets
-                        const srcTokenTransfer = fromTokenTransfers.find(
-                            (t) =>
-                                destTokenTransfer &&
-                                t.asset.symbol != destTokenTransfer.asset.symbol &&
-                                (NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol) || NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
-                        )
-                        if (srcTokenTransfer) {
-                            msgAction.detail!.src_asset = srcTokenTransfer.asset
-                            msgAction.detail!.src_amount = srcTokenTransfer.amount
+                        // swap from erc20 token
+                        if (isTokenSwap) {
+                            const srcTokenTransfer = fromTokenTransfers.find(
+                                (t) =>
+                                    destTokenTransfer &&
+                                    t.asset.symbol != destTokenTransfer.asset.symbol &&
+                                    (NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol) || NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
+                            )
+                            if (srcTokenTransfer) {
+                                msgAction.detail!.src_asset = srcTokenTransfer.asset
+                                msgAction.detail!.src_amount = srcTokenTransfer.amount
+                            }
+                        }
+                        // swap from native token
+                        if (isNativeSwap) {
+                            const srcAmount = await this.getIconAmountDeposit(txHash)
+                            msgAction.detail!.src_asset = { name: 'ICX', symbol: 'ICX' }
+                            msgAction.detail!.src_amount = srcAmount
                         }
                     }
 

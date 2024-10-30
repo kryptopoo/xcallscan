@@ -90,11 +90,7 @@ export class SolanaSubscriber extends BaseSubscriber {
                         if (txs.length > 0) latestSignature = txs[txs.length - 1].signature
                     }
                 } catch (error) {
-                    logger.error(`${this.network} clear interval task ${JSON.stringify(error)}`)
-                    clearInterval(intervalId)
-
-                    // retry with another task
-                    task()
+                    logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
                 }
             }, this.interval)
         }

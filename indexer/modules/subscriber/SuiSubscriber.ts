@@ -123,11 +123,7 @@ export class SuiSubscriber extends BaseSubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`${this.network} clear interval task ${JSON.stringify(error)}`)
-                    clearInterval(intervalId)
-
-                    // retry with another task
-                    task()
+                    logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
                 }
             }, this.interval)
         }
