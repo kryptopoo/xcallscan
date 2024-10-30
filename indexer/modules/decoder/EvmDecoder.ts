@@ -6,6 +6,7 @@ import xcallAbi from '../../abi/xcall.abi.json'
 import assetManagerAbi from '../../abi/AssetManager.abi.json'
 import oracleProxyAbi from '../../abi/OracleProxy.abi.json'
 import balancedDollarAbi from '../../abi/BalancedDollar.abi.json'
+import stackedIcxAbi from '../../abi/StackedICX.abi.json'
 import logger from '../logger/logger'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 
@@ -134,6 +135,23 @@ export class EvmDecoder implements IDecoder {
                             const balancedDollarContract = new ethers.Contract(balancedDollarAddr, balancedDollarAbi, this.provider)
                             const iconBnUSDAddr = await balancedDollarContract.iconBnUSD()
                             rs._decodedTo = iconBnUSDAddr
+                        }
+                    }
+                } catch (error) {}
+
+                // Try decode from StackedICX and Balanced Token contract
+                try {
+                    if (!rs._decodedTo) {
+                        let decodedData: any = undefined
+                        if (!decodedData) decodedData = this.decodeFunction(stackedIcxAbi, 'crossTransfer(string to, uint256 value)', tx.data)
+                        if (!decodedData)
+                            decodedData = this.decodeFunction(stackedIcxAbi, 'crossTransfer(string to, uint256 value,bytes memory data)', tx.data)
+
+                        if (decodedData && tx.to) {
+                            const stackedIcxAddr = tx.to
+                            const stackedIcxContract = new ethers.Contract(stackedIcxAddr, stackedIcxAbi, this.provider)
+                            const iconTokenAddr = await stackedIcxContract.iconTokenAddress()
+                            rs._decodedTo = iconTokenAddr
                         }
                     }
                 } catch (error) {}
