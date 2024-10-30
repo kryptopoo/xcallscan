@@ -95,7 +95,7 @@ const META_URLS = {
         [NETWORK.SUI]: USE_MAINNET ? 'https://suiscan.xyz/mainnet/tx/' : 'https://suiscan.xyz/testnet/tx/',
         [NETWORK.POLYGON]: USE_MAINNET ? 'https://polygonscan.com/tx/' : 'https://amoy.polygonscan.com/tx/',
         [NETWORK.STELLAR]: USE_MAINNET ? 'https://stellar.expert/explorer/public/tx/' : 'https://stellar.expert/explorer/testnet/tx/',
-        [NETWORK.SOLANA]: USE_MAINNET ? 'https://solscan.io/tx/{txHash}' : 'https://solscan.io/tx/{txHash}?cluster=testnet'
+        [NETWORK.SOLANA]: USE_MAINNET ? 'https://explorer.solana.com/tx/{txHash}' : 'https://explorer.solana.com/tx/{txHash}?cluster=testnet'
     }
 }
 
