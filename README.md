@@ -1,6 +1,6 @@
-# xCallScan
+# xCallScan - ICON's General Message Passing Explorer
 
-xCallScan is an Explorer that allows users to look up relay messages and transactions being sent through [xCall Service](https://www.xcall.dev).
+xCallScan is an Explorer that allows users to look up relay messages and transactions being sent through [xCall Service (General Message Passing)](https://www.xcall.dev).
 
 xCallScan is typically made of:
 
@@ -10,10 +10,11 @@ xCallScan is typically made of:
 
 3. Explorer: A frontend app that displays the data
 
+4. WebSocket: client dApp can subscribe websocket to get new messages in realtime
 
-### Highlevel architecture
+5. Network Subscriber: the service listens for new events from networks/chains, extracts, transforms data in realtime
 
-<img src="https://github.com/kryptopoo/xcallscan/blob/master/docs/screenshots/xcallscan-highlevel-architecture.png" width="800" >
+6. Action Analyzer: the service analyzes message transactions to determine what action (SendMsg, Transfer, Swap, Loan...)
 
 
 ### Screenshots
@@ -21,8 +22,7 @@ xCallScan is typically made of:
 <img src="https://github.com/kryptopoo/xcallscan/blob/master/docs/screenshots/homepage.png" width="800" >
 
 
-### Live: http://testnet.xcallscan.xyz
-
+### Live: http://xcallscan.xyz
 
 
 ## Getting started
@@ -51,11 +51,22 @@ xCallScan is typically made of:
     npm run ws
     ```
 
+- Start network subscriber
+    ```bash
+    npm run subscriber
+    ```
+
+- Start action analyzer
+    ```bash
+    npm run analyzer
+    ```
+
 - Command
     ```bash
     ts-node cmd scan <network> <event> <flag_number> <xcall_address>
     ts-node cmd fetch <network> <event> <flag_number> <update_counter>
     ts-node cmd sync <from_sn><comma_or_hyphen><to_sn> <networks_separated_by_comma>
+    ts-node cmd analyze <src_network> <dest_network> <sn>
     ```
 
 ### Api
@@ -85,12 +96,6 @@ xCallScan is typically made of:
     ```bash
     npm start
     ```
-
-## What's next
-- This is still under testing and known issues found.
-- Improving Indexer to fetch data faster.
-- Improving Explorer UI/UX, supporting mobile responsiveness.
-
 
 ## References
 - https://github.com/icon-project/xcall-multi/wiki/xCall-Deployment-Info
