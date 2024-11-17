@@ -35,7 +35,7 @@ export class SolanaSubscriber extends BaseSubscriber {
             const intervalId = setInterval(async () => {
                 try {
                     // try rotating other rpcs if failed
-                    const rotateRpcRetries = 3
+                    const rotateRpcRetries = 1
                     let txs: any
                     for (let retry = 1; retry <= rotateRpcRetries; retry++) {
                         txs = await retryAsync(
@@ -54,11 +54,15 @@ export class SolanaSubscriber extends BaseSubscriber {
                     }
 
                     if (txs) {
-                        if (txs.length > 0) logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
-
                         // sort slot/block asc
                         txs = txs.sort((a: any, b: any) => a.slot - b.slot)
                         const txSignatures = txs.map((t: any) => t.signature)
+
+                        if (txs.length > 0) {
+                            logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
+                            latestSignature = txs[txs.length - 1].signature
+                        }
+                        
                         for (let i = 0; i < txSignatures.length; i++) {
                             const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
                             if (txDetail) {
@@ -86,8 +90,6 @@ export class SolanaSubscriber extends BaseSubscriber {
                                 }
                             }
                         }
-
-                        if (txs.length > 0) latestSignature = txs[txs.length - 1].signature
                     }
                 } catch (error) {
                     logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
