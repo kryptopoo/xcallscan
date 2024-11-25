@@ -1,8 +1,8 @@
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WEB3_ALCHEMY_API_KEY, WSS_URLS } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
-import solanaWeb3, { Connection, ParsedInnerInstruction, PublicKey, SignaturesForAddressOptions } from '@solana/web3.js'
+import solanaWeb3, { Connection, SignaturesForAddressOptions } from '@solana/web3.js'
 import { BaseSubscriber } from './BaseSubscriber'
 import { retryAsync } from 'ts-retry'
 import { EventLog } from '../../types/EventLog'
@@ -62,13 +62,13 @@ export class SolanaSubscriber extends BaseSubscriber {
                             logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
                             latestSignature = txs[txs.length - 1].signature
                         }
-                        
+
                         for (let i = 0; i < txSignatures.length; i++) {
                             const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
                             if (txDetail) {
                                 const eventNames = Object.values(EVENT)
                                 for (let j = 0; j < eventNames.length; j++) {
-                                    const decodedEventName = eventNames[i]
+                                    const decodedEventName = eventNames[j]
                                     const decodeEventLog = await this.decoder.decodeEventLog(txDetail, decodedEventName)
                                     if (decodeEventLog) {
                                         const txHash = txDetail.transaction.signatures[0]

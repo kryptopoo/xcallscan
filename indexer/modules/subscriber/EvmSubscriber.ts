@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import { EvmDecoder } from '../decoder/EvmDecoder'
@@ -16,7 +16,7 @@ export class EvmSubscriber extends BaseSubscriber {
 
         this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
         // // pollingInterval default is 4000 ms
-        this.provider.pollingInterval = SUBSCRIBER_INTERVAL
+        this.provider.pollingInterval = this.interval
     }
 
     private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {

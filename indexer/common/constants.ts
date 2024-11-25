@@ -96,7 +96,7 @@ const WSS_URLS: { [network: string]: string[] } = {
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
-const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? Number(process.env.SUBSCRIBER_INTERVAL) : 4000
+const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? process.env.SUBSCRIBER_INTERVAL : "*:6000"
 
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,

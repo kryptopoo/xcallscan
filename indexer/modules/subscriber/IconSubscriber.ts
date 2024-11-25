@@ -2,7 +2,7 @@ import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFi
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL, WSS_URLS } from '../../common/constants'
+import { CONTRACT, EVENT, WSS_URLS } from '../../common/constants'
 import { subscriberLogger as logger } from '../logger/logger'
 import { IconDecoder } from '../decoder/IconDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
@@ -11,14 +11,16 @@ import { BaseSubscriber } from './BaseSubscriber'
 export class IconSubscriber extends BaseSubscriber {
     iconService: IconService
 
-    // default interval is 20 block
-    interval = Math.round(SUBSCRIBER_INTERVAL / 2000) // block time ~2s
-    reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
+    // default interval is 20 block, block time ~2s
+    reconnectInterval: number = 4
 
     constructor(network: string) {
         super(network, WSS_URLS[network], new IconDecoder())
         const provider: HttpProvider = new HttpProvider(this.url)
         this.iconService = new IconService(provider)
+
+        // convert ms to s
+        this.interval = Math.round(this.interval / 1000)
     }
 
     private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
