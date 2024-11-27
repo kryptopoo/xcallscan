@@ -2,8 +2,7 @@ import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFi
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, WSS_URLS } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
+import { CONTRACT, EVENT, NETWORK, WSS_URLS } from '../../common/constants'
 import { IconDecoder } from '../decoder/IconDecoder'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import { BaseSubscriber } from './BaseSubscriber'
@@ -59,7 +58,7 @@ export class IconSubscriber extends BaseSubscriber {
                 { delay: 1000, maxTry: 5 }
             )
         } catch (error) {
-            logger.error(`${this.network} get block ${blockNumber} error ${JSON.stringify(error)}`)
+            this.logger.error(`${this.network} get block ${blockNumber} error ${JSON.stringify(error)}`)
         }
 
         if (block) {
@@ -90,8 +89,8 @@ export class IconSubscriber extends BaseSubscriber {
     }
 
     async subscribe(calbback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${this.url}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} connect ${this.url}`)
+        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const iconEventNames = [
             'CallMessageSent(Address,str,int)',
@@ -102,18 +101,19 @@ export class IconSubscriber extends BaseSubscriber {
             'RollbackExecuted(int)'
         ]
         const onerror = (error: any) => {
-            logger.error(`${this.network} onerror ${JSON.stringify(error)}`)
+            this.logger.error(`${this.network} onerror ${JSON.stringify(error)}`)
 
             setTimeout(() => {
-                logger.info(`${this.network} ws reconnect...`)
+                this.logger.info(`${this.network} ws reconnect...`)
                 monitorEvent()
             }, this.reconnectInterval)
         }
         const onprogress = (height: BigNumber) => {
-            // logger.info(`${this.network} height ${height.toString()}`)
+            // this.logger.info(`${this.network} height ${height.toString()}`)
+            this.logLatestPolling()
         }
         const ondata = async (notification: EventNotification) => {
-            logger.info(`${this.network} ondata ${JSON.stringify(notification)}`)
+            this.logger.info(`${this.network} ondata ${JSON.stringify(notification)}`)
 
             try {
                 const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
@@ -136,14 +136,14 @@ export class IconSubscriber extends BaseSubscriber {
                         const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
                         calbback(eventLog)
                     } else {
-                        logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
+                        this.logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                     }
                 } else {
-                    logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+                    this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                 }
             } catch (error) {
-                logger.info(`${this.network} error ${JSON.stringify(error)}`)
-                logger.error(`${this.network} error ${JSON.stringify(error)}`)
+                this.logger.info(`${this.network} error ${JSON.stringify(error)}`)
+                this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
         }
 

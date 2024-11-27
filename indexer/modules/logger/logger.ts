@@ -58,27 +58,28 @@ export const wsLogger = winston.createLogger({
     ]
 })
 
-export const subscriberLogger = winston.createLogger({
-    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), myFormat),
-    transports: [
-        new winston.transports.Console({}),
-        new DailyRotateFile({
-            level: 'error',
-            filename: './logs/%DATE%.subscriber.error.log',
-            json: false,
-            datePattern: 'yyyy-MM-DD',
-            maxFiles: 10
-        }),
-        new DailyRotateFile({
-            // name: 'info-file',
-            level: 'info',
-            filename: './logs/%DATE%.subscriber.log',
-            json: false,
-            datePattern: 'yyyy-MM-DD',
-            maxFiles: 10
-        })
-    ]
-})
+export const subscriberLogger = (network: string) =>
+    winston.createLogger({
+        format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), myFormat),
+        transports: [
+            new winston.transports.Console({}),
+            new DailyRotateFile({
+                level: 'error',
+                filename: `./logs/%DATE%.subscriber.error.${network}.log`,
+                json: false,
+                datePattern: 'yyyy-MM-DD',
+                maxFiles: 10
+            }),
+            new DailyRotateFile({
+                // name: 'info-file',
+                level: 'info',
+                filename: `./logs/%DATE%.subscriber.${network}.log`,
+                json: false,
+                datePattern: 'yyyy-MM-DD',
+                maxFiles: 10
+            })
+        ]
+    })
 
 export const analyzerLogger = winston.createLogger({
     format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), myFormat),

@@ -1,8 +1,7 @@
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
-import solanaWeb3, { Connection, SignaturesForAddressOptions } from '@solana/web3.js'
+import solanaWeb3, { ConfirmedSignatureInfo, Connection, SignaturesForAddressOptions } from '@solana/web3.js'
 import { BaseSubscriber } from './BaseSubscriber'
 import { retryAsync } from 'ts-retry'
 import { EventLog } from '../../types/EventLog'
@@ -17,49 +16,44 @@ export class SolanaSubscriber extends BaseSubscriber {
     }
 
     async subscribe(callback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${this.url}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} connect ${this.url}`)
+        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const addressPubkey = new solanaWeb3.PublicKey(this.xcallContracts[0])
-        const latestTxs = await retryAsync(
-            async () => {
-                return await this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 1 })
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        const latestTxs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 1 }), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                this.logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
+            }
+        })
 
         let latestSignature = latestTxs[0].signature
-        logger.info(`${this.network} latestSignature ${latestSignature}`)
+        this.logger.info(`${this.network} latestSignature ${latestSignature}`)
 
         const task = () => {
             const intervalId = setInterval(async () => {
                 try {
-                    // try rotating other rpcs if failed
-                    const rotateRpcRetries = 1
-                    let txs: any
-                    for (let retry = 1; retry <= rotateRpcRetries; retry++) {
-                        txs = await retryAsync(
-                            async () => {
-                                const options: SignaturesForAddressOptions = { limit: 20, until: latestSignature }
+                    this.logLatestPolling()
 
-                                return await this.solanaConnection.getSignaturesForAddress(addressPubkey, options)
-                            },
-                            { delay: 1000, maxTry: 3 }
-                        )
+                    let txs = await retryAsync(
+                        () => this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 20, until: latestSignature }),
+                        {
+                            delay: 1000,
+                            maxTry: 3,
+                            onError: (err, currentTry) => {
+                                this.logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
+                            }
+                        }
+                    )
 
-                        if (!txs) {
-                            const rotatedRpc = this.rotateUrl()
-                            logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
-                        } else break
-                    }
-
-                    if (txs) {
+                    if (txs && txs.length > 0) {
                         // sort slot/block asc
                         txs = txs.sort((a: any, b: any) => a.slot - b.slot)
                         const txSignatures = txs.map((t: any) => t.signature)
 
                         if (txs.length > 0) {
-                            logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
+                            this.logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
                             latestSignature = txs[txs.length - 1].signature
                         }
 
@@ -92,7 +86,7 @@ export class SolanaSubscriber extends BaseSubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
+                    this.logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
                 }
             }, this.interval)
         }

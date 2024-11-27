@@ -6,7 +6,6 @@ import logger, { subscriberLogger as ssLogger } from './modules/logger/logger'
 import { getNetwork, sleep } from './common/helper'
 import { Ws } from './modules/ws/ws'
 import { IFetcher } from './interfaces/IFetcher'
-import { ISubscriber } from './interfaces/ISubcriber'
 import { IconSubscriber } from './modules/subscriber/IconSubscriber'
 import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
 import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
@@ -14,6 +13,7 @@ import { SuiSubscriber } from './modules/subscriber/SuiSubscriber'
 import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
 import { SolanaSubscriber } from './modules/subscriber/SolanaSubscriber'
 import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
+import { BaseSubscriber } from './modules/subscriber/BaseSubscriber'
 import { Analyzer } from './modules/analyzer/Analyzer'
 
 import dotenv from 'dotenv'
@@ -97,7 +97,7 @@ const startWs = () => {
 const startSubscriber = () => {
     logger.info('start subscriber...')
 
-    const subscribers: { [network: string]: ISubscriber } = {
+    const subscribers: { [network: string]: BaseSubscriber } = {
         // ICON
         [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON),
         [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH),
@@ -157,7 +157,7 @@ const startSubscriber = () => {
         const subscriber = subscribers[network]
         if (subscriber) {
             subscriber.subscribe(async (data) => {
-                ssLogger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
+                subscriber.logger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
 
                 try {
                     // this event should be come after CallMessage
@@ -165,7 +165,7 @@ const startSubscriber = () => {
 
                     // store db
                     const eventModel = await fetchers[subscriber.network].storeDb(data)
-                    ssLogger.info(`${subscriber.network} storeDb ${JSON.stringify(eventModel)}`)
+                    subscriber.logger.info(`${subscriber.network} storeDb ${JSON.stringify(eventModel)}`)
 
                     // init syncer corresponding networks
                     const syncerNetworks = subscriber.network != NETWORK.ICON ? [NETWORK.ICON, subscriber.network] : [NETWORK.ICON]
@@ -179,13 +179,17 @@ const startSubscriber = () => {
                     const sn = eventModel.sn
                     if (sn) {
                         await syncer.syncMessage(sn)
-                        ssLogger.info(`${subscriber.network} syncMessage networks:${JSON.stringify(syncerNetworks)} event:${data.eventName} sn:${sn}`)
+                        subscriber.logger.info(
+                            `${subscriber.network} syncMessage networks:${JSON.stringify(syncerNetworks)} event:${data.eventName} sn:${sn}`
+                        )
                     } else {
                         await syncer.syncNewMessages()
-                        ssLogger.info(`${subscriber.network} syncNewMessages networks:${JSON.stringify(syncerNetworks)} event:${data.eventName}`)
+                        subscriber.logger.info(
+                            `${subscriber.network} syncNewMessages networks:${JSON.stringify(syncerNetworks)} event:${data.eventName}`
+                        )
                     }
                 } catch (error) {
-                    ssLogger.error(`${subscriber.network} error ${JSON.stringify(error)}`)
+                    subscriber.logger.error(`${subscriber.network} error ${JSON.stringify(error)}`)
                 }
             })
         }

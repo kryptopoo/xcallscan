@@ -180,9 +180,10 @@
         "stellar": {
             "api": "",
             "rpcs": [
+                "https://light-convincing-sunset.stellar-mainnet.quiknode.pro",
                 "https://rpc.ankr.com/stellar_soroban",
-                "https://soroban-rpc.mainnet.stellar.gateway.fm",
-                "https://mainnet.stellar.validationcloud.io/v1/9O_ZB5sCUQ0A2tW9BkIKXAPeCnHvnAZOmdC7exhxfr8"
+                "https://mainnet.stellar.validationcloud.io/v1/9O_ZB5sCUQ0A2tW9BkIKXAPeCnHvnAZOmdC7exhxfr8",
+                "https://soroban-rpc.mainnet.stellar.gateway.fm"
             ],
             "wss": [],
             "btp_network_id": "stellar",
