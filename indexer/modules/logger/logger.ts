@@ -64,14 +64,6 @@ export const subscriberLogger = (network: string) =>
         transports: [
             new winston.transports.Console({}),
             new DailyRotateFile({
-                level: 'error',
-                filename: `./logs/%DATE%.subscriber.error.${network}.log`,
-                json: false,
-                datePattern: 'yyyy-MM-DD',
-                maxFiles: 10
-            }),
-            new DailyRotateFile({
-                // name: 'info-file',
                 level: 'info',
                 filename: `./logs/%DATE%.subscriber.${network}.log`,
                 json: false,

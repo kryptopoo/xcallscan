@@ -1,7 +1,7 @@
-import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS } from '../../common/constants'
+import { ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
-import solanaWeb3, { ConfirmedSignatureInfo, Connection, SignaturesForAddressOptions } from '@solana/web3.js'
+import solanaWeb3, { Connection } from '@solana/web3.js'
 import { BaseSubscriber } from './BaseSubscriber'
 import { retryAsync } from 'ts-retry'
 import { EventLog } from '../../types/EventLog'
@@ -48,6 +48,9 @@ export class SolanaSubscriber extends BaseSubscriber {
                     )
 
                     if (txs && txs.length > 0) {
+                        // skip error txs
+                        txs = txs.filter((tx) => !tx.err)
+
                         // sort slot/block asc
                         txs = txs.sort((a: any, b: any) => a.slot - b.slot)
                         const txSignatures = txs.map((t: any) => t.signature)

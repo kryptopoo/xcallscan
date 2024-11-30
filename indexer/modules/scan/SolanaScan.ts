@@ -1,7 +1,6 @@
 import { EVENT, RPC_URLS } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
-import logger from '../logger/logger'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
 import solanaWeb3, { Connection, ParsedInnerInstruction, SignaturesForAddressOptions } from '@solana/web3.js'
 
@@ -34,6 +33,9 @@ export class SolanaScan implements IScan {
 
         let txs = await this.solanaConnection.getSignaturesForAddress(addressPubkey, options)
         if (txs) {
+            // skip error txs
+            txs = txs.filter((tx) => !tx.err)
+
             // sort slot/block asc
             txs = txs.sort((a, b) => a.slot - b.slot)
             const txSignatures = txs.map((t) => t.signature)
