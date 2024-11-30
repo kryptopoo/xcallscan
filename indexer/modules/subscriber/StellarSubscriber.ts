@@ -1,7 +1,6 @@
 import { retryAsync } from 'ts-retry'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { StellarDecoder } from '../decoder/StellarDecoder'
@@ -23,12 +22,18 @@ export class StellarSubscriber extends BaseSubscriber {
                     const rpcRes = await axiosInstance.post(this.url, postData)
                     return rpcRes.data.result
                 } catch (error) {
-                    logger.error(`${this.network} called rpc ${this.url} failed ${error}`)
+                    this.logger.error(`${this.network} called rpc ${this.url} failed ${error}`)
                 }
 
                 return undefined
             },
-            { delay: 1000, maxTry: 10 }
+            {
+                delay: 1000,
+                maxTry: 3,
+                onError: (err, currentTry) => {
+                    this.logger.error(`${this.network} retry ${currentTry} callRpc ${err}`)
+                }
+            }
         )
 
         return res
@@ -80,22 +85,25 @@ export class StellarSubscriber extends BaseSubscriber {
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${this.url}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} connect ${this.url}`)
+        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const latestLedgerRes = await this.getLatestLedger()
         let latestLedger = latestLedgerRes?.sequence
+        this.logger.info(`${this.network} latestLedger ${latestLedger}`)
 
         const task = () => {
             let intervalId = setInterval(async () => {
                 try {
+                    this.logLatestPolling()
+
                     if (latestLedger) {
                         // get events given contract
-                        const eventsRes = await this.getEvents(latestLedger)
+                        const eventsRes = await this.getEvents(latestLedger + 1)
                         const events = eventsRes.events
 
                         if (eventsRes && events && events.length > 0) {
-                            logger.info(`${this.network} ondata ${JSON.stringify(eventsRes)}`)
+                            this.logger.info(`${this.network} ondata ${JSON.stringify(eventsRes)}`)
                             latestLedger = eventsRes.latestLedger
 
                             for (let i = 0; i < events.length; i++) {
@@ -150,7 +158,7 @@ export class StellarSubscriber extends BaseSubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
+                    this.logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
                 }
             }, this.interval)
         }

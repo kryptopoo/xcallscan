@@ -2,7 +2,6 @@ import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { SuiDecoder } from '../decoder/SuiDecoder'
@@ -37,7 +36,7 @@ export class SuiSubscriber extends BaseSubscriber {
 
             return res.data.result
         } catch (error: any) {
-            logger.error(`${this.network} called rpc failed ${this.url} ${error.code}`)
+            this.logger.error(`${this.network} called rpc failed ${this.url} ${error.code}`)
         }
 
         return { data: [], nextCursor: undefined }
@@ -48,42 +47,36 @@ export class SuiSubscriber extends BaseSubscriber {
     }
 
     async subscribe(callback: ISubscriberCallback): Promise<void> {
-        logger.info(`${this.network} connect ${JSON.stringify(this.url)}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} connect ${JSON.stringify(this.url)}`)
+        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
-        let res = await retryAsync(
-            async () => {
-                return await this.queryTxBlocks('', true, 1)
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        let res = await retryAsync(() => this.queryTxBlocks('', true, 1), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                this.logger.error(`${this.network} retry ${currentTry} queryTxBlocks ${err}`)
+            }
+        })
 
         let nextCursor = res.nextCursor
-        logger.info(`${this.network} nextCursor ${nextCursor}`)
+        this.logger.info(`${this.network} nextCursor ${nextCursor}`)
 
         const task = () => {
             const intervalId = setInterval(async () => {
                 try {
-                    // try rotating other rpcs if failed
-                    const rotateRpcRetries = 3
-                    let txsRes: any
-                    for (let retry = 1; retry <= rotateRpcRetries; retry++) {
-                        txsRes = await retryAsync(
-                            async () => {
-                                return this.queryTxBlocks(nextCursor, false)
-                            },
-                            { delay: 1000, maxTry: 3 }
-                        )
+                    this.logLatestPolling()
 
-                        if (!res) {
-                            const rotatedRpc = this.rotateUrl()
-                            logger.error(`${this.network} retry ${retry} changing rpc to ${rotatedRpc}`)
-                        } else break
-                    }
+                    const txsRes = await retryAsync(() => this.queryTxBlocks(nextCursor, false), {
+                        delay: 1000,
+                        maxTry: 3,
+                        onError: (err, currentTry) => {
+                            this.logger.error(`${this.network} retry ${currentTry} queryTxBlocks ${err}`)
+                        }
+                    })
 
                     if (txsRes?.nextCursor) nextCursor = txsRes.nextCursor
                     const txs = txsRes?.data?.filter((t: any) => t.events?.length > 0) ?? []
-                    if (txs.length > 0) logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
+                    if (txs.length > 0) this.logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
 
                     for (let i = 0; i < txs.length; i++) {
                         const tx = txs[i]
@@ -123,7 +116,7 @@ export class SuiSubscriber extends BaseSubscriber {
                         }
                     }
                 } catch (error) {
-                    logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
+                    this.logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
                 }
             }, this.interval)
         }

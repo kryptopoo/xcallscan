@@ -14,6 +14,7 @@ const WEB3_BLOCKVISION_API_KEY = process.env.WEB3_BLOCKVISION_API_KEY
 const WEB3_ANKR_API_KEY = process.env.WEB3_ANKR_API_KEY
 const WEB3_INSTANTNODES_API_KEY = process.env.WEB3_INSTANTNODES_API_KEY
 const WEB3_QUICKNODE_API_KEY = process.env.WEB3_QUICKNODE_API_KEY
+const WEB3_VALIDATIONCLOUD_API_KEY = process.env.WEB3_VALIDATIONCLOUD_API_KEY
 
 const NETWORK = {
     ICON: 'icon',
@@ -46,6 +47,7 @@ const buildProviderUrls = (urls: string[]) => {
         else if (url.includes('ankr')) correctUrls.push(`${url}/${WEB3_ANKR_API_KEY}`)
         else if (url.includes('instantnodes')) correctUrls.push(`${url}/token-${WEB3_INSTANTNODES_API_KEY}`)
         else if (url.includes('quiknode')) correctUrls.push(`${url}/${WEB3_QUICKNODE_API_KEY}`)
+        else if (url.includes('validationcloud')) correctUrls.push(`${url}/${WEB3_VALIDATIONCLOUD_API_KEY}`)
         else correctUrls.push(url)
     })
 
@@ -96,7 +98,7 @@ const WSS_URLS: { [network: string]: string[] } = {
 }
 
 const SUBSCRIBER_NETWORKS = process.env.SUBSCRIBER_NETWORKS ? process.env.SUBSCRIBER_NETWORKS.split(',') : []
-const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? Number(process.env.SUBSCRIBER_INTERVAL) : 4000
+const SUBSCRIBER_INTERVAL = process.env.SUBSCRIBER_INTERVAL ? process.env.SUBSCRIBER_INTERVAL : '*:6000'
 
 const API_URL: { [network: string]: string } = {
     [NETWORK.ICON]: CONFIG_NETWORKS.icon.api,
@@ -264,10 +266,5 @@ export {
     SCAN_FROM_FLAG_NUMBER,
     WSS_URLS,
     SUBSCRIBER_NETWORKS,
-    SUBSCRIBER_INTERVAL,
-    WEB3_ALCHEMY_API_KEY,
-    WEB3_CHAINSTACK_API_KEY,
-    WEB3_BLAST_API_KEY,
-    WEB3_BLOCKVISION_API_KEY,
-    WEB3_ANKR_API_KEY
+    SUBSCRIBER_INTERVAL
 }

@@ -1,7 +1,6 @@
 import { WebSocket } from 'ws'
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, RPC_URLS, SUBSCRIBER_INTERVAL, WSS_URLS } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
+import { CONTRACT, EVENT, RPC_URLS, WSS_URLS } from '../../common/constants'
 import { IbcDecoder } from '../decoder/IbcDecoder'
 import { v4 as uuidv4 } from 'uuid'
 import { toHex } from '@cosmjs/encoding'
@@ -15,7 +14,7 @@ export class IbcSubscriber extends BaseSubscriber {
     ws!: WebSocket
     wsQuery: any
 
-    reconnectInterval: number = SUBSCRIBER_INTERVAL * 2
+    reconnectInterval: number = this.interval * 2
     disconnectedCount: number = 0
 
     constructor(public network: string) {
@@ -94,7 +93,7 @@ export class IbcSubscriber extends BaseSubscriber {
         const onmessage = async (event: any) => {
             const eventJson = JSON.parse(event)
             if (eventJson && eventJson.result && eventJson.result.data) {
-                logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
+                this.logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
 
                 try {
                     const events = eventJson.result.data.value.TxResult.result.events as any[]
@@ -123,8 +122,8 @@ export class IbcSubscriber extends BaseSubscriber {
 
                             if (!tx || !block) {
                                 // try changing to next rpc
-                                if (i < rpcUrls.length - 1) logger.error(`${this.network} changing rpc to ${rpcUrls[i + 1]}`)
-                                if (i == rpcUrls.length - 1) logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                                if (i < rpcUrls.length - 1) this.logger.error(`${this.network} changing rpc to ${rpcUrls[i + 1]}`)
+                                if (i == rpcUrls.length - 1) this.logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
                             } else {
                                 const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
                                 callback(eventLog)
@@ -132,11 +131,11 @@ export class IbcSubscriber extends BaseSubscriber {
                             }
                         }
                     } else {
-                        logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+                        this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                     }
                 } catch (error) {
-                    logger.info(`${this.network} error ${JSON.stringify(error)}`)
-                    logger.error(`${this.network} error ${JSON.stringify(error)}`)
+                    this.logger.info(`${this.network} error ${JSON.stringify(error)}`)
+                    this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
                 }
             }
         }
@@ -146,7 +145,7 @@ export class IbcSubscriber extends BaseSubscriber {
 
     private disconnect() {
         this.disconnectedCount += 1
-        logger.info(`${this.network} disconnect ${this.disconnectedCount}`)
+        this.logger.info(`${this.network} disconnect ${this.disconnectedCount}`)
 
         if (this.disconnectedCount >= 5) {
             this.disconnectedCount = 0
@@ -163,8 +162,13 @@ export class IbcSubscriber extends BaseSubscriber {
 
     private connect(onmessage: (data: any) => Promise<void>) {
         try {
-            logger.info(`${this.network} connect ${this.url}`)
-            logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+            this.logger.info(`${this.network} connect ${this.url}`)
+            this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+
+            const _this = this
+            const progressInterval = setInterval(() => {
+                _this.logLatestPolling()
+            }, this.interval)
 
             // Open a new WebSocket connection to the specified URL.
             this.ws = new WebSocket(this.url)
@@ -180,22 +184,24 @@ export class IbcSubscriber extends BaseSubscriber {
             }
             // When the WebSocket connection is established, send the subscription request.
             this.ws.on('open', () => {
-                logger.info(`${this.network} ws open sending the subscription request`)
+                this.logger.info(`${this.network} ws open sending the subscription request`)
                 this.ws.send(JSON.stringify(this.wsQuery))
             })
             // When a message (i.e., a matching transaction) is received, log the transaction and close the WebSocket connection.
             this.ws.on('message', onmessage)
             // If an error occurs with the WebSocket, log the error and close the WebSocket connection.
             this.ws.on('error', (error: any) => {
-                logger.info(`${this.network} ws error ${JSON.stringify(error)}`)
+                this.logger.info(`${this.network} ws error ${JSON.stringify(error)}`)
                 this.disconnect()
             })
             this.ws.on('close', (code, reason) => {
-                logger.info(`${this.network} ws close ${code} ${reason}`)
+                this.logger.info(`${this.network} ws close ${code} ${reason}`)
                 this.disconnect()
 
+                clearInterval(progressInterval)
+
                 setTimeout(() => {
-                    logger.info(`${this.network} ws reconnect...`)
+                    this.logger.info(`${this.network} ws reconnect...`)
                     this.connect(onmessage)
                 }, this.reconnectInterval)
             })
@@ -203,7 +209,7 @@ export class IbcSubscriber extends BaseSubscriber {
             this.ws.on('pong', (data) => {})
         } catch (err) {
             // If an error occurs when trying to connect or subscribe, log the error and close the WebSocket connection.
-            logger.error(`${this.network} error ${JSON.stringify(err)}`)
+            this.logger.error(`${this.network} error ${JSON.stringify(err)}`)
             this.disconnect()
         }
     }

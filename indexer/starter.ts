@@ -1,20 +1,13 @@
 import cron from 'node-cron'
-import { CONTRACT, EVENT, NETWORK, SUBSCRIBER_NETWORKS, USE_MAINNET } from './common/constants'
+import { EVENT, NETWORK, SUBSCRIBER_NETWORKS, USE_MAINNET } from './common/constants'
 import { Fetcher } from './modules/fetcher/Fetcher'
 import { Syncer } from './modules/syncer/Syncer'
-import logger, { subscriberLogger as ssLogger } from './modules/logger/logger'
 import { getNetwork, sleep } from './common/helper'
 import { Ws } from './modules/ws/ws'
 import { IFetcher } from './interfaces/IFetcher'
-import { ISubscriber } from './interfaces/ISubcriber'
-import { IconSubscriber } from './modules/subscriber/IconSubscriber'
-import { EvmSubscriber } from './modules/subscriber/EvmSubscriber'
-import { IbcSubscriber } from './modules/subscriber/IbcSubscriber'
-import { SuiSubscriber } from './modules/subscriber/SuiSubscriber'
-import { StellarSubscriber } from './modules/subscriber/StellarSubscriber'
-import { SolanaSubscriber } from './modules/subscriber/SolanaSubscriber'
-import { HavahSubscriber } from './modules/subscriber/HavahSubscriber'
+import { SubscriberFactory } from './modules/subscriber/SubscriberFactory'
 import { Analyzer } from './modules/analyzer/Analyzer'
+import logger from './modules/logger/logger'
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -97,67 +90,19 @@ const startWs = () => {
 const startSubscriber = () => {
     logger.info('start subscriber...')
 
-    const subscribers: { [network: string]: ISubscriber } = {
-        // ICON
-        [NETWORK.ICON]: new IconSubscriber(NETWORK.ICON),
-        [NETWORK.HAVAH]: new IconSubscriber(NETWORK.HAVAH),
-
-        // EVM
-        [NETWORK.ARBITRUM]: new EvmSubscriber(NETWORK.ARBITRUM),
-        [NETWORK.BASE]: new EvmSubscriber(NETWORK.BASE),
-        [NETWORK.OPTIMISM]: new EvmSubscriber(NETWORK.OPTIMISM),
-        [NETWORK.AVAX]: new EvmSubscriber(NETWORK.AVAX),
-        [NETWORK.BSC]: new EvmSubscriber(NETWORK.BSC),
-        [NETWORK.ETH2]: new EvmSubscriber(NETWORK.ETH2),
-        [NETWORK.POLYGON]: new EvmSubscriber(NETWORK.POLYGON),
-
-        // IBC
-        [NETWORK.IBC_INJECTIVE]: new IbcSubscriber(NETWORK.IBC_INJECTIVE),
-        [NETWORK.IBC_ARCHWAY]: new IbcSubscriber(NETWORK.IBC_ARCHWAY),
-        [NETWORK.IBC_NEUTRON]: new IbcSubscriber(NETWORK.IBC_NEUTRON),
-
-        // SUI
-        [NETWORK.SUI]: new SuiSubscriber(),
-        // STELLAR
-        [NETWORK.STELLAR]: new StellarSubscriber(),
-        // SOLANA
-        [NETWORK.SOLANA]: new SolanaSubscriber()
-    }
-
-    const fetchers: { [network: string]: IFetcher } = {
-        // ICON
-        [NETWORK.ICON]: new Fetcher(NETWORK.ICON),
-        [NETWORK.HAVAH]: new Fetcher(NETWORK.HAVAH),
-
-        // EVM
-        [NETWORK.ARBITRUM]: new Fetcher(NETWORK.ARBITRUM),
-        [NETWORK.BASE]: new Fetcher(NETWORK.BASE),
-        [NETWORK.OPTIMISM]: new Fetcher(NETWORK.OPTIMISM),
-        [NETWORK.AVAX]: new Fetcher(NETWORK.AVAX),
-        [NETWORK.BSC]: new Fetcher(NETWORK.BSC),
-        [NETWORK.ETH2]: new Fetcher(NETWORK.ETH2),
-        [NETWORK.POLYGON]: new Fetcher(NETWORK.POLYGON),
-
-        // IBC
-        [NETWORK.IBC_INJECTIVE]: new Fetcher(NETWORK.IBC_INJECTIVE),
-        [NETWORK.IBC_ARCHWAY]: new Fetcher(NETWORK.IBC_ARCHWAY),
-        [NETWORK.IBC_NEUTRON]: new Fetcher(NETWORK.IBC_NEUTRON),
-
-        // SUI
-        [NETWORK.SUI]: new Fetcher(NETWORK.SUI),
-        // STELLAR
-        [NETWORK.STELLAR]: new Fetcher(NETWORK.STELLAR),
-        // SOLANA
-        [NETWORK.SOLANA]: new Fetcher(NETWORK.SOLANA)
-    }
-
     // only subscribe networks in .env
-    for (let i = 0; i < SUBSCRIBER_NETWORKS.length; i++) {
-        const network = SUBSCRIBER_NETWORKS[i]
-        const subscriber = subscribers[network]
+    const subscribers = SUBSCRIBER_NETWORKS.map((network) => SubscriberFactory.createSubscriber(network))
+
+    const fetchers: { [network: string]: IFetcher } = {}
+    SUBSCRIBER_NETWORKS.forEach((network) => {
+        fetchers[network] = new Fetcher(network)
+    })
+
+    for (let i = 0; i < subscribers.length; i++) {
+        const subscriber = subscribers[i]
         if (subscriber) {
             subscriber.subscribe(async (data) => {
-                ssLogger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
+                subscriber.logger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
 
                 try {
                     // this event should be come after CallMessage
@@ -165,7 +110,7 @@ const startSubscriber = () => {
 
                     // store db
                     const eventModel = await fetchers[subscriber.network].storeDb(data)
-                    ssLogger.info(`${subscriber.network} storeDb ${JSON.stringify(eventModel)}`)
+                    subscriber.logger.info(`${subscriber.network} storeDb ${JSON.stringify(eventModel)}`)
 
                     // init syncer corresponding networks
                     const syncerNetworks = subscriber.network != NETWORK.ICON ? [NETWORK.ICON, subscriber.network] : [NETWORK.ICON]
@@ -179,13 +124,17 @@ const startSubscriber = () => {
                     const sn = eventModel.sn
                     if (sn) {
                         await syncer.syncMessage(sn)
-                        ssLogger.info(`${subscriber.network} syncMessage networks:${JSON.stringify(syncerNetworks)} event:${data.eventName} sn:${sn}`)
+                        subscriber.logger.info(
+                            `${subscriber.network} syncMessage networks:${JSON.stringify(syncerNetworks)} event:${data.eventName} sn:${sn}`
+                        )
                     } else {
                         await syncer.syncNewMessages()
-                        ssLogger.info(`${subscriber.network} syncNewMessages networks:${JSON.stringify(syncerNetworks)} event:${data.eventName}`)
+                        subscriber.logger.info(
+                            `${subscriber.network} syncNewMessages networks:${JSON.stringify(syncerNetworks)} event:${data.eventName}`
+                        )
                     }
                 } catch (error) {
-                    ssLogger.error(`${subscriber.network} error ${JSON.stringify(error)}`)
+                    subscriber.logger.error(`${subscriber.network} error ${JSON.stringify(error)}`)
                 }
             })
         }

@@ -2,8 +2,7 @@ import { ethers } from 'ethers'
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, RPC_URLS, SUBSCRIBER_INTERVAL } from '../../common/constants'
-import { subscriberLogger as logger } from '../logger/logger'
+import { CONTRACT, EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import { EvmDecoder } from '../decoder/EvmDecoder'
 import { BaseSubscriber } from './BaseSubscriber'
@@ -16,7 +15,7 @@ export class EvmSubscriber extends BaseSubscriber {
 
         this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
         // // pollingInterval default is 4000 ms
-        this.provider.pollingInterval = SUBSCRIBER_INTERVAL
+        this.provider.pollingInterval = this.interval
     }
 
     private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
@@ -48,8 +47,8 @@ export class EvmSubscriber extends BaseSubscriber {
     }
 
     subscribe(callback: ISubscriberCallback) {
-        logger.info(`${this.network} connect ${this.url}`)
-        logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} connect ${this.url}`)
+        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
         const topics = [
             [
@@ -66,7 +65,7 @@ export class EvmSubscriber extends BaseSubscriber {
             topics: topics
         }
         this.provider.on(filter, async (log: any, event: any) => {
-            logger.info(`${this.network} ondata ${JSON.stringify(log)}`)
+            this.logger.info(`${this.network} ondata ${JSON.stringify(log)}`)
 
             try {
                 const eventName = this.getEventName(log.topics)
@@ -77,29 +76,43 @@ export class EvmSubscriber extends BaseSubscriber {
                         async () => {
                             return await this.provider.getBlock(log.blockNumber)
                         },
-                        { delay: 1000, maxTry: 3 }
+                        {
+                            delay: 1000,
+                            maxTry: 3,
+                            onError: (err, currentTry) => {
+                                this.logger.error(`${this.network} retry ${currentTry} getBlock ${err}`)
+                            }
+                        }
                     )
 
                     const tx = await retryAsync(
                         async () => {
                             return await this.provider.getTransactionReceipt(log.transactionHash)
                         },
-                        { delay: 1000, maxTry: 3 }
+                        {
+                            delay: 1000,
+                            maxTry: 3,
+                            onError: (err, currentTry) => {
+                                this.logger.error(`${this.network} retry ${currentTry} getTransactionReceipt ${err}`)
+                            }
+                        }
                     )
 
                     if (tx) {
                         const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
                         callback(eventLog)
                     } else {
-                        logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
+                        this.logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
                     }
                 } else {
-                    logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+                    this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                 }
             } catch (error) {
-                logger.info(`${this.network} error ${JSON.stringify(error)}`)
-                logger.error(`${this.network} error ${JSON.stringify(error)}`)
+                this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
+        })
+        this.provider.on('poll', () => {
+            this.logLatestPolling()
         })
     }
 }
