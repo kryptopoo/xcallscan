@@ -1,5 +1,5 @@
 import { retryAsync } from 'ts-retry'
-import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
+import { ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
@@ -16,30 +16,18 @@ export class StellarSubscriber extends BaseSubscriber {
     async callRpc(postData: any): Promise<any> {
         const axiosInstance = AxiosCustomInstance.getInstance()
 
-        let res = await retryAsync(
-            async () => {
-                try {
-                    const rpcRes = await axiosInstance.post(this.url, postData)
-                    return rpcRes.data.result
-                } catch (error) {
-                    this.logger.error(`${this.network} called rpc ${this.url} failed ${error}`)
-                }
-
-                return undefined
-            },
-            {
-                delay: 1000,
-                maxTry: 3,
-                onError: (err, currentTry) => {
-                    this.logger.error(`${this.network} retry ${currentTry} callRpc ${err}`)
-                }
+        const res = await retryAsync(() => axiosInstance.post(this.url, postData), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                this.logger.error(`${this.network} retry ${currentTry} callRpc ${err}`)
             }
-        )
+        })
 
-        return res
+        return res?.data?.result
     }
 
-    async getEvents(startLedger: number): Promise<any> {
+    getEvents(startLedger: number) {
         const postData = {
             jsonrpc: '2.0',
             id: 8675309,
@@ -61,7 +49,7 @@ export class StellarSubscriber extends BaseSubscriber {
         return this.callRpc(postData)
     }
 
-    async getLatestLedger() {
+    getLatestLedger() {
         const postData = {
             jsonrpc: '2.0',
             id: 8675309,
@@ -71,7 +59,7 @@ export class StellarSubscriber extends BaseSubscriber {
         return this.callRpc(postData)
     }
 
-    async getTx(txHash: string) {
+    getTx(txHash: string) {
         const postData = {
             jsonrpc: '2.0',
             id: 8675309,
@@ -100,17 +88,20 @@ export class StellarSubscriber extends BaseSubscriber {
                     if (latestLedger) {
                         // get events given contract
                         const eventsRes = await this.getEvents(latestLedger + 1)
-                        const events = eventsRes.events
+                        const events = eventsRes?.events
 
                         if (eventsRes && events && events.length > 0) {
                             this.logger.info(`${this.network} ondata ${JSON.stringify(eventsRes)}`)
                             latestLedger = eventsRes.latestLedger
 
-                            for (let i = 0; i < events.length; i++) {
-                                const event = events[i]
+                            // unique by tx hash
+                            const txHashes = events
+                                .map((ev: any) => ev.txHash)
+                                .filter((value: string, index: number, array: string[]) => array.indexOf(value) === index)
 
+                            for (let i = 0; i < txHashes.length; i++) {
                                 // get transaction
-                                const txHash = event.txHash
+                                const txHash = txHashes[i]
                                 const tx = await this.getTx(txHash)
 
                                 // parse xrd
@@ -159,6 +150,11 @@ export class StellarSubscriber extends BaseSubscriber {
                     }
                 } catch (error) {
                     this.logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
+
+                    // restart task
+                    this.logger.info(`${this.network} restart task`)
+                    clearInterval(intervalId)
+                    task()
                 }
             }, this.interval)
         }
