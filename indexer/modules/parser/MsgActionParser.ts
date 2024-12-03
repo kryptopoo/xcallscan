@@ -7,6 +7,7 @@ import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { retryAsync } from 'ts-retry'
 import IconService from 'icon-sdk-js'
 import solanaWeb3 from '@solana/web3.js'
+const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
@@ -20,7 +21,7 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
     },
     XLM: {
         symbols: ['XLM'],
-        decimals: 9,
+        decimals: 7,
         priceUsd: '',
         cmcId: 512
     },
@@ -125,24 +126,46 @@ const NATIVE_ASSETS: { [network: string]: string[] } = {
     [NETWORK.OPTIMISM]: ['ETH'],
     [NETWORK.SUI]: ['SUI'],
     [NETWORK.POLYGON]: ['MATIC'],
-    [NETWORK.SOLANA]: ['SOL']
+    [NETWORK.SOLANA]: ['SOL'],
+    [NETWORK.STELLAR]: ['XLM']
 }
 
 const NETWORK_ASSETS: { [network: string]: string[] } = {
-    [NETWORK.ICON]: ['ICX', 'bnUSD', 'sICX', 'BALN', 'USDT', 'USDC', 'sARCH', 'SUI', 'INJ', 'HVH', 'ETH', 'BTC', 'BNB', 'AVAX', 'hyTB', 'OMM', 'CFT'],
+    [NETWORK.ICON]: [
+        'ICX',
+        'bnUSD',
+        'sICX',
+        'BALN',
+        'USDT',
+        'USDC',
+        'sARCH',
+        'INJ',
+        'HVH',
+        'ETH',
+        'BTC',
+        'BNB',
+        'AVAX',
+        'hyTB',
+        'OMM',
+        'CFT',
+        'SUI',
+        'SOL',
+        'XLM'
+    ],
     [NETWORK.BSC]: ['BNB', 'bnUSD'],
     [NETWORK.ETH2]: ['ETH'],
     [NETWORK.HAVAH]: ['HVH', 'bnUSD'],
     [NETWORK.IBC_ARCHWAY]: ['ARCH', 'sARCH', 'bnUSD', 'USDC'],
     [NETWORK.IBC_NEUTRON]: ['NTRN'],
-    [NETWORK.IBC_INJECTIVE]: ['INJ', 'bnUSD'],
+    [NETWORK.IBC_INJECTIVE]: ['INJ', 'bnUSD', 'USDC'],
     [NETWORK.AVAX]: ['AVAX', 'bnUSD', 'USDT', 'USDC'],
-    [NETWORK.BASE]: ['ETH', 'bnUSD', 'USDC'],
+    [NETWORK.BASE]: ['ETH', 'bnUSD', 'USDC', 'bcBTC'],
     [NETWORK.ARBITRUM]: ['ETH', 'WBTC', 'tBTC', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.OPTIMISM]: ['ETH'],
-    [NETWORK.SUI]: ['SUI'],
+    [NETWORK.SUI]: ['SUI', 'bnUSD', 'afSUI', 'haSUI', 'vSUI', 'USDC'],
     [NETWORK.POLYGON]: ['MATIC'],
-    [NETWORK.SOLANA]: ['SOL']
+    [NETWORK.SOLANA]: ['SOL', 'bnUSD'],
+    [NETWORK.STELLAR]: ['XLM', 'bnUSD']
 }
 
 interface TokenInfo {
@@ -201,34 +224,11 @@ export class MsgActionParser {
         return undefined
     }
 
-    private async getSuiTx(txHash: string) {
-        const network = NETWORK.SUI
-        const apiUrl = `${API_URL[network]}/${API_KEY[network]}`
-        const postData = {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'sui_getTransactionBlock',
-            params: [
-                txHash,
-                {
-                    showBalanceChanges: true,
-                    showEffects: true,
-                    showInput: true,
-                    showEvents: true,
-                    showObjectChanges: true,
-                    showRawInput: true
-                }
-            ]
-        }
-
+    private async callRpc(network: string, postData: any) {
+        const apiUrl = `${RPC_URLS[network][0]}`
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
-            const res = await retryAsync(
-                async () => {
-                    return await axiosInstance.post(apiUrl, postData)
-                },
-                { delay: 1000, maxTry: 3 }
-            )
+            const res = await retryAsync(() => axiosInstance.post(apiUrl, postData), { delay: 1000, maxTry: 3 })
 
             return res.data.result
         } catch (error: any) {
@@ -248,14 +248,6 @@ export class MsgActionParser {
         return asset
             ? ({ name: asset.symbol, symbol: asset.symbol, decimals: asset.decimals } as TokenInfo)
             : ({ name: '', symbol: '', contract: contract } as TokenInfo)
-    }
-
-    private getNativeAssetSymbol(symbolA: string, symbolB: string) {
-        for (const symbol in ASSET_MAP) {
-            if (ASSET_MAP[symbol].symbols.includes(symbolA) && ASSET_MAP[symbol].symbols.includes(symbolB)) return symbol
-        }
-
-        return undefined
     }
 
     private isUsdAsset(symbol: string) {
@@ -605,11 +597,25 @@ export class MsgActionParser {
     }
 
     private async parseSuiTokenTransfers(txhash: string) {
-        const network = NETWORK.SUI
         const networkDecimals = 9
         const tokenTransfer: TokenTransfer[] = []
 
-        const tx = await this.getSuiTx(txhash)
+        const tx = await this.callRpc(NETWORK.SUI, {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'sui_getTransactionBlock',
+            params: [
+                txhash,
+                {
+                    showBalanceChanges: true,
+                    showEffects: true,
+                    showInput: true,
+                    showEvents: true,
+                    showObjectChanges: true,
+                    showRawInput: true
+                }
+            ]
+        })
 
         if (tx && tx.balanceChanges) {
             for (let index = 0; index < tx.balanceChanges.length; index++) {
@@ -640,17 +646,56 @@ export class MsgActionParser {
 
     // TODO: parseStellarTokenTransfers
     private async parseStellarTokenTransfers(txhash: string) {
+        const networkDecimals = 7
         const tokenTransfer: TokenTransfer[] = []
+
+        // get transfers info
+        const tx = await this.callRpc(NETWORK.STELLAR, {
+            jsonrpc: '2.0',
+            id: 8675309,
+            method: 'getTransaction',
+            params: {
+                hash: txhash
+            }
+        })
+        // parse xrd
+        const data = parseTxOperationsMeta({
+            network: 'Public Global Stellar Network ; September 2015',
+            tx: tx.envelopeXdr, // trasnaction envelope XDR
+            result: tx.resultXdr, // trasnaction result XDR
+            meta: tx.resultMetaXdr, // trasnaction meta XDR
+            processSystemEvents: false, // whether to analyze system Soroban diagnostic events
+            mapSac: false, // whether to map Classic assets to Soroban contracts automatically
+            processFailedOpEffects: false, // whether to analyze effects in failed transactions
+            protocol: 21 // different versions of Stelalr protocol may yield uninform effects
+        })
+
+        // native transfer
+        const transfer = data?.tx?._operations[0].effects.find((e: any) => e.function == 'transfer')
+
+        // TODO: token transfer
+
+        // result
+        if (transfer) {
+            const amount = Math.abs(Number(transfer.args[2].toString()))
+            const symbol = NATIVE_ASSETS[NETWORK.STELLAR][0]
+            tokenTransfer.push({
+                asset: {
+                    name: symbol,
+                    symbol: symbol
+                },
+                amount: this.formatUnits(amount.toString(), networkDecimals)
+            } as TokenTransfer)
+        }
 
         return tokenTransfer
     }
 
     private async parseSolanaTokenTransfers(txhash: string) {
-        const network = NETWORK.SOLANA
         const networkDecimals = 9
         const tokenTransfer: TokenTransfer[] = []
 
-        const rpcUrl = RPC_URLS[network][0]
+        const rpcUrl = RPC_URLS[NETWORK.SOLANA][0]
         const solanaConnection = new solanaWeb3.Connection(rpcUrl)
         const txDetail = await solanaConnection.getParsedTransaction(txhash, { maxSupportedTransactionVersion: 0 })
 
