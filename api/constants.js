@@ -6,6 +6,7 @@ const MainnetDeployment = require('./configs/mainnet_deployment.json')
 
 const USE_MAINNET = process.env.USE_MAINNET == 'true'
 const CONFIG_NETWORKS = USE_MAINNET ? MainnetDeployment.networks : TestnetDeployment.networks
+const RATE_LIMIT = process.env.RATE_LIMIT ? process.env.RATE_LIMIT : 10
 
 const WEB3_ALCHEMY_API_KEY = process.env.WEB3_ALCHEMY_API_KEY
 const WEB3_BLAST_API_KEY = process.env.WEB3_BLAST_API_KEY
@@ -55,13 +56,12 @@ const buildProviderUrls = (urls) => {
     return correctUrls
 }
 
-
 const RPC_URLS = {
     [NETWORK.ICON]: buildProviderUrls(CONFIG_NETWORKS.icon.rpcs),
     [NETWORK.HAVAH]: buildProviderUrls(CONFIG_NETWORKS.havah.rpcs),
 
     [NETWORK.BSC]: buildProviderUrls(CONFIG_NETWORKS.bsc.rpcs),
-    [NETWORK.ETH2]:  buildProviderUrls(CONFIG_NETWORKS.eth2.rpcs),
+    [NETWORK.ETH2]: buildProviderUrls(CONFIG_NETWORKS.eth2.rpcs),
     [NETWORK.AVAX]: buildProviderUrls(CONFIG_NETWORKS.avax.rpcs),
     [NETWORK.BASE]: buildProviderUrls(CONFIG_NETWORKS.base.rpcs),
     [NETWORK.ARBITRUM]: buildProviderUrls(CONFIG_NETWORKS.arbitrum.rpcs),
@@ -102,6 +102,7 @@ const META_URLS = {
 module.exports = {
     USE_MAINNET,
     NETWORK,
+    RATE_LIMIT,
     RPC_URLS,
     META_URLS
 }
