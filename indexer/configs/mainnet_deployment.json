@@ -2,8 +2,8 @@
     "networks": {
         "icon": {
             "api": "https://tracker.icon.community/api/v1",
-            "rpcs": ["https://ctz.solidwallet.io/api/v3/icon_dex"],
-            "wss": ["https://ctz.solidwallet.io/api/v3/icon_dex"],
+            "rpcs": ["http://172.31.66.218:9000/api/v3/icon_dex", "https://ctz.solidwallet.io/api/v3/icon_dex"],
+            "wss": ["http://172.31.66.218:9000/api/v3/icon_dex", "https://ctz.solidwallet.io/api/v3/icon_dex"],
             "btp_network_id": "0x1.icon",
             "block_height": 0
         },

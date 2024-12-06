@@ -92,6 +92,17 @@ export class IconSubscriber extends BaseSubscriber {
         this.logger.info(`${this.network} connect ${this.url}`)
         this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
 
+        // checking rpc/ws
+        try {
+            await this.iconService.getLastBlock().execute()
+        } catch (error) {
+            // switch to public rpc/ws
+            this.logger.error(`${this.network} connect ${this.url} failed`)
+            this.rotateUrl()
+            this.logger.info(`${this.network} connect ${this.url}`)
+            this.iconService = new IconService(new HttpProvider(this.url))
+        }
+
         const iconEventNames = [
             'CallMessageSent(Address,str,int)',
             'CallMessage(str,str,int,int,bytes)',
