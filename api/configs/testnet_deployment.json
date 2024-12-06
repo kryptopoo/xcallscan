@@ -86,7 +86,7 @@
         },
         "sui": {
             "api": "https://sui-testnet-endpoint.blockvision.org",
-            "rpcs": [],
+            "rpcs": ["https://sui-testnet-endpoint.blockvision.org"],
             "wss": [],
             "btp_network_id": "sui-test",
             "block_height": 0,
