@@ -692,7 +692,12 @@ export class MsgActionParser {
 
         const rpcUrl = RPC_URLS[NETWORK.SOLANA][0]
         const solanaConnection = new solanaWeb3.Connection(rpcUrl)
-        const txDetail = await solanaConnection.getParsedTransaction(txhash, { maxSupportedTransactionVersion: 0 })
+
+        const txDetail = await retryAsync(() => solanaConnection.getParsedTransaction(txhash, { maxSupportedTransactionVersion: 0 }), {
+            delay: 1000,
+            maxTry: 3,
+            until: (lastResult) => lastResult?.meta?.innerInstructions != undefined
+        })
 
         if (txDetail) {
             if (txDetail.meta?.innerInstructions) {
