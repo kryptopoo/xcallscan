@@ -4,6 +4,17 @@ import { API_URL, EVENT, NETWORK, CONTRACT } from '../../common/constants'
 import { EventLog, EventLogData } from '../../types/EventLog'
 
 export class IconDecoder implements IDecoder {
+    private getEventName(log: string) {
+        if (log.includes('CallMessageSent(Address,str,int)')) return EVENT.CallMessageSent
+        if (log.includes('CallMessage(str,str,int,int,bytes)')) return EVENT.CallMessage
+        if (log.includes('CallExecuted(int,int,str)')) return EVENT.CallExecuted
+        if (log.includes('ResponseMessage(int,int)')) return EVENT.ResponseMessage
+        if (log.includes('RollbackMessage(int)')) return EVENT.RollbackMessage
+        if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
+
+        return ''
+    }
+
     async decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | undefined> {
         let rs: EventLogData | undefined = undefined
 
@@ -11,15 +22,16 @@ export class IconDecoder implements IDecoder {
         if (typeof eventLog.data !== 'string') eventLog.data = JSON.stringify(eventLog.data)
         let eventData = [...JSON.parse(eventLog.indexed), ...JSON.parse(eventLog.data == 'null' ? '[]' : eventLog.data)]
 
-        const hasXcallEvent =
-            eventLog.indexed.includes('CallMessageSent(Address,str,int)') ||
-            eventLog.indexed.includes('CallMessage(str,str,int,int,bytes)') ||
-            eventLog.indexed.includes('CallExecuted(int,int,str)') ||
-            eventLog.indexed.includes('ResponseMessage(int,int)') ||
-            eventLog.indexed.includes('RollbackMessage(int)') ||
-            eventLog.indexed.includes('RollbackExecuted(int)')
+        // const hasXcallEvent =
+        //     eventLog.indexed.includes('CallMessageSent(Address,str,int)') ||
+        //     eventLog.indexed.includes('CallMessage(str,str,int,int,bytes)') ||
+        //     eventLog.indexed.includes('CallExecuted(int,int,str)') ||
+        //     eventLog.indexed.includes('ResponseMessage(int,int)') ||
+        //     eventLog.indexed.includes('RollbackMessage(int)') ||
+        //     eventLog.indexed.includes('RollbackExecuted(int)')
+        // if (!hasXcallEvent) return undefined
 
-        if (!hasXcallEvent) return undefined
+        if (this.getEventName(eventLog.indexed) != eventName) return undefined
 
         switch (eventName) {
             case EVENT.CallMessageSent:

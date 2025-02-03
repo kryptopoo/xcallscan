@@ -48,44 +48,48 @@ export class IconSubscriber extends BaseSubscriber {
         return ''
     }
 
-    async findTxInBlock(iconService: IconService, blockNumber: BigNumber, eventName: string) {
+    async findTxsInBlock(iconService: IconService, blockNumber: BigNumber, eventName: string) {
         let block = undefined
         try {
-            block = await retryAsync(
-                async () => {
-                    return await iconService.getBlockByHeight(blockNumber).execute()
-                },
-                { delay: 1000, maxTry: 5 }
-            )
+            block = await retryAsync(() => iconService.getBlockByHeight(blockNumber).execute(), { delay: 1000, maxTry: 3 })
         } catch (error) {
             this.logger.error(`${this.network} get block ${blockNumber} error ${JSON.stringify(error)}`)
         }
 
         if (block) {
-            const confirmedTxs = block.confirmedTransactionList
-                .filter((t: any) => t.from && t.to)
-                .concat(block.confirmedTransactionList.filter((t: any) => t.from && t.to))
+            const txs = []
+            const confirmedTxs = block.confirmedTransactionList.filter((t: any) => t.from && t.to)
+
+            // TODO: remove log
+            this.logger.info(`${this.network} confirmedTxs ${confirmedTxs.length} ${confirmedTxs.map((c) => c.txHash)}`)
 
             for (let i = 0; i < confirmedTxs.length; i++) {
                 const confirmedTx = confirmedTxs[i]
-                const confirmedTxDetail = await retryAsync(
-                    async () => {
-                        return await iconService.getTransactionResult(confirmedTx.txHash).execute()
-                    },
-                    { delay: 1000, maxTry: 5 }
-                )
+                const confirmedTxDetail = await retryAsync(() => iconService.getTransactionResult(confirmedTx.txHash).execute(), {
+                    delay: 1000,
+                    maxTry: 3
+                })
 
                 const confirmedEventLogs = confirmedTxDetail.eventLogs as any[]
                 for (let e = 0; e < confirmedEventLogs.length; e++) {
                     const tryDecodeEventLog = await this.decoder.decodeEventLog(confirmedEventLogs[e], eventName)
                     if (tryDecodeEventLog) {
-                        return { tx: confirmedTxDetail, block: block }
+                        txs.push({ tx: confirmedTxDetail, block: block, decodeEventLog: tryDecodeEventLog })
                     }
                 }
             }
+
+            // TODO: remove log
+            this.logger.info(
+                `${this.network} findTxsInBlock ${txs.length} ${JSON.stringify(txs.map((t) => t.tx.txHash))}  ${JSON.stringify(
+                    txs.map((t) => t.decodeEventLog)
+                )}`
+            )
+
+            return txs
         }
 
-        return undefined
+        return []
     }
 
     async subscribe(calbback: ISubscriberCallback) {
@@ -137,15 +141,26 @@ export class IconSubscriber extends BaseSubscriber {
                     let blockHash = notification.hash
                     let blockNumber = notification.height
                     let prevBlockNumber = new BigNumber(Number(notification.height) - 1)
-                    let txInBlock = await this.findTxInBlock(iconService, prevBlockNumber, eventName)
-                    if (!txInBlock) {
+                    let txsInBlock = await this.findTxsInBlock(iconService, prevBlockNumber, eventName)
+                    if (txsInBlock.length === 0) {
                         // try current block from notification
-                        txInBlock = await this.findTxInBlock(iconService, blockNumber, eventName)
+                        txsInBlock = await this.findTxsInBlock(iconService, blockNumber, eventName)
                     }
 
-                    if (txInBlock) {
-                        const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
-                        calbback(eventLog)
+                    if (txsInBlock.length > 0) {
+                        // fix duplicated txs
+                        if (decodeEventLog._sn) {
+                            for (let i = 0; i < txsInBlock.length; i++) {
+                                const txInBlock = txsInBlock[i]
+                                if (decodeEventLog._sn === txInBlock.decodeEventLog._sn) {
+                                    const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
+                                    calbback(eventLog)
+                                }
+                            }
+                        } else {
+                            const eventLog = this.buildEventLog(txsInBlock[0].block, txsInBlock[0].tx, eventName, decodeEventLog)
+                            calbback(eventLog)
+                        }
                     } else {
                         this.logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                     }
@@ -153,7 +168,6 @@ export class IconSubscriber extends BaseSubscriber {
                     this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                 }
             } catch (error) {
-                this.logger.info(`${this.network} error ${JSON.stringify(error)}`)
                 this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
         }

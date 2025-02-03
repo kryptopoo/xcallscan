@@ -87,7 +87,7 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         priceUsd: '1'
     },
     USDT: {
-        symbols: ['USDT', 'archUSDT'],
+        symbols: ['USDT', 'archUSDT', 'USDt'],
         decimals: 6,
         priceUsd: '1'
     },
@@ -158,7 +158,7 @@ const NETWORK_ASSETS: { [network: string]: string[] } = {
     [NETWORK.IBC_ARCHWAY]: ['ARCH', 'sARCH', 'bnUSD', 'USDC'],
     [NETWORK.IBC_NEUTRON]: ['NTRN'],
     [NETWORK.IBC_INJECTIVE]: ['INJ', 'bnUSD', 'USDC'],
-    [NETWORK.AVAX]: ['AVAX', 'bnUSD', 'USDT', 'USDC'],
+    [NETWORK.AVAX]: ['AVAX', 'bnUSD', 'USDT', 'USDC', 'USDt'],
     [NETWORK.BASE]: ['ETH', 'bnUSD', 'USDC', 'bcBTC'],
     [NETWORK.ARBITRUM]: ['ETH', 'WBTC', 'tBTC', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.OPTIMISM]: ['ETH'],
@@ -324,12 +324,10 @@ export class MsgActionParser {
 
     private async parseIconTokenTransfers(txHash: string) {
         const network = NETWORK.ICON
-        const txHashRes = await retryAsync(
-            async () => {
-                return await this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash })
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        const txHashRes = await retryAsync(() => this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash }), {
+            delay: 1000,
+            maxTry: 3
+        })
         const rs = txHashRes?.data
 
         let tokenTransfer: TokenTransfer[] = []
@@ -386,15 +384,17 @@ export class MsgActionParser {
 
     private async parseEvmTokenTransfers(network: string, txHash: string) {
         // const provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
-        const provider = new ethers.providers.FallbackProvider(RPC_URLS[network].map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
+        let tx = undefined
 
-        // deposit Native
-        let tx = await retryAsync(
-            async () => {
-                return await provider.getTransaction(txHash)
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        let provider: ethers.providers.FallbackProvider | ethers.providers.JsonRpcProvider
+        try {
+            provider = new ethers.providers.FallbackProvider(RPC_URLS[network].map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
+            tx = await retryAsync(() => provider.getTransaction(txHash), { delay: 1000, maxTry: 3 })
+        } catch (error) {
+            logger.error(`PRC_URLS ${JSON.stringify(RPC_URLS[network])} incorrect`)
+            provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
+            tx = await retryAsync(() => provider.getTransaction(txHash), { delay: 1000, maxTry: 3 })
+        }
 
         const assetManagerAbi = require('../../abi/AssetManager.abi.json')
         const contractInterface = new ethers.utils.Interface(assetManagerAbi)
@@ -418,12 +418,7 @@ export class MsgActionParser {
 
         // deposit tokens
         let tokenTransfers: TokenTransfer[] = []
-        let txDetail = await retryAsync(
-            async () => {
-                return await provider.getTransactionReceipt(txHash)
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        let txDetail = await retryAsync(() => provider.getTransactionReceipt(txHash), { delay: 1000, maxTry: 3 })
         if (txDetail && txDetail.logs) {
             for (let index = 0; index < txDetail.logs.length; index++) {
                 const log = txDetail.logs[index]
@@ -697,7 +692,12 @@ export class MsgActionParser {
 
         const rpcUrl = RPC_URLS[NETWORK.SOLANA][0]
         const solanaConnection = new solanaWeb3.Connection(rpcUrl)
-        const txDetail = await solanaConnection.getParsedTransaction(txhash, { maxSupportedTransactionVersion: 0 })
+
+        const txDetail = await retryAsync(() => solanaConnection.getParsedTransaction(txhash, { maxSupportedTransactionVersion: 0 }), {
+            delay: 1000,
+            maxTry: 3,
+            until: (lastResult) => lastResult?.meta?.innerInstructions != undefined
+        })
 
         if (txDetail) {
             if (txDetail.meta?.innerInstructions) {
@@ -764,9 +764,9 @@ export class MsgActionParser {
 
     async parseMgsAction(fromNetwork: string, fromHash: string, toNetwork: string, toHash: string) {
         const fromTokenTransfers = await this.parseTokenTransfers(fromNetwork, fromHash)
-        const toTokenTransfers = await this.parseTokenTransfers(toNetwork, toHash)
-
         logger.info(`fromTokenTransfers ${JSON.stringify(fromTokenTransfers)}`)
+
+        const toTokenTransfers = await this.parseTokenTransfers(toNetwork, toHash)
         logger.info(`toTokenTransfers ${JSON.stringify(toTokenTransfers)}`)
 
         if (!fromTokenTransfers || !toTokenTransfers) {
@@ -823,7 +823,7 @@ export class MsgActionParser {
                 async () => {
                     return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
                 },
-                { delay: 1000, maxTry: 5 }
+                { delay: 1000, maxTry: 3 }
             )
 
             if (txHashRes && txHashRes.data) {

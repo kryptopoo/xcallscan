@@ -95,8 +95,7 @@
                 "https://rpc.ankr.com/avalanche",
                 "https://avalanche.drpc.org",
                 "https://avalanche.public-rpc.com",
-                "https://avalanche-c-chain-rpc.publicnode.com",
-                "https://avalanche.blockpi.network/v1/rpc/public"
+                "https://avalanche-c-chain-rpc.publicnode.com"
             ],
             "wss": [],
             "btp_network_id": "0xa86a.avax",
