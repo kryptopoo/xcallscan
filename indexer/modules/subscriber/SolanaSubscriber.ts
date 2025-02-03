@@ -61,7 +61,14 @@ export class SolanaSubscriber extends BaseSubscriber {
                         }
 
                         for (let i = 0; i < txSignatures.length; i++) {
-                            const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
+                            const txDetail = await retryAsync(
+                                () => this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 }),
+                                {
+                                    delay: 1000,
+                                    maxTry: 3
+                                }
+                            )
+
                             if (txDetail) {
                                 const eventNames = Object.values(EVENT)
                                 for (let j = 0; j < eventNames.length; j++) {
