@@ -50,7 +50,7 @@ const buildWhereSql = (status, src_network, dest_network, src_address, dest_addr
         values.push(to_timestamp)
     }
     if (action_type) {
-        conditions.push(`action_type = $${conditions.length + 1}`)
+        conditions.push(`LOWER(action_type) = LOWER($${conditions.length + 1})`)
         values.push(action_type)
     }
 

@@ -12,9 +12,10 @@ const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parse
 const ERC20_ABI = require('../../abi/Erc20.abi.json')
 
 // map native tokens to wrapped tokens
+// using for price calculation and asset info
 const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; priceUsd: string; denom?: string; cmcId?: number } } = {
     SOL: {
-        symbols: ['SOL'],
+        symbols: ['SOL', 'JitoSOL'],
         decimals: 9,
         priceUsd: '',
         cmcId: 5426
@@ -25,20 +26,20 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         priceUsd: '',
         cmcId: 512
     },
-    MATIC: {
-        symbols: ['MATIC'],
+    POL: {
+        symbols: ['POL'],
         decimals: 18,
         priceUsd: '',
         cmcId: 3890
     },
     SUI: {
-        symbols: ['SUI'],
+        symbols: ['SUI', 'afSUI', 'haSUI', 'vSUI', 'mSUI'],
         decimals: 18,
         priceUsd: '',
         cmcId: 20947
     },
     ICX: {
-        symbols: ['ICX', 'sICX'],
+        symbols: ['ICX', 'sICX', 'wICX'],
         decimals: 18,
         priceUsd: '',
         cmcId: 2099
@@ -87,12 +88,12 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         priceUsd: '1'
     },
     USDT: {
-        symbols: ['USDT', 'archUSDT', 'USDt'],
+        symbols: ['USDT', 'archUSDT', 'USDt', 'USD₮0'],
         decimals: 6,
         priceUsd: '1'
     },
     BTC: {
-        symbols: ['BTC', 'WBTC', 'tBTC'],
+        symbols: ['BTC', 'WBTC', 'tBTC', 'BTCB'],
         decimals: 18,
         priceUsd: '',
         cmcId: 1
@@ -108,26 +109,32 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
         decimals: 18,
         priceUsd: '',
         cmcId: 1839
+    },
+    BALN: {
+        symbols: ['BALN'],
+        decimals: 18,
+        priceUsd: '',
+        cmcId: 11262
     }
 }
 
 // native assets
-const NATIVE_ASSETS: { [network: string]: string[] } = {
-    [NETWORK.ICON]: ['ICX', 'sICX'],
-    [NETWORK.BSC]: ['BNB'],
-    [NETWORK.ETH2]: ['ETH'],
-    [NETWORK.HAVAH]: ['HVH'],
-    [NETWORK.IBC_ARCHWAY]: ['ARCH'],
-    [NETWORK.IBC_NEUTRON]: ['NTRN'],
-    [NETWORK.IBC_INJECTIVE]: ['INJ'],
-    [NETWORK.AVAX]: ['AVAX'],
-    [NETWORK.BASE]: ['ETH'],
-    [NETWORK.ARBITRUM]: ['ETH'],
-    [NETWORK.OPTIMISM]: ['ETH'],
-    [NETWORK.SUI]: ['SUI'],
-    [NETWORK.POLYGON]: ['MATIC'],
-    [NETWORK.SOLANA]: ['SOL'],
-    [NETWORK.STELLAR]: ['XLM']
+const NATIVE_ASSETS: { [network: string]: string } = {
+    [NETWORK.ICON]: 'ICX',
+    [NETWORK.BSC]: 'BNB',
+    [NETWORK.ETH2]: 'ETH',
+    [NETWORK.HAVAH]: 'HVH',
+    [NETWORK.IBC_ARCHWAY]: 'ARCH',
+    [NETWORK.IBC_NEUTRON]: 'NTRN',
+    [NETWORK.IBC_INJECTIVE]: 'INJ',
+    [NETWORK.AVAX]: 'AVAX',
+    [NETWORK.BASE]: 'ETH',
+    [NETWORK.ARBITRUM]: 'ETH',
+    [NETWORK.OPTIMISM]: 'ETH',
+    [NETWORK.SUI]: 'SUI',
+    [NETWORK.POLYGON]: 'POL',
+    [NETWORK.SOLANA]: 'SOL',
+    [NETWORK.STELLAR]: 'XLM'
 }
 
 const NETWORK_ASSETS: { [network: string]: string[] } = {
@@ -135,6 +142,7 @@ const NETWORK_ASSETS: { [network: string]: string[] } = {
         'ICX',
         'bnUSD',
         'sICX',
+        'wICX',
         'BALN',
         'USDT',
         'USDC',
@@ -163,7 +171,7 @@ const NETWORK_ASSETS: { [network: string]: string[] } = {
     [NETWORK.ARBITRUM]: ['ETH', 'WBTC', 'tBTC', 'bnUSD', 'USDT', 'USDC'],
     [NETWORK.OPTIMISM]: ['ETH'],
     [NETWORK.SUI]: ['SUI', 'bnUSD', 'afSUI', 'haSUI', 'vSUI', 'USDC'],
-    [NETWORK.POLYGON]: ['MATIC'],
+    [NETWORK.POLYGON]: ['POL'],
     [NETWORK.SOLANA]: ['SOL', 'bnUSD'],
     [NETWORK.STELLAR]: ['XLM', 'bnUSD']
 }
@@ -192,9 +200,11 @@ interface MgsActionDetail {
 
 interface MgsAction {
     type: string
-    detail?: MgsActionDetail
+    detail: MgsActionDetail
     amount_usd: string
 }
+
+const defaultRetryOptions = { delay: 1000, maxTry: 3 }
 
 export class MsgActionParser {
     constructor() {}
@@ -228,7 +238,7 @@ export class MsgActionParser {
         const apiUrl = `${RPC_URLS[network][0]}`
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
-            const res = await retryAsync(() => axiosInstance.post(apiUrl, postData), { delay: 1000, maxTry: 3 })
+            const res = await retryAsync(() => axiosInstance.post(apiUrl, postData), defaultRetryOptions)
 
             return res.data.result
         } catch (error: any) {
@@ -254,7 +264,7 @@ export class MsgActionParser {
         const usdAssets = ['USDC', 'USDT', 'bnUSD']
         for (let index = 0; index < usdAssets.length; index++) {
             const key = usdAssets[index]
-            if (ASSET_MAP[key].symbols.includes(symbol)) return true
+            if (ASSET_MAP[key].symbols.some((s) => s.toUpperCase() === symbol.toUpperCase())) return true
         }
 
         return false
@@ -272,7 +282,7 @@ export class MsgActionParser {
 
         let nativeSymbol = ''
         Object.keys(ASSET_MAP).forEach((assetNativeSymbol) => {
-            if (ASSET_MAP[assetNativeSymbol]?.symbols.includes(symbol)) nativeSymbol = assetNativeSymbol
+            if (ASSET_MAP[assetNativeSymbol]?.symbols.some((s) => s.toUpperCase() === symbol.toUpperCase())) nativeSymbol = assetNativeSymbol
         })
         if (!nativeSymbol) {
             logger.error(`Cannot found symbol ${symbol}`)
@@ -309,12 +319,7 @@ export class MsgActionParser {
 
     private async getIconAmountDeposit(txhash: string) {
         const network = NETWORK.ICON
-        const txHashRes = await retryAsync(
-            async () => {
-                return await this.callApi(`${API_URL[network]}/transactions/details/${txhash}`, {})
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        const txHashRes = await retryAsync(() => this.callApi(`${API_URL[network]}/transactions/details/${txhash}`, {}), defaultRetryOptions)
         const rs = txHashRes?.data
 
         const amount = rs?.value_decimal.toString()
@@ -324,10 +329,10 @@ export class MsgActionParser {
 
     private async parseIconTokenTransfers(txHash: string) {
         const network = NETWORK.ICON
-        const txHashRes = await retryAsync(() => this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash }), {
-            delay: 1000,
-            maxTry: 3
-        })
+        const txHashRes = await retryAsync(
+            () => this.callApi(`${API_URL[network]}/transactions/token-transfers`, { transaction_hash: txHash }),
+            defaultRetryOptions
+        )
         const rs = txHashRes?.data
 
         let tokenTransfer: TokenTransfer[] = []
@@ -361,21 +366,14 @@ export class MsgActionParser {
 
     private async parseHavahTokenTransfers(txHash: string) {
         const network = NETWORK.HAVAH
-        const txHashRes = await retryAsync(
-            async () => {
-                return await this.callApi(`${API_URL[network]}/transaction/info`, {
-                    txHash: txHash
-                })
-            },
-            { delay: 1000, maxTry: 3 }
-        )
+        const txHashRes = await retryAsync(() => this.callApi(`${API_URL[network]}/transaction/info`, { txHash: txHash }), defaultRetryOptions)
 
         // TODO: correct asset
         return [
             {
                 asset: {
-                    name: NATIVE_ASSETS[network][0],
-                    symbol: NATIVE_ASSETS[network][0]
+                    name: NATIVE_ASSETS[network],
+                    symbol: NATIVE_ASSETS[network]
                 },
                 amount: txHashRes.data.data.amount
             } as TokenTransfer
@@ -389,11 +387,11 @@ export class MsgActionParser {
         let provider: ethers.providers.FallbackProvider | ethers.providers.JsonRpcProvider
         try {
             provider = new ethers.providers.FallbackProvider(RPC_URLS[network].map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
-            tx = await retryAsync(() => provider.getTransaction(txHash), { delay: 1000, maxTry: 3 })
+            tx = await retryAsync(() => provider.getTransaction(txHash), defaultRetryOptions)
         } catch (error) {
             logger.error(`PRC_URLS ${JSON.stringify(RPC_URLS[network])} incorrect`)
             provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
-            tx = await retryAsync(() => provider.getTransaction(txHash), { delay: 1000, maxTry: 3 })
+            tx = await retryAsync(() => provider.getTransaction(txHash), defaultRetryOptions)
         }
 
         const assetManagerAbi = require('../../abi/AssetManager.abi.json')
@@ -408,8 +406,8 @@ export class MsgActionParser {
             return [
                 {
                     asset: {
-                        name: NATIVE_ASSETS[network][0],
-                        symbol: NATIVE_ASSETS[network][0]
+                        name: NATIVE_ASSETS[network],
+                        symbol: NATIVE_ASSETS[network]
                     },
                     amount: this.formatUnits(parsedTx.args?.amount?.toString(), 18)
                 } as TokenTransfer
@@ -418,7 +416,7 @@ export class MsgActionParser {
 
         // deposit tokens
         let tokenTransfers: TokenTransfer[] = []
-        let txDetail = await retryAsync(() => provider.getTransactionReceipt(txHash), { delay: 1000, maxTry: 3 })
+        let txDetail = await retryAsync(() => provider.getTransactionReceipt(txHash), defaultRetryOptions)
         if (txDetail && txDetail.logs) {
             for (let index = 0; index < txDetail.logs.length; index++) {
                 const log = txDetail.logs[index]
@@ -479,14 +477,14 @@ export class MsgActionParser {
                     for (let i = 0; i < internalTxsRes.data.result.length; i++) {
                         const internalTx = internalTxsRes.data.result[i]
 
-                        const nativeAssetSymbol = NATIVE_ASSETS[network][0]
-                        const nativeAsset = ASSET_MAP[nativeAssetSymbol]
+                        const nativeAssetSymbol = NATIVE_ASSETS[network]
+                        const nativeAssetDecimals = ASSET_MAP[nativeAssetSymbol]?.decimals
                         tokenTransfers.push({
                             asset: {
                                 name: nativeAssetSymbol,
                                 symbol: nativeAssetSymbol
                             },
-                            amount: this.formatUnits(internalTx.value.toString(), nativeAsset.decimals)
+                            amount: this.formatUnits(internalTx.value.toString(), nativeAssetDecimals)
                         })
                     }
                 }
@@ -496,15 +494,10 @@ export class MsgActionParser {
         // in case of AVAX missing logs
         if (network == NETWORK.AVAX && tokenTransfers.length == 0) {
             const url = `https://cdn.routescan.io/api/blockchain/43114/tx/${txHash}?lean=false`
-            const res = await retryAsync(
-                async () => {
-                    return await this.callApi(url, {})
-                },
-                { delay: 1000, maxTry: 3 }
-            )
+            const res = await retryAsync(() => this.callApi(url, {}), defaultRetryOptions)
             const transferOp = res?.data?.operations?.find((op: any) => op.value > 0)
             if (transferOp) {
-                const symbol = NATIVE_ASSETS[network][0]
+                const symbol = NATIVE_ASSETS[network]
                 const decimals = ASSET_MAP[symbol]?.decimals
                 tokenTransfers.push({
                     asset: {
@@ -553,7 +546,7 @@ export class MsgActionParser {
                     // try find transfer log
                     let transferLog = data.logs[0].events.find((e: any) => e.type == 'transfer')
                     if (!transferLog) return []
-                    const nativeAssetSymbol = NATIVE_ASSETS[network][0]
+                    const nativeAssetSymbol = NATIVE_ASSETS[network]
                     const transferAmount = transferLog.attributes?.find((a: any) => a.key == 'amount')?.value.toString()
                     const nativeDenom = ASSET_MAP[nativeAssetSymbol].denom
                     const transferAssetDenom =
@@ -584,7 +577,7 @@ export class MsgActionParser {
                 })
 
                 // don't care native token fee
-                if (tokenTransfer.length > 1) return tokenTransfer.filter((t) => t.asset.symbol != NATIVE_ASSETS[network][0])
+                if (tokenTransfer.length > 1) return tokenTransfer.filter((t) => t.asset.symbol != NATIVE_ASSETS[network])
             }
         }
 
@@ -639,7 +632,6 @@ export class MsgActionParser {
         return tokenTransfer
     }
 
-    // TODO: parseStellarTokenTransfers
     private async parseStellarTokenTransfers(txhash: string) {
         const networkDecimals = 7
         const tokenTransfer: TokenTransfer[] = []
@@ -673,7 +665,7 @@ export class MsgActionParser {
         // result
         if (transfer) {
             const amount = Math.abs(Number(transfer.args[2].toString()))
-            const symbol = NATIVE_ASSETS[NETWORK.STELLAR][0]
+            const symbol = NATIVE_ASSETS[NETWORK.STELLAR]
             tokenTransfer.push({
                 asset: {
                     name: symbol,
@@ -811,20 +803,15 @@ export class MsgActionParser {
             }
 
             msgAction.amount_usd = await this.convertAmountUsd(
-                msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '',
-                msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || ''
+                msgAction.detail.src_amount || msgAction.detail.dest_amount || '',
+                msgAction.detail.src_asset.symbol || msgAction.detail.dest_asset.symbol || ''
             )
         }
 
         // xtransfer - swap - loan
         if (fromNetwork == NETWORK.ICON || toNetwork == NETWORK.ICON) {
             const txHash = fromNetwork == NETWORK.ICON ? fromHash : toHash
-            const txHashRes = await retryAsync(
-                async () => {
-                    return await this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash })
-                },
-                { delay: 1000, maxTry: 3 }
-            )
+            const txHashRes = await retryAsync(() => this.callApi(`${API_URL[NETWORK.ICON]}/logs`, { transaction_hash: txHash }), defaultRetryOptions)
 
             if (txHashRes && txHashRes.data) {
                 const xtransfer = txHashRes?.data?.find((item: any) => item.method == 'XTransfer')
@@ -836,25 +823,30 @@ export class MsgActionParser {
                 // Cross Transfer
                 if (xtransfer) {
                     msgAction.type = `Transfer`
-                    msgAction.detail!.type = 'CrossTransfer'
+                    msgAction.detail.type = 'CrossTransfer'
 
                     // assume native asset
                     if (fromNetwork == NETWORK.ICON && msgAction.detail && !msgAction.detail.src_asset) {
                         msgAction.detail.src_asset = { name: 'ICX', symbol: 'ICX' }
                         msgAction.detail.src_amount = ethers.utils.formatEther(BigNumber.from(JSON.parse(xtransfer.data)[1]).toString()).toString()
-                        msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
+                        msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail.src_amount, msgAction.detail.src_asset.symbol)
                     }
 
                     msgAction.amount_usd = await this.convertAmountUsd(
-                        msgAction.detail?.src_amount || msgAction.detail?.dest_amount || '',
-                        msgAction.detail?.src_asset.symbol || msgAction.detail?.dest_asset.symbol || ''
+                        msgAction.detail.src_amount || msgAction.detail.dest_amount || '',
+                        msgAction.detail.src_asset.symbol || msgAction.detail.dest_asset.symbol || ''
                     )
                 }
 
                 // LOAN
                 if (loanData) {
                     msgAction.type = `Loan`
-                    msgAction.detail!.type = `Loan-${loanData.method}`
+                    msgAction.detail.type = `Loan-${loanData.method}`
+
+                    // calculate total amount
+                    if (loanData.method == 'CollateralReceived' || loanData.method == 'OriginateLoan') {
+                        msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail.dest_amount, msgAction.detail.dest_asset.symbol)
+                    }
                 }
 
                 // SWAP
@@ -865,11 +857,11 @@ export class MsgActionParser {
                         const isNativeSwap = fromTokenTransfers.length == 1 && fromTokenTransfers[0].asset.symbol == 'sICX'
 
                         msgAction.type = `Swap`
-                        msgAction.detail!.type = 'Swap'
+                        msgAction.detail.type = 'Swap'
                         const destTokenTransfer = toTokenTransfers[0]
                         if (destTokenTransfer) {
-                            msgAction.detail!.dest_asset = destTokenTransfer.asset
-                            msgAction.detail!.dest_amount = destTokenTransfer.amount
+                            msgAction.detail.dest_asset = destTokenTransfer.asset
+                            msgAction.detail.dest_amount = destTokenTransfer.amount
                         }
 
                         // swap from erc20 token
@@ -877,31 +869,31 @@ export class MsgActionParser {
                             const srcTokenTransfer = fromTokenTransfers.find(
                                 (t) =>
                                     destTokenTransfer &&
-                                    t.asset.symbol != destTokenTransfer.asset.symbol &&
-                                    (NATIVE_ASSETS[fromNetwork].includes(t.asset.symbol) || NETWORK_ASSETS[fromNetwork].includes(t.asset.symbol))
+                                    t.asset.symbol.toUpperCase() != destTokenTransfer.asset.symbol.toUpperCase() &&
+                                    NETWORK_ASSETS[fromNetwork].some((s) => s.toUpperCase() === t.asset.symbol.toUpperCase())
                             )
                             if (srcTokenTransfer) {
-                                msgAction.detail!.src_asset = srcTokenTransfer.asset
-                                msgAction.detail!.src_amount = srcTokenTransfer.amount
+                                msgAction.detail.src_asset = srcTokenTransfer.asset
+                                msgAction.detail.src_amount = srcTokenTransfer.amount
                             }
                         }
                         // swap from native token
                         if (isNativeSwap) {
                             const srcAmount = await this.getIconAmountDeposit(txHash)
-                            msgAction.detail!.src_asset = { name: 'ICX', symbol: 'ICX' }
-                            msgAction.detail!.src_amount = srcAmount
+                            msgAction.detail.src_asset = { name: 'ICX', symbol: 'ICX' }
+                            msgAction.detail.src_amount = srcAmount
                         }
                     }
 
                     if (toNetwork == NETWORK.ICON && toTokenTransfers.length >= 2) {
                         msgAction.type = `Swap`
-                        msgAction.detail!.type = 'Swap'
+                        msgAction.detail.type = 'Swap'
 
                         const srcTokenTransfer = fromTokenTransfers[0]
 
                         if (srcTokenTransfer) {
-                            msgAction.detail!.src_asset = srcTokenTransfer.asset
-                            msgAction.detail!.src_amount = srcTokenTransfer.amount
+                            msgAction.detail.src_asset = srcTokenTransfer.asset
+                            msgAction.detail.src_amount = srcTokenTransfer.amount
                         }
 
                         // // TODO: swap to ICX
@@ -909,14 +901,14 @@ export class MsgActionParser {
                         // if (icxTransfers && icxTransfers.length > 0) {
                         //     const icxTransferAmount = JSON.parse(icxTransfers[0].indexed).pop()
 
-                        //     msgAction.detail!.dest_asset = { symbol: 'ICX', name: 'ICX' }
-                        //     msgAction.detail!.dest_amount = ethers.utils.formatEther(BigNumber.from(icxTransferAmount).toString()).toString()
+                        //     msgAction.detail.dest_asset = { symbol: 'ICX', name: 'ICX' }
+                        //     msgAction.detail.dest_amount = ethers.utils.formatEther(BigNumber.from(icxTransferAmount).toString()).toString()
                         // }
 
                         const destTokenTransfer = toTokenTransfers.find((t) => t.asset.symbol != srcTokenTransfer?.asset.symbol)
                         if (destTokenTransfer) {
-                            msgAction.detail!.dest_asset = destTokenTransfer.asset
-                            msgAction.detail!.dest_amount = destTokenTransfer.amount
+                            msgAction.detail.dest_asset = destTokenTransfer.asset
+                            msgAction.detail.dest_amount = destTokenTransfer.amount
                         }
                     }
 
@@ -926,7 +918,7 @@ export class MsgActionParser {
                     } else if (msgAction.detail && this.isUsdAsset(msgAction.detail.dest_asset.symbol)) {
                         msgAction.amount_usd = Number(msgAction.detail.dest_amount).toFixed(6)
                     } else {
-                        msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail!.src_amount, msgAction.detail!.src_asset.symbol)
+                        msgAction.amount_usd = await this.convertAmountUsd(msgAction.detail.src_amount, msgAction.detail.src_asset.symbol)
                     }
                 }
             }
