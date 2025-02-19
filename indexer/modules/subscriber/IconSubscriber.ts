@@ -13,6 +13,20 @@ export class IconSubscriber extends BaseSubscriber {
     // default interval is 20 block, block time ~2s
     reconnectInterval: number = 4
 
+    ICON_EVENT_ID: { [eventName: string]: string } = {
+        [EVENT.CallMessageSent]: 'CallMessageSent(Address,str,int)',
+        [EVENT.CallMessage]: 'CallMessage(str,str,int,int,bytes)',
+        [EVENT.CallExecuted]: 'CallExecuted(int,int,str)',
+        [EVENT.ResponseMessage]: 'ResponseMessage(int,int)',
+        [EVENT.RollbackMessage]: 'RollbackMessage(int)',
+        [EVENT.RollbackExecuted]: 'RollbackExecuted(int)'
+        // [INTENTS_EVENT.SwapIntent]: ethers.utils.id('SwapIntent(uint256,string,string,string,string,string,string,uint256,string,uint256,bytes)'),
+        // [INTENTS_EVENT.OrderFilled]: ethers.utils.id('OrderFilled(uint256,string)'),
+        // [INTENTS_EVENT.OrderClosed]: ethers.utils.id('OrderClosed(uint256)'),
+        // [INTENTS_EVENT.OrderCancelled]: ethers.utils.id('OrderCancelled(uint256,string)'),
+        // [INTENTS_EVENT.Message]: ethers.utils.id('Message(string,uint256,bytes)')
+    }
+
     constructor(network: string) {
         super(network, WSS_URLS[network], new IconDecoder())
         const provider: HttpProvider = new HttpProvider(this.url)
@@ -38,12 +52,16 @@ export class IconSubscriber extends BaseSubscriber {
     }
 
     private getEventName(log: string) {
-        if (log.includes('CallMessageSent(Address,str,int)')) return EVENT.CallMessageSent
-        if (log.includes('CallMessage(str,str,int,int,bytes)')) return EVENT.CallMessage
-        if (log.includes('CallExecuted(int,int,str)')) return EVENT.CallExecuted
-        if (log.includes('ResponseMessage(int,int)')) return EVENT.ResponseMessage
-        if (log.includes('RollbackMessage(int)')) return EVENT.RollbackMessage
-        if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
+        // if (log.includes('CallMessageSent(Address,str,int)')) return EVENT.CallMessageSent
+        // if (log.includes('CallMessage(str,str,int,int,bytes)')) return EVENT.CallMessage
+        // if (log.includes('CallExecuted(int,int,str)')) return EVENT.CallExecuted
+        // if (log.includes('ResponseMessage(int,int)')) return EVENT.ResponseMessage
+        // if (log.includes('RollbackMessage(int)')) return EVENT.RollbackMessage
+        // if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
+
+        for (const [key, value] of Object.entries(this.ICON_EVENT_ID)) {
+            if (log.includes(value)) return key
+        }
 
         return ''
     }
@@ -72,7 +90,7 @@ export class IconSubscriber extends BaseSubscriber {
 
                 const confirmedEventLogs = confirmedTxDetail.eventLogs as any[]
                 for (let e = 0; e < confirmedEventLogs.length; e++) {
-                    const tryDecodeEventLog = await this.decoder.decodeEventLog(confirmedEventLogs[e], eventName)
+                    const tryDecodeEventLog = (await this.decoder.decodeEventLog(confirmedEventLogs[e], eventName)) as EventLogData
                     if (tryDecodeEventLog) {
                         txs.push({ tx: confirmedTxDetail, block: block, decodeEventLog: tryDecodeEventLog })
                     }
@@ -92,9 +110,9 @@ export class IconSubscriber extends BaseSubscriber {
         return []
     }
 
-    async subscribe(calbback: ISubscriberCallback) {
+    async subscribe(contractAddresses: string[], eventNames: string[], calbback: ISubscriberCallback) {
         this.logger.info(`${this.network} connect ${this.url}`)
-        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contractAddresses)}`)
 
         // checking rpc/ws
         try {
@@ -107,14 +125,15 @@ export class IconSubscriber extends BaseSubscriber {
             this.iconService = new IconService(new HttpProvider(this.url))
         }
 
-        const iconEventNames = [
-            'CallMessageSent(Address,str,int)',
-            'CallMessage(str,str,int,int,bytes)',
-            'CallExecuted(int,int,str)',
-            'ResponseMessage(int,int)',
-            'RollbackMessage(int)',
-            'RollbackExecuted(int)'
-        ]
+        // const iconEventNames = [
+        //     'CallMessageSent(Address,str,int)',
+        //     'CallMessage(str,str,int,int,bytes)',
+        //     'CallExecuted(int,int,str)',
+        //     'ResponseMessage(int,int)',
+        //     'RollbackMessage(int)',
+        //     'RollbackExecuted(int)'
+        // ]
+
         const onerror = (error: any) => {
             this.logger.error(`${this.network} onerror ${JSON.stringify(error)}`)
 
@@ -132,7 +151,7 @@ export class IconSubscriber extends BaseSubscriber {
 
             try {
                 const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
-                const decodeEventLog = await this.decoder.decodeEventLog(notification.logs[0], eventName)
+                const decodeEventLog = (await this.decoder.decodeEventLog(notification.logs[0], eventName)) as EventLogData
 
                 if (decodeEventLog) {
                     // init another iconService to avoid conflict
@@ -174,10 +193,10 @@ export class IconSubscriber extends BaseSubscriber {
 
         const monitorEvent = async () => {
             const allEventFilters: EventFilter[] = []
-            for (let i = 0; i < this.xcallContracts.length; i++) {
-                const contractAddr = this.xcallContracts[i]
-                iconEventNames.forEach((eventName) => {
-                    allEventFilters.push(new EventFilter(eventName, contractAddr))
+            for (let i = 0; i < contractAddresses.length; i++) {
+                const contractAddr = contractAddresses[i]
+                Object.values(this.ICON_EVENT_ID).forEach((iconEventId) => {
+                    allEventFilters.push(new EventFilter(iconEventId, contractAddr))
                 })
             }
             const lastBlock = await this.iconService.getLastBlock().execute()

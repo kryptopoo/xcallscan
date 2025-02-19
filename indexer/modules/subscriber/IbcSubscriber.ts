@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { toHex } from '@cosmjs/encoding'
 import { sha256 } from '@cosmjs/crypto'
 import { StargateClient } from '@cosmjs/stargate'
-import { EventLogData } from '../../types/EventLog'
+import { EventLogData, IntentsEventLogData } from '../../types/EventLog'
 import { BaseSubscriber } from './BaseSubscriber'
 import { retryAsync } from 'ts-retry'
 
@@ -62,7 +62,7 @@ export class IbcSubscriber extends BaseSubscriber {
         return ''
     }
 
-    private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
+    private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData | IntentsEventLogData) {
         const sender = (
             tx.events.find((e: any) => e.type == 'message' && e.attributes.filter((a: any) => a.key == 'sender').length > 0)['attributes'] as any[]
         ).find((a) => a.key == 'sender').value as string
@@ -89,7 +89,7 @@ export class IbcSubscriber extends BaseSubscriber {
         }
     }
 
-    subscribe(callback: ISubscriberCallback) {
+    subscribe(contractAddresses: string[], eventNames: string[], callback: ISubscriberCallback) {
         const onmessage = async (event: any) => {
             const eventJson = JSON.parse(event)
             if (eventJson && eventJson.result && eventJson.result.data) {
@@ -140,7 +140,7 @@ export class IbcSubscriber extends BaseSubscriber {
             }
         }
 
-        this.connect(onmessage)
+        this.connect(contractAddresses, onmessage)
     }
 
     private disconnect() {
@@ -160,10 +160,10 @@ export class IbcSubscriber extends BaseSubscriber {
         this.ws.close()
     }
 
-    private connect(onmessage: (data: any) => Promise<void>) {
+    private connect(contracts: string[], onmessage: (data: any) => Promise<void>) {
         try {
             this.logger.info(`${this.network} connect ${this.url}`)
-            this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+            this.logger.info(`${this.network} listen events on ${JSON.stringify(contracts)}`)
 
             const _this = this
             const progressInterval = setInterval(() => {
@@ -179,7 +179,7 @@ export class IbcSubscriber extends BaseSubscriber {
                 method: 'subscribe',
                 id: uuidv4().toString(),
                 params: {
-                    query: `tm.event = 'Tx' AND wasm._contract_address = '${this.xcallContracts[0]}'`
+                    query: `tm.event = 'Tx' AND wasm._contract_address = '${contracts[0]}'`
                 }
             }
             // When the WebSocket connection is established, send the subscription request.
@@ -202,7 +202,7 @@ export class IbcSubscriber extends BaseSubscriber {
 
                 setTimeout(() => {
                     this.logger.info(`${this.network} ws reconnect...`)
-                    this.connect(onmessage)
+                    this.connect(contracts, onmessage)
                 }, this.reconnectInterval)
             })
             this.ws.on('ping', (data) => {})

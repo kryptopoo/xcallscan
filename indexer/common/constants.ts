@@ -162,59 +162,74 @@ const SERVICE_API_KEY = {
     SCRAPING_ANT: process.env.SCRAPING_ANT_API_KEY ?? ''
 }
 
-const CONTRACT: { [network: string]: { xcall: string[] } } = {
+const CONTRACT: { [network: string]: { xcall: string[]; intents: string[] } } = {
     [NETWORK.ICON]: {
-        xcall: CONFIG_CONTRACTS.icon.xcall
+        xcall: CONFIG_CONTRACTS.icon.xcall,
+        intents: CONFIG_CONTRACTS.icon.intents
     },
     [NETWORK.HAVAH]: {
-        xcall: CONFIG_CONTRACTS.havah.xcall
+        xcall: CONFIG_CONTRACTS.havah.xcall,
+        intents: CONFIG_CONTRACTS.havah.intents
     },
 
     // EVM
     [NETWORK.BSC]: {
-        xcall: CONFIG_CONTRACTS.bsc.xcall
+        xcall: CONFIG_CONTRACTS.bsc.xcall,
+        intents: CONFIG_CONTRACTS.bsc.intents
     },
     [NETWORK.ETH2]: {
-        xcall: CONFIG_CONTRACTS.eth2.xcall
+        xcall: CONFIG_CONTRACTS.eth2.xcall,
+        intents: CONFIG_CONTRACTS.eth2.intents
     },
     [NETWORK.AVAX]: {
-        xcall: CONFIG_CONTRACTS.avax.xcall
+        xcall: CONFIG_CONTRACTS.avax.xcall,
+        intents: CONFIG_CONTRACTS.avax.intents
     },
     [NETWORK.POLYGON]: {
-        xcall: CONFIG_CONTRACTS.polygon.xcall
+        xcall: CONFIG_CONTRACTS.polygon.xcall,
+        intents: CONFIG_CONTRACTS.polygon.intents
     },
     [NETWORK.BASE]: {
-        xcall: CONFIG_CONTRACTS.base.xcall
+        xcall: CONFIG_CONTRACTS.base.xcall,
+        intents: CONFIG_CONTRACTS.base.intents
     },
     [NETWORK.ARBITRUM]: {
-        xcall: CONFIG_CONTRACTS.arbitrum.xcall
+        xcall: CONFIG_CONTRACTS.arbitrum.xcall,
+        intents: CONFIG_CONTRACTS.arbitrum.intents
     },
     [NETWORK.OPTIMISM]: {
-        xcall: CONFIG_CONTRACTS.optimism.xcall
+        xcall: CONFIG_CONTRACTS.optimism.xcall,
+        intents: CONFIG_CONTRACTS.optimism.intents
     },
 
     // IBC
     [NETWORK.IBC_ARCHWAY]: {
-        xcall: CONFIG_CONTRACTS.ibc_archway.xcall
+        xcall: CONFIG_CONTRACTS.ibc_archway.xcall,
+        intents: CONFIG_CONTRACTS.ibc_archway.intents
     },
     [NETWORK.IBC_NEUTRON]: {
-        xcall: CONFIG_CONTRACTS.ibc_neutron.xcall
+        xcall: CONFIG_CONTRACTS.ibc_neutron.xcall,
+        intents: CONFIG_CONTRACTS.ibc_neutron.intents
     },
     [NETWORK.IBC_INJECTIVE]: {
-        xcall: CONFIG_CONTRACTS.ibc_injective.xcall
+        xcall: CONFIG_CONTRACTS.ibc_injective.xcall,
+        intents: CONFIG_CONTRACTS.ibc_injective.intents
     },
 
     // SUI
     [NETWORK.SUI]: {
-        xcall: CONFIG_CONTRACTS.sui.xcall
+        xcall: CONFIG_CONTRACTS.sui.xcall,
+        intents: CONFIG_CONTRACTS.sui.intents
     },
     // STELLAR
     [NETWORK.STELLAR]: {
-        xcall: CONFIG_CONTRACTS.stellar.xcall
+        xcall: CONFIG_CONTRACTS.stellar.xcall,
+        intents: CONFIG_CONTRACTS.stellar.intents
     },
     // SOLANA
     [NETWORK.SOLANA]: {
-        xcall: CONFIG_CONTRACTS.solana.xcall
+        xcall: CONFIG_CONTRACTS.solana.xcall,
+        intents: CONFIG_CONTRACTS.solana.intents
     }
 }
 
@@ -244,6 +259,15 @@ const EVENT = {
     MessageReceived: 'MessageReceived'
 }
 
+const INTENTS_EVENT = {
+    SwapIntent: 'SwapIntent',
+    SwapOrder: 'SwapOrder', // the same with SwapIntent
+    OrderFilled: 'OrderFilled',
+    OrderClosed: 'OrderClosed',
+    OrderCancelled: 'OrderCancelled',
+    Message: 'Message'
+}
+
 const MSG_STATUS = {
     Pending: 'pending',
     Delivered: 'delivered',
@@ -259,6 +283,7 @@ export {
     API_KEY,
     CONTRACT,
     EVENT,
+    INTENTS_EVENT,
     MSG_STATUS,
     RPC_URLS,
     BTP_NETWORK_ID,

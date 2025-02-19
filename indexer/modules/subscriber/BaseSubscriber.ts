@@ -9,7 +9,6 @@ export abstract class BaseSubscriber {
     interval = 6000 // default is 6000 ms
     network: string = ''
     url: string = ''
-    xcallContracts: string[] = []
     decoder: IDecoder
     logger: Logger
 
@@ -19,7 +18,6 @@ export abstract class BaseSubscriber {
         this.network = network
         this.urls = urls
         this.url = this.urls[0]
-        this.xcallContracts = CONTRACT[this.network].xcall
         this.decoder = decoder
         this.logger = subscriberLogger(this.network)
 
@@ -70,5 +68,5 @@ export abstract class BaseSubscriber {
         }
     }
 
-    abstract subscribe(callback: ISubscriberCallback): void
+    abstract subscribe(contractAddresses: string[], eventNames: string[], callback: ISubscriberCallback): void
 }
