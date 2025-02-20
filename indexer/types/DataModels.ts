@@ -41,6 +41,9 @@ export type MessageModel = {
     fee?: string
 
     synced: boolean
+
+    intents_order_id: number
+    intents_order_detail?: string
 }
 
 export type BaseMessageModel = {
