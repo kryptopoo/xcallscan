@@ -11,6 +11,7 @@ import logger from './modules/logger/logger'
 import { Db } from './data/Db'
 import { MessageModel } from './types/DataModels'
 import { IntentsEventLogData } from './types/EventLog'
+import { IntentsFetcher } from './modules/fetcher/IntentsFetcher'
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -98,20 +99,14 @@ const startSubscriber = () => {
     // only subscribe networks in .env
     const subscribers = SUBSCRIBER_NETWORKS.map((network) => SubscriberFactory.createSubscriber(network))
 
+    // xcall fetcher
     const fetchers: { [network: string]: IFetcher } = {}
     SUBSCRIBER_NETWORKS.forEach((network) => {
         fetchers[network] = new Fetcher(network)
     })
 
-    const getNetwork = (btpNetworkId: string | undefined) => {
-        if (btpNetworkId) {
-            for (const [key, value] of Object.entries(BTP_NETWORK_ID)) {
-                if (value == btpNetworkId) return key
-            }
-        }
-
-        return undefined
-    }
+    // intents fetcher
+    const intentsFetcher = new IntentsFetcher()
 
     for (let i = 0; i < subscribers.length; i++) {
         const subscriber = subscribers[i]
@@ -161,57 +156,7 @@ const startSubscriber = () => {
                 subscriber.subscribe(CONTRACT[subscriber.network].intents, Object.values(INTENTS_EVENT), async (data) => {
                     subscriber.logger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
 
-                    const eventData = data.eventData as IntentsEventLogData
-                    const srcNetwork = getNetwork(eventData.srcNID) ?? ''
-                    const destNetwork = getNetwork(eventData.dstNID) ?? ''
-                    const intentsOrderId = eventData.id ?? 0
-                    const intentsOrderDetail = eventData
-
-                    //  SwapIntent | SwapOrder
-                    if (data.eventName == INTENTS_EVENT.SwapIntent || data.eventName == INTENTS_EVENT.SwapOrder) {
-                        const intentsMsg: MessageModel = {
-                            sn: 0,
-                            status: MSG_STATUS.Pending,
-                            src_network: srcNetwork,
-                            src_block_number: data.blockNumber,
-                            src_block_timestamp: data.blockTimestamp,
-                            src_tx_hash: data.txHash,
-                            dest_network: destNetwork,
-                            fee: data.txFee,
-                            value: data.txValue,
-
-                            synced: false,
-
-                            intents_order_id: intentsOrderId,
-                            intents_order_detail: JSON.stringify(intentsOrderDetail)
-                        }
-
-                        await db.insertIntentsMessage(intentsMsg)
-                    }
-
-                    // OrderFilled
-                    if (data.eventName == INTENTS_EVENT.OrderFilled) {
-                        await db.updateIntentsMessageOrderFilled(
-                            intentsOrderId,
-                            srcNetwork,
-                            destNetwork,
-                            data.blockNumber,
-                            data.blockTimestamp,
-                            data.txHash
-                        )
-                    }
-
-                    // OrderClosed
-                    if (data.eventName == INTENTS_EVENT.OrderClosed) {
-                        await db.updateIntentsMessageOrderClosed(
-                            intentsOrderId,
-                            srcNetwork,
-                            destNetwork,
-                            data.blockNumber,
-                            data.blockTimestamp,
-                            data.txHash
-                        )
-                    }
+                    await intentsFetcher.storeDb(subscriber.network, data)
                 })
             }
         }

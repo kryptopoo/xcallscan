@@ -256,13 +256,24 @@ export class EvmDecoder implements IDecoder {
                 break
             case INTENTS_EVENT.OrderClosed:
                 rs = {
-                    id: decodeEventLog.id.toNumber()
+                    id: Number(decodeEventLog.id)
+                }
+
+                const orderClosedTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const decodedOrderClosed = this.decodeFunction(intentsAbi, 'recvMessage', orderClosedTx.data)
+                if (decodedOrderClosed) {
+                    rs = {
+                        id: Number(decodeEventLog.id),
+                        dstNID: decodedOrderClosed.srcNetwork,
+                        sn: decodedOrderClosed._connSn,
+                        msg: decodedOrderClosed._msg
+                    }
                 }
 
                 break
             case INTENTS_EVENT.OrderCancelled:
                 rs = {
-                    id: decodeEventLog.id.toNumber(),
+                    id: Number(decodeEventLog.id),
                     srcNID: decodeEventLog.srcNID
                 }
                 break

@@ -276,6 +276,14 @@ const MSG_STATUS = {
     Failed: 'failed'
 }
 
+const MSG_ACTION_TYPES = {
+    SendMsg: 'SendMsg',
+    Transfer: 'Transfer',
+    Swap: 'Swap',
+    Loan: 'Loan',
+    SwapIntent: 'SwapIntent'
+}
+
 export {
     USE_MAINNET,
     NETWORK,
@@ -285,6 +293,7 @@ export {
     EVENT,
     INTENTS_EVENT,
     MSG_STATUS,
+    MSG_ACTION_TYPES,
     RPC_URLS,
     BTP_NETWORK_ID,
     SERVICE_API_KEY,

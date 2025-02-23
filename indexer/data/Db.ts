@@ -3,7 +3,7 @@ import path from 'path'
 import 'dotenv/config'
 import pg from 'pg'
 const Pool = pg.Pool
-import { EVENT, INTENTS_EVENT, MSG_STATUS } from '../common/constants'
+import { EVENT, INTENTS_EVENT, MSG_ACTION_TYPES, MSG_STATUS } from '../common/constants'
 import logger from '../modules/logger/logger'
 import { BaseMessageModel, EventModel, MessageModel } from '../types/DataModels'
 import { lastDaysTimestamp, lastWeekTimestamp, nowTimestamp } from '../common/helper'
@@ -249,8 +249,9 @@ class Db {
             try {
                 const rs = await this.pool.query(
                     `INSERT INTO messages (sn, status, src_network, src_block_number, src_block_timestamp, src_tx_hash, src_app,  
-                        dest_network, dest_block_number,  dest_block_timestamp,  dest_tx_hash, dest_app, value, fee, created_at)  
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+                        dest_network, dest_block_number,  dest_block_timestamp,  dest_tx_hash, dest_app, value, fee, 
+                        intents_order_id, intents_order_detail, action_type, created_at)  
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
                     [
                         0,
                         message.status,
@@ -266,10 +267,10 @@ class Db {
                         message.dest_app,
                         message.value,
                         message.fee,
-                        nowTimestamp(),
-
                         message.intents_order_id,
-                        message.intents_order_detail
+                        message.intents_order_detail,
+                        MSG_ACTION_TYPES.SwapIntent,
+                        nowTimestamp()
                     ]
                 )
                 return rs.rowCount ?? 0
@@ -331,7 +332,7 @@ class Db {
                     intents_order_id,
                     src_network,
                     dest_network,
-                    INTENTS_EVENT.OrderFilled,
+                    MSG_STATUS.Executed,
                     response_block_number,
                     response_block_timestamp,
                     response_tx_hash,
