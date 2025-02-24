@@ -74,7 +74,7 @@ const getMessages = async (skip, limit, status, src_network, dest_network, src_a
     const selectFields = ` id, sn, status, src_network, src_block_number, src_block_timestamp, src_tx_hash, src_app as src_address, src_error, 
                                 dest_network, dest_block_number, dest_block_timestamp, dest_tx_hash, dest_app as dest_address, dest_error, 
                                 response_block_number, response_block_timestamp, response_tx_hash, response_error, 
-                                rollback_block_number, rollback_block_timestamp, rollback_tx_hash, rollback_error, action_type, created_at `
+                                rollback_block_number, rollback_block_timestamp, rollback_tx_hash, rollback_error, action_type, intents_order_id, created_at `
     let sqlMessages = `SELECT ${selectFields} 
                         FROM messages ORDER BY src_block_timestamp DESC OFFSET $1 LIMIT $2`
     if (conditions.length > 0) {
@@ -109,7 +109,7 @@ const getMessageById = async (id) => {
                     dest_network, dest_block_number, dest_block_timestamp, dest_tx_hash, dest_app as dest_address, dest_error, 
                     response_block_number, response_block_timestamp, response_tx_hash, response_error, 
                     rollback_block_number, rollback_block_timestamp, rollback_tx_hash, rollback_error, 
-                    value, fee, action_type, action_detail, action_amount_usd, created_at, updated_at 
+                    value, fee, action_type, action_detail, action_amount_usd, intents_order_id, intents_order_detail, created_at, updated_at 
                 FROM messages WHERE id = $1`
     const messagesRs = await pool.query(sql, [id])
     return {
@@ -129,7 +129,7 @@ const searchMessages = async (value) => {
             dest_network, dest_block_number, dest_block_timestamp, dest_tx_hash, dest_app as dest_address, dest_error, 
             response_block_number, response_block_timestamp, response_tx_hash, response_error, 
             rollback_block_number, rollback_block_timestamp, rollback_tx_hash, rollback_error, 
-            value, fee, created_at, updated_at 
+            value, fee, intents_order_id, created_at, updated_at 
         FROM messages 
         WHERE src_tx_hash = $1 OR dest_tx_hash = $1 OR response_tx_hash = $1 OR rollback_tx_hash = $1 OR sn = $2 
         ORDER BY src_block_timestamp DESC`,
@@ -137,30 +137,6 @@ const searchMessages = async (value) => {
     )
     return {
         data: messagesRs.rows,
-        meta: {
-            urls: META_URLS
-        }
-    }
-}
-
-// TODO: to be removed
-const getStatistic = async () => {
-    const totalRs = await pool.query('SELECT count(*) FROM messages')
-    const messages = Number(totalRs.rows[0].count)
-
-    const fees = {}
-    const networks = Object.values(NETWORK)
-    for (let index = 0; index < networks.length; index++) {
-        const network = networks[index]
-        const feeRs = await pool.query(`select sum(cast(value as decimal)) from messages where src_network = '${network}'`)
-        fees[network] = feeRs.rows[0].sum ? feeRs.rows[0].sum.toString() : '0'
-    }
-
-    return {
-        data: {
-            messages,
-            fees
-        },
         meta: {
             urls: META_URLS
         }
@@ -226,6 +202,5 @@ module.exports = {
     getMessages,
     getMessageById,
     searchMessages,
-    getStatistic,
     getTotalMessages
 }

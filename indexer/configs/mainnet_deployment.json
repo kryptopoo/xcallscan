@@ -260,7 +260,7 @@
         },
         "polygon": {
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"],
-            "intents": []
+            "intents": ["0xa3e6E49B5eDceb922f3729D2Ef8efd1c42aFFF0e"]
         },
         "stellar": {
             "xcall": ["CB6IJRLOWGQXUDSYGFOAAZYVOESQ6TVSTU3242I7PG3LH7F43PPX2HE6"],

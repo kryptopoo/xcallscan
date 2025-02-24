@@ -32,16 +32,18 @@ export class EvmDecoder implements IDecoder {
     async decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | IntentsEventLogData | undefined> {
         let rs: EventLogData | IntentsEventLogData | undefined = {}
 
+        if (!eventName || eventName == '') return undefined
+
         let decodeEventLog: any = undefined
         try {
             decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
         } catch (error: any) {
-            logger.error(`${eventName} decodeEventLog error ${error.code}`)
+            logger.error(`xcall ${eventName} decodeEventLog error ${error.code}`)
         }
         try {
             decodeEventLog = intentsInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
         } catch (error: any) {
-            logger.error(`${eventName} decodeEventLog error ${error.code}`)
+            logger.error(`intents ${eventName} decodeEventLog error ${error.code}`)
         }
 
         if (!decodeEventLog) return undefined
@@ -215,23 +217,22 @@ export class EvmDecoder implements IDecoder {
         switch (eventName) {
             case INTENTS_EVENT.SwapIntent:
                 rs = {
-                    id: decodeEventLog.id.toNumber(),
+                    id: Number(decodeEventLog.id),
                     emitter: decodeEventLog.emitter,
                     srcNID: decodeEventLog.srcNID,
                     dstNID: decodeEventLog.dstNID,
                     creator: decodeEventLog.creator,
                     destinationAddress: decodeEventLog.destinationAddress,
                     token: decodeEventLog.token,
-                    amount: decodeEventLog.amount.toNumber(),
+                    amount: Number(decodeEventLog.amount).toString(),
                     toToken: decodeEventLog.toToken,
-                    toAmount: decodeEventLog.toAmount.toNumber(),
+                    toAmount: Number(decodeEventLog.toAmount).toString(),
                     data: decodeEventLog.data
                 }
-                console.log('INTENTS_EVENT.SwapIntent', rs)
                 break
             case INTENTS_EVENT.OrderFilled:
                 rs = {
-                    id: decodeEventLog.id.toNumber(),
+                    id: Number(decodeEventLog.id),
                     srcNID: decodeEventLog.srcNID
                 }
 
@@ -239,16 +240,16 @@ export class EvmDecoder implements IDecoder {
                 const decodedFill = this.decodeFunction(intentsAbi, 'fill', intentsTx.data)
                 if (decodedFill) {
                     rs = {
-                        id: decodeEventLog.id.toNumber(),
+                        id: Number(decodeEventLog.id),
                         emitter: decodedFill.order.emitter,
                         srcNID: decodedFill.order.srcNID,
                         dstNID: decodedFill.order.dstNID,
                         creator: decodedFill.order.creator,
                         destinationAddress: decodedFill.order.destinationAddress,
                         token: decodedFill.order.token,
-                        amount: decodedFill.order.amount.toNumber(),
+                        amount: Number(decodedFill.order.amount).toString(),
                         toToken: decodedFill.order.toToken,
-                        toAmount: decodedFill.order.toAmount.toNumber(),
+                        toAmount: Number(decodedFill.order.toAmount).toString(),
                         data: decodedFill.order.data
                     }
                 }
@@ -291,85 +292,4 @@ export class EvmDecoder implements IDecoder {
 
         return rs
     }
-
-    // async decodeIntentsEventLog(eventLog: ethers.providers.Log, eventName: string): Promise<IntentsEventLogData | undefined> {
-    //     let rs: IntentsEventLogData | undefined = {}
-
-    //     let decodeEventLog: any = undefined
-    //     try {
-    //         decodeEventLog = intentsInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
-    //     } catch (error: any) {
-    //         logger.error(`${eventName} decodeEventLog error ${error.code}`)
-    //     }
-
-    //     if (!decodeEventLog) return undefined
-
-    //     switch (eventName) {
-    //         case INTENTS_EVENT.SwapIntent:
-    //             rs = {
-    //                 id: decodeEventLog.id.toNumber(),
-    //                 emitter: decodeEventLog.emitter,
-    //                 srcNID: decodeEventLog.srcNID,
-    //                 dstNID: decodeEventLog.dstNID,
-    //                 creator: decodeEventLog.creator,
-    //                 destinationAddress: decodeEventLog.destinationAddress,
-    //                 token: decodeEventLog.token,
-    //                 amount: decodeEventLog.amount.toNumber(),
-    //                 toToken: decodeEventLog.toToken,
-    //                 toAmount: decodeEventLog.toAmount.toNumber(),
-    //                 data: decodeEventLog.data
-    //             }
-    //             console.log('INTENTS_EVENT.SwapIntent', rs)
-    //             break
-    //         case INTENTS_EVENT.OrderFilled:
-    //             rs = {
-    //                 id: decodeEventLog.id.toNumber(),
-    //                 srcNID: decodeEventLog.srcNID
-    //             }
-
-    //             const intentsTx = await this.provider.getTransaction(eventLog.transactionHash)
-    //             const decodedFill = this.decodeFunction(intentsAbi, 'fill', intentsTx.data)
-    //             if (decodedFill) {
-    //                 rs = {
-    //                     id: decodeEventLog.id.toNumber(),
-    //                     emitter: decodedFill.order.emitter,
-    //                     srcNID: decodedFill.order.srcNID,
-    //                     dstNID: decodedFill.order.dstNID,
-    //                     creator: decodedFill.order.creator,
-    //                     destinationAddress: decodedFill.order.destinationAddress,
-    //                     token: decodedFill.order.token,
-    //                     amount: decodedFill.order.amount.toNumber(),
-    //                     toToken: decodedFill.order.toToken,
-    //                     toAmount: decodedFill.order.toAmount.toNumber(),
-    //                     data: decodedFill.order.data
-    //                 }
-    //             }
-
-    //             break
-    //         case INTENTS_EVENT.OrderClosed:
-    //             rs = {
-    //                 id: decodeEventLog.id.toNumber()
-    //             }
-
-    //             break
-    //         case INTENTS_EVENT.OrderCancelled:
-    //             rs = {
-    //                 id: decodeEventLog.id.toNumber(),
-    //                 srcNID: decodeEventLog.srcNID
-    //             }
-    //             break
-
-    //         case INTENTS_EVENT.Message:
-    //             rs = {
-    //                 sn: Number(decodeEventLog.sn),
-    //                 dstNID: decodeEventLog.targetNetwork.toString(),
-    //                 msg: decodeEventLog._msg.toString()
-    //             }
-    //             break
-    //         default:
-    //             break
-    //     }
-
-    //     return rs
-    // }
 }
