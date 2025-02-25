@@ -36,14 +36,14 @@ export class EvmDecoder implements IDecoder {
 
         let decodeEventLog: any = undefined
         try {
-            decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            if (Object.values(EVENT).includes(eventName)) {
+                decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            }
+            if (Object.values(INTENTS_EVENT).includes(eventName)) {
+                decodeEventLog = intentsInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            }
         } catch (error: any) {
-            logger.error(`xcall ${eventName} decodeEventLog error ${error.code}`)
-        }
-        try {
-            decodeEventLog = intentsInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
-        } catch (error: any) {
-            logger.error(`intents ${eventName} decodeEventLog error ${error.code}`)
+            logger.error(`${eventName} decodeEventLog error ${error.code}`)
         }
 
         if (!decodeEventLog) return undefined

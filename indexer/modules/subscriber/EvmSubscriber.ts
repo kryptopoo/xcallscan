@@ -50,20 +50,6 @@ export class EvmSubscriber extends BaseSubscriber {
     }
 
     private getEventName(topics: string[]) {
-        // if (topics.includes(ethers.utils.id('CallMessageSent(address,string,uint256)'))) return EVENT.CallMessageSent
-        // if (topics.includes(ethers.utils.id('CallMessage(string,string,uint256,uint256,bytes)'))) return EVENT.CallMessage
-        // if (topics.includes(ethers.utils.id('CallExecuted(uint256,int256,string)'))) return EVENT.CallExecuted
-        // if (topics.includes(ethers.utils.id('ResponseMessage(uint256,int256)'))) return EVENT.ResponseMessage
-        // if (topics.includes(ethers.utils.id('RollbackMessage(uint256)'))) return EVENT.RollbackMessage
-        // if (topics.includes(ethers.utils.id('RollbackExecuted(uint256)'))) return EVENT.RollbackExecuted
-
-        // if (topics.includes(ethers.utils.id('SwapIntent(uint256,string,string,string,string,string,string,uint256,string,uint256,bytes)')))
-        //     return INTENTS_EVENT.SwapIntent
-        // if (topics.includes(ethers.utils.id('Message(string,uint256,bytes)'))) return INTENTS_EVENT.Message
-        // if (topics.includes(ethers.utils.id('OrderCancelled(uint256,string)'))) return INTENTS_EVENT.OrderCancelled
-        // if (topics.includes(ethers.utils.id('OrderClosed(uint256)'))) return INTENTS_EVENT.OrderClosed
-        // if (topics.includes(ethers.utils.id('OrderFilled(uint256,string)'))) return INTENTS_EVENT.OrderFilled
-
         for (const [key, value] of Object.entries(this.ETHERS_EVENT_ID)) {
             if (topics.includes(value)) return key
         }
@@ -77,25 +63,7 @@ export class EvmSubscriber extends BaseSubscriber {
 
         const filter = {
             address: contracts[0],
-            topics: [
-                // [
-                //     // ethers.utils.id('CallMessageSent(address,string,uint256)'),
-                //     // ethers.utils.id('CallMessage(string,string,uint256,uint256,bytes)'),
-                //     // ethers.utils.id('CallExecuted(uint256,int256,string)'),
-                //     // ethers.utils.id('ResponseMessage(uint256,int256)'),
-                //     // ethers.utils.id('RollbackMessage(uint256)'),
-                //     // ethers.utils.id('RollbackExecuted(uint256)')
-
-                //     this.ETHERS_EVENT_ID[EVENT.CallMessageSent],
-                //     this.ETHERS_EVENT_ID[EVENT.CallMessage],
-                //     this.ETHERS_EVENT_ID[EVENT.CallExecuted],
-                //     this.ETHERS_EVENT_ID[EVENT.ResponseMessage],
-                //     this.ETHERS_EVENT_ID[EVENT.RollbackMessage],
-                //     this.ETHERS_EVENT_ID[EVENT.RollbackExecuted]
-                // ]
-
-                eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)
-            ]
+            topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
         }
 
         this.provider.on(filter, async (log: any, event: any) => {
@@ -135,6 +103,7 @@ export class EvmSubscriber extends BaseSubscriber {
                 this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
             }
         })
+
         this.provider.on('poll', () => {
             this.logLatestPolling()
         })

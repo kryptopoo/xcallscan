@@ -3,6 +3,7 @@ import { Db } from '../../data/Db'
 import { BTP_NETWORK_ID, INTENTS_EVENT, MSG_STATUS, NETWORK } from '../../common/constants'
 import { EventLog, IntentsEventLogData } from '../../types/EventLog'
 import { EventModel, MessageModel } from '../../types/DataModels'
+import { sleep } from '../../common/helper'
 
 export class IntentsFetcher {
     private _db = new Db()
@@ -63,6 +64,9 @@ export class IntentsFetcher {
 
             // OrderClosed
             if (data.eventName == INTENTS_EVENT.OrderClosed) {
+                // wait updating OrderFilled
+                if (srcNetwork == destNetwork) await sleep(1000)
+
                 await this._db.updateIntentsMessageOrderClosed(
                     intentsOrderId,
                     srcNetwork,
@@ -72,6 +76,8 @@ export class IntentsFetcher {
                     data.txHash
                 )
             }
+
+            // OrderCancelled
         }
     }
 }

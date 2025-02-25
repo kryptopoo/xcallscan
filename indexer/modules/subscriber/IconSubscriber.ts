@@ -125,15 +125,6 @@ export class IconSubscriber extends BaseSubscriber {
             this.iconService = new IconService(new HttpProvider(this.url))
         }
 
-        // const iconEventNames = [
-        //     'CallMessageSent(Address,str,int)',
-        //     'CallMessage(str,str,int,int,bytes)',
-        //     'CallExecuted(int,int,str)',
-        //     'ResponseMessage(int,int)',
-        //     'RollbackMessage(int)',
-        //     'RollbackExecuted(int)'
-        // ]
-
         const onerror = (error: any) => {
             this.logger.error(`${this.network} onerror ${JSON.stringify(error)}`)
 
@@ -176,6 +167,15 @@ export class IconSubscriber extends BaseSubscriber {
                                     calbback(eventLog)
                                 }
                             }
+                            // fix multiple CallExecuted txs
+                        } else if (decodeEventLog._reqId) {
+                            for (let i = 0; i < txsInBlock.length; i++) {
+                                const txInBlock = txsInBlock[i]
+                                if (decodeEventLog._reqId === txInBlock.decodeEventLog._reqId) {
+                                    const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
+                                    calbback(eventLog)
+                                }
+                            }
                         } else {
                             const eventLog = this.buildEventLog(txsInBlock[0].block, txsInBlock[0].tx, eventName, decodeEventLog)
                             calbback(eventLog)
@@ -200,12 +200,6 @@ export class IconSubscriber extends BaseSubscriber {
                 })
             }
             const lastBlock = await this.iconService.getLastBlock().execute()
-            // const specs = iconEventNames.map(
-            //     (n) => new EventMonitorSpec(BigNumber(lastBlock.height), new EventFilter(n, this.contractAddress), true, this.interval)
-            // )
-            // const monitorEvents = specs.map((s) =>
-            //     this.iconService.monitorEvent(s, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)
-            // )
             const spec = new EventMonitorSpec(BigNumber(lastBlock.height), allEventFilters, true, this.interval)
             this.iconService.monitorEvent(spec, async (notification: EventNotification) => await ondata(notification), onerror, onprogress)
         }
