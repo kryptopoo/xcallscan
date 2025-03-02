@@ -1,5 +1,9 @@
-import { EventLogData } from '../types/EventLog'
+import { EventLogData, IntentsEventLogData } from '../types/EventLog'
 
 export interface IDecoder {
-    decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | undefined>
+    // decoding for xcall contract
+    decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | IntentsEventLogData | undefined>
+
+    // // decoding for intents contract
+    // decodeIntentsEventLog(eventLog: any, eventName: string): Promise<IntentsEventLogData | undefined>
 }

@@ -1,14 +1,16 @@
 import { IDecoder } from '../../interfaces/IDecoder'
 import { ethers } from 'ethers'
-import { EVENT, RPC_URLS } from '../../common/constants'
-import { EventLog, EventLogData } from '../../types/EventLog'
+import { EVENT, INTENTS_EVENT, RPC_URLS } from '../../common/constants'
+import { EventLog, EventLogData, IntentsEventLogData } from '../../types/EventLog'
 import xcallAbi from '../../abi/xcall.abi.json'
+import intentsAbi from '../../abi/Intents.abi.json'
 import assetManagerAbi from '../../abi/AssetManager.abi.json'
 import oracleProxyAbi from '../../abi/OracleProxy.abi.json'
 import balancedDollarAbi from '../../abi/BalancedDollar.abi.json'
 import stackedIcxAbi from '../../abi/StackedICX.abi.json'
 import logger from '../logger/logger'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
+const intentsInterface = new ethers.utils.Interface(intentsAbi)
 
 export class EvmDecoder implements IDecoder {
     private provider: ethers.providers.StaticJsonRpcProvider
@@ -27,18 +29,26 @@ export class EvmDecoder implements IDecoder {
         return undefined
     }
 
-    async decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | undefined> {
-        let rs: EventLogData = {}
+    async decodeEventLog(eventLog: any, eventName: string): Promise<EventLogData | IntentsEventLogData | undefined> {
+        let rs: EventLogData | IntentsEventLogData | undefined = {}
+
+        if (!eventName || eventName == '') return undefined
 
         let decodeEventLog: any = undefined
         try {
-            decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            if (Object.values(EVENT).includes(eventName)) {
+                decodeEventLog = xcallInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            }
+            if (Object.values(INTENTS_EVENT).includes(eventName)) {
+                decodeEventLog = intentsInterface.decodeEventLog(eventName, eventLog.data, eventLog.topics)
+            }
         } catch (error: any) {
             logger.error(`${eventName} decodeEventLog error ${error.code}`)
         }
 
         if (!decodeEventLog) return undefined
 
+        // xcall event
         switch (eventName) {
             case EVENT.CallMessageSent:
                 rs = {
@@ -197,6 +207,89 @@ export class EvmDecoder implements IDecoder {
                     _reqId: decodeEventLog._reqId?.toNumber(),
                     _code: decodeEventLog._code?.toNumber(),
                     _msg: decodeEventLog._msg
+                }
+                break
+            default:
+                break
+        }
+
+        // Intents events
+        switch (eventName) {
+            case INTENTS_EVENT.SwapIntent:
+                rs = {
+                    id: Number(decodeEventLog.id),
+                    emitter: decodeEventLog.emitter,
+                    srcNID: decodeEventLog.srcNID,
+                    dstNID: decodeEventLog.dstNID,
+                    creator: decodeEventLog.creator,
+                    destinationAddress: decodeEventLog.destinationAddress,
+                    token: decodeEventLog.token,
+                    amount: Number(decodeEventLog.amount).toString(),
+                    toToken: decodeEventLog.toToken,
+                    toAmount: Number(decodeEventLog.toAmount).toString(),
+                    data: decodeEventLog.data
+                }
+                break
+            case INTENTS_EVENT.OrderFilled:
+                rs = {
+                    id: Number(decodeEventLog.id),
+                    srcNID: decodeEventLog.srcNID
+                }
+
+                const intentsTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const decodedFill = this.decodeFunction(intentsAbi, 'fill', intentsTx.data)
+                if (decodedFill) {
+                    rs = {
+                        id: Number(decodeEventLog.id),
+                        emitter: decodedFill.order.emitter,
+                        srcNID: decodedFill.order.srcNID,
+                        dstNID: decodedFill.order.dstNID,
+                        creator: decodedFill.order.creator,
+                        destinationAddress: decodedFill.order.destinationAddress,
+                        token: decodedFill.order.token,
+                        amount: Number(decodedFill.order.amount).toString(),
+                        toToken: decodedFill.order.toToken,
+                        toAmount: Number(decodedFill.order.toAmount).toString(),
+                        data: decodedFill.order.data
+                    }
+                }
+
+                break
+            case INTENTS_EVENT.OrderClosed:
+                rs = {
+                    id: Number(decodeEventLog.id)
+                }
+
+                const orderClosedTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const decodedOrderClosed = this.decodeFunction(intentsAbi, 'recvMessage', orderClosedTx.data)
+                if (decodedOrderClosed) {
+                    rs = {
+                        id: Number(decodeEventLog.id),
+                        dstNID: decodedOrderClosed.srcNetwork,
+                        sn: decodedOrderClosed._connSn,
+                        msg: decodedOrderClosed._msg
+                    }
+                }
+
+                break
+            case INTENTS_EVENT.OrderCancelled:
+                rs = {
+                    id: Number(decodeEventLog.id),
+                    srcNID: decodeEventLog.srcNID
+                }
+                break
+
+            case INTENTS_EVENT.Message:
+                rs = {
+                    sn: Number(decodeEventLog.sn),
+                    dstNID: decodeEventLog.targetNetwork.toString(),
+                    msg: decodeEventLog._msg.toString()
+                }
+
+                const orderCancelledTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const decodedOrderCancelled = this.decodeFunction(intentsAbi, 'cancel', orderCancelledTx.data)
+                if (decodedOrderCancelled) {
+                    rs.id = Number(decodedOrderCancelled.id)
                 }
                 break
             default:

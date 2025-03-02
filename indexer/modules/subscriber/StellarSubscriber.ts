@@ -27,7 +27,7 @@ export class StellarSubscriber extends BaseSubscriber {
         return res?.data?.result
     }
 
-    getEvents(startLedger: number) {
+    getEvents(contractAddereses: string[], startLedger: number) {
         const postData = {
             jsonrpc: '2.0',
             id: 8675309,
@@ -37,7 +37,7 @@ export class StellarSubscriber extends BaseSubscriber {
                 filters: [
                     {
                         type: 'contract',
-                        contractIds: this.xcallContracts
+                        contractIds: contractAddereses
                     }
                 ],
                 pagination: {
@@ -72,22 +72,22 @@ export class StellarSubscriber extends BaseSubscriber {
         return this.callRpc(postData)
     }
 
-    async subscribe(callback: ISubscriberCallback): Promise<void> {
+    async subscribe(contractAddresses: string[], eventNames: string[],callback: ISubscriberCallback): Promise<void> {
         this.logger.info(`${this.network} connect ${this.url}`)
-        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contractAddresses)}`)
 
         const latestLedgerRes = await this.getLatestLedger()
         let latestLedger = latestLedgerRes?.sequence
         this.logger.info(`${this.network} latestLedger ${latestLedger}`)
 
-        const task = () => {
+        const task = (contractAddresses: string[]) => {
             let intervalId = setInterval(async () => {
                 try {
                     this.logLatestPolling()
 
                     if (latestLedger) {
                         // get events given contract
-                        const eventsRes = await this.getEvents(latestLedger + 1)
+                        const eventsRes = await this.getEvents(contractAddresses, latestLedger + 1)
                         const events = eventsRes?.events
 
                         if (eventsRes && events && events.length > 0) {
@@ -120,7 +120,6 @@ export class StellarSubscriber extends BaseSubscriber {
                                 const invokeHostFunctionOp = res.operations[0]
                                 const contractEvents = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractEvent')
 
-                                const eventNames = Object.values(EVENT)
                                 for (let j = 0; j < eventNames.length; j++) {
                                     const eventName = eventNames[j]
                                     const contractEvent = contractEvents.find((obj: any) => obj.topics.includes(eventName))
@@ -154,12 +153,12 @@ export class StellarSubscriber extends BaseSubscriber {
                     // restart task
                     this.logger.info(`${this.network} restart task`)
                     clearInterval(intervalId)
-                    task()
+                    task(contractAddresses)
                 }
             }, this.interval)
         }
 
         // run task
-        task()
+        task(contractAddresses)
     }
 }

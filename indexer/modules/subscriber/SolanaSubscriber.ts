@@ -15,11 +15,11 @@ export class SolanaSubscriber extends BaseSubscriber {
         this.solanaConnection = new solanaWeb3.Connection(this.url)
     }
 
-    async subscribe(callback: ISubscriberCallback) {
+    async subscribe(contractAddresses: string[], eventNames: string[], callback: ISubscriberCallback) {
         this.logger.info(`${this.network} connect ${this.url}`)
-        this.logger.info(`${this.network} listen events on ${JSON.stringify(this.xcallContracts)}`)
+        this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contractAddresses)}`)
 
-        const addressPubkey = new solanaWeb3.PublicKey(this.xcallContracts[0])
+        const addressPubkey = new solanaWeb3.PublicKey(contractAddresses[0])
         const latestTxs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 1 }), {
             delay: 1000,
             maxTry: 3,
@@ -70,7 +70,6 @@ export class SolanaSubscriber extends BaseSubscriber {
                             )
 
                             if (txDetail) {
-                                const eventNames = Object.values(EVENT)
                                 for (let j = 0; j < eventNames.length; j++) {
                                     const decodedEventName = eventNames[j]
                                     const decodeEventLog = await this.decoder.decodeEventLog(txDetail, decodedEventName)
@@ -82,7 +81,7 @@ export class SolanaSubscriber extends BaseSubscriber {
                                             blockTimestamp: Number(txDetail.blockTime),
                                             txHash: txHash,
                                             txFrom: txDetail.transaction.message.accountKeys.find((k) => k.signer)?.pubkey.toString() ?? '',
-                                            txTo: this.xcallContracts[0],
+                                            txTo: contractAddresses[0],
                                             txFee: txDetail.meta?.fee.toString(),
                                             // // txValue: tx.value.toString(),
                                             eventName: decodedEventName,

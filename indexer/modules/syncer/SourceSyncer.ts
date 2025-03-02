@@ -67,7 +67,9 @@ export class SourceSyncer implements ISourceSyncer {
             fee: event.tx_fee,
             value: event.tx_value,
 
-            synced: false
+            synced: false,
+
+            intents_order_id: 0
         }
 
         return msg

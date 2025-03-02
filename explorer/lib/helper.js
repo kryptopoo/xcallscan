@@ -116,6 +116,7 @@ const MSG_ACTION_TYPES = {
     SendMsg: 'SendMsg',
     Transfer: 'Transfer',
     Swap: 'Swap',
+    SwapIntent: 'SwapIntent',
     Loan: 'Loan'
 }
 

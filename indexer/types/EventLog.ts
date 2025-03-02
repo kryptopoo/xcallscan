@@ -36,3 +36,22 @@ export type EventLogData = {
     _decodedFrom?: string
     _decodedTo?: string
 }
+
+export type IntentsEventLogData = {
+    id?: number
+    emitter?: string
+    srcNID?: string
+    dstNID?: string
+    creator?: string
+    destinationAddress?: string
+    token?: string
+    amount?: string
+    toToken?: string
+    toAmount?: string
+    data?: string
+
+    solverAddress?: string
+
+    sn?: number
+    msg?: string
+}
