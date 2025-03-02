@@ -237,6 +237,15 @@ class Db {
     }
 
     // Intents Messages
+    async getIntentsMessage(intents_order_id: number, src_network: string, dest_network: string) {
+        const rs = await this.pool.query(`SELECT * FROM messages WHERE src_network = $1 AND dest_network = $2 AND intents_order_id = $3`, [
+            src_network,
+            dest_network,
+            intents_order_id
+        ])
+        return rs.rowCount == 0 ? [] : rs.rows
+    }
+
     async insertIntentsMessage(message: MessageModel) {
         const existedTxs = await this.pool.query(`SELECT 1 FROM messages where intents_order_id = $1 and src_network = $2 and dest_network = $3`, [
             message.intents_order_id,
@@ -347,7 +356,39 @@ class Db {
         return 0
     }
 
-    async updateIntentsMessageOrderCancelled(intents_order_id: number, src_network: string, dest_network: string) {}
+    async updateIntentsMessageOrderCancelled(
+        intents_order_id: number,
+        src_network: string,
+        dest_network: string,
+        rollback_block_number: number,
+        rollback_block_timestamp: number,
+        rollback_tx_hash: string,
+        rollback_error: string | undefined
+    ) {
+        try {
+            const rs = await this.pool.query(
+                `UPDATE messages   
+                SET status = $4, rollback_block_number = $5, rollback_block_timestamp = $6, rollback_tx_hash = $7, rollback_error = $8, updated_at = $9
+                WHERE intents_order_id = $1 AND src_network = $2 AND dest_network = $3 `,
+                [
+                    intents_order_id,
+                    src_network,
+                    dest_network,
+                    MSG_STATUS.Rollbacked,
+                    rollback_block_number,
+                    rollback_block_timestamp,
+                    rollback_tx_hash,
+                    rollback_error,
+                    nowTimestamp()
+                ]
+            )
+            return rs.rowCount ?? 0
+        } catch (error: any) {
+            logger.error(`db: error ${error.message}`)
+        }
+
+        return 0
+    }
 
     async getMessageStatus(sn: number, src_network: string, dest_network: string, src_app: string) {
         const msgStatusRs = await this.pool.query(
@@ -370,6 +411,7 @@ class Db {
 
     async updateMessageAction(
         sn: number,
+        intents_order_id: number,
         src_network: string,
         dest_network: string,
         action_type: string,
@@ -377,13 +419,24 @@ class Db {
         action_amount_usd: string
     ) {
         try {
-            const rs = await this.pool.query(
-                `UPDATE messages   
-                SET action_type = $4, action_detail = $5, action_amount_usd = $6
-                WHERE sn = $1 AND src_network = $2 AND dest_network = $3 `,
-                [sn, src_network, dest_network, action_type, action_detail, action_amount_usd]
-            )
-            return rs.rowCount ?? 0
+            if (sn > 0) {
+                const rs = await this.pool.query(
+                    `UPDATE messages   
+                    SET action_type = $4, action_detail = $5, action_amount_usd = $6
+                    WHERE sn = $1 AND src_network = $2 AND dest_network = $3 `,
+                    [sn, src_network, dest_network, action_type, action_detail, action_amount_usd]
+                )
+                return rs.rowCount ?? 0
+            }
+            if (intents_order_id > 0) {
+                const rs = await this.pool.query(
+                    `UPDATE messages   
+                    SET action_type = $4, action_detail = $5, action_amount_usd = $6
+                    WHERE intents_order_id = $1 AND src_network = $2 AND dest_network = $3 `,
+                    [intents_order_id, src_network, dest_network, action_type, action_detail, action_amount_usd]
+                )
+                return rs.rowCount ?? 0
+            }
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }

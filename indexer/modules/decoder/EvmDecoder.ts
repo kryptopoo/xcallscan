@@ -285,6 +285,12 @@ export class EvmDecoder implements IDecoder {
                     dstNID: decodeEventLog.targetNetwork.toString(),
                     msg: decodeEventLog._msg.toString()
                 }
+
+                const orderCancelledTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const decodedOrderCancelled = this.decodeFunction(intentsAbi, 'cancel', orderCancelledTx.data)
+                if (decodedOrderCancelled) {
+                    rs.id = Number(decodedOrderCancelled.id)
+                }
                 break
             default:
                 break

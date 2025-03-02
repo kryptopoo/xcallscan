@@ -57,6 +57,47 @@ export class EvmSubscriber extends BaseSubscriber {
         return ''
     }
 
+    async fetchEventLog(log: any) {
+        this.logger.info(`${this.network} ondata ${JSON.stringify(log)}`)
+
+        try {
+            const eventName = this.getEventName(log.topics)
+            console.log('eventName', eventName)
+            const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
+
+            if (decodeEventLog) {
+                const block = await retryAsync(() => this.provider.getBlock(log.blockNumber), {
+                    delay: 1000,
+                    maxTry: 3,
+                    onError: (err, currentTry) => {
+                        this.logger.error(`${this.network} retry ${currentTry} getBlock ${err}`)
+                    }
+                })
+
+                const tx = await retryAsync(() => this.provider.getTransactionReceipt(log.transactionHash), {
+                    delay: 1000,
+                    maxTry: 3,
+                    onError: (err, currentTry) => {
+                        this.logger.error(`${this.network} retry ${currentTry} getTransactionReceipt ${err}`)
+                    }
+                })
+
+                if (tx) {
+                    const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
+                    return eventLog
+                } else {
+                    this.logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
+                }
+            } else {
+                this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+            }
+        } catch (error) {
+            this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
+        }
+
+        return undefined
+    }
+
     subscribe(contracts: string[], eventNames: string[], callback: ISubscriberCallback) {
         this.logger.info(`${this.network} connect ${this.url}`)
         this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contracts)}`)
@@ -67,41 +108,8 @@ export class EvmSubscriber extends BaseSubscriber {
         }
 
         this.provider.on(filter, async (log: any, event: any) => {
-            this.logger.info(`${this.network} ondata ${JSON.stringify(log)}`)
-
-            try {
-                const eventName = this.getEventName(log.topics)
-                const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
-
-                if (decodeEventLog) {
-                    const block = await retryAsync(() => this.provider.getBlock(log.blockNumber), {
-                        delay: 1000,
-                        maxTry: 3,
-                        onError: (err, currentTry) => {
-                            this.logger.error(`${this.network} retry ${currentTry} getBlock ${err}`)
-                        }
-                    })
-
-                    const tx = await retryAsync(() => this.provider.getTransactionReceipt(log.transactionHash), {
-                        delay: 1000,
-                        maxTry: 3,
-                        onError: (err, currentTry) => {
-                            this.logger.error(`${this.network} retry ${currentTry} getTransactionReceipt ${err}`)
-                        }
-                    })
-
-                    if (tx) {
-                        const eventLog = this.buildEventLog(block, tx, eventName, decodeEventLog)
-                        callback(eventLog)
-                    } else {
-                        this.logger.info(`${this.network} ondata ${eventName} could not find tx ${log.transactionHash}`)
-                    }
-                } else {
-                    this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
-                }
-            } catch (error) {
-                this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
-            }
+            const eventLog = await this.fetchEventLog(log)
+            if (eventLog) callback(eventLog)
         })
 
         this.provider.on('poll', () => {

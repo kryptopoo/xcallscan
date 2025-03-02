@@ -52,13 +52,6 @@ export class IconSubscriber extends BaseSubscriber {
     }
 
     private getEventName(log: string) {
-        // if (log.includes('CallMessageSent(Address,str,int)')) return EVENT.CallMessageSent
-        // if (log.includes('CallMessage(str,str,int,int,bytes)')) return EVENT.CallMessage
-        // if (log.includes('CallExecuted(int,int,str)')) return EVENT.CallExecuted
-        // if (log.includes('ResponseMessage(int,int)')) return EVENT.ResponseMessage
-        // if (log.includes('RollbackMessage(int)')) return EVENT.RollbackMessage
-        // if (log.includes('RollbackExecuted(int)')) return EVENT.RollbackExecuted
-
         for (const [key, value] of Object.entries(this.ICON_EVENT_ID)) {
             if (log.includes(value)) return key
         }

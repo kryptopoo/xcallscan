@@ -78,6 +78,33 @@ export class IntentsFetcher {
             }
 
             // OrderCancelled
+            // TODO: review & test
+            if (data.eventName == INTENTS_EVENT.OrderCancelled) {
+                await this._db.updateIntentsMessageOrderCancelled(
+                    intentsOrderId,
+                    srcNetwork,
+                    destNetwork,
+                    data.blockNumber,
+                    data.blockTimestamp,
+                    data.txHash,
+                    INTENTS_EVENT.OrderCancelled
+                )
+            }
+
+            if (data.eventName == INTENTS_EVENT.Message) {
+                // OrderCancelled: if Message emitted by calling calcel method
+                if (intentsOrderId) {
+                    await this._db.updateIntentsMessageOrderCancelled(
+                        intentsOrderId,
+                        srcNetwork,
+                        destNetwork,
+                        data.blockNumber,
+                        data.blockTimestamp,
+                        data.txHash,
+                        INTENTS_EVENT.OrderCancelled
+                    )
+                }
+            }
         }
     }
 }
