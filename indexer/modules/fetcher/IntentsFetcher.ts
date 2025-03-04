@@ -65,7 +65,19 @@ export class IntentsFetcher {
             // OrderClosed
             if (data.eventName == INTENTS_EVENT.OrderClosed) {
                 // wait updating OrderFilled
-                if (srcNetwork == destNetwork) await sleep(1000)
+                if (srcNetwork == destNetwork) {
+                    // no OrderFilled event in this case
+                    await this._db.updateIntentsMessageOrderFilled(
+                        intentsOrderId,
+                        srcNetwork,
+                        destNetwork,
+                        data.blockNumber,
+                        data.blockTimestamp,
+                        data.txHash
+                    )
+                    
+                    await sleep(1000)
+                }
 
                 await this._db.updateIntentsMessageOrderClosed(
                     intentsOrderId,
