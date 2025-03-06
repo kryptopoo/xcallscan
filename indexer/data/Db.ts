@@ -302,7 +302,7 @@ class Db {
         try {
             const rs = await this.pool.query(
                 `UPDATE messages   
-                SET dest_block_number = $4, dest_block_timestamp = $5, dest_tx_hash = $6, status = $7, updated_at = $8
+                SET dest_block_number = $4, dest_block_timestamp = $5, dest_tx_hash = $6, status = $7, updated_at = $8 
                 WHERE intents_order_id = $1 AND src_network = $2 AND dest_network = $3 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
                 [
                     intents_order_id,
@@ -327,7 +327,6 @@ class Db {
     async updateIntentsMessageOrderClosed(
         intents_order_id: number,
         src_network: string,
-        dest_network: string,
         response_block_number: number,
         response_block_timestamp: number,
         response_tx_hash: string
@@ -335,12 +334,11 @@ class Db {
         try {
             const rs = await this.pool.query(
                 `UPDATE messages   
-                SET status = $4, response_block_number = $5, response_block_timestamp = $6, response_tx_hash = $7, updated_at = $8
-                WHERE intents_order_id = $1 AND src_network = $2 AND dest_network = $3 `,
+                SET status = $3, response_block_number = $4, response_block_timestamp = $5, response_tx_hash = $6, updated_at = $7
+                WHERE intents_order_id = $1 AND src_network = $2 `,
                 [
                     intents_order_id,
                     src_network,
-                    dest_network,
                     MSG_STATUS.Executed,
                     response_block_number,
                     response_block_timestamp,

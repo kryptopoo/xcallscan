@@ -79,14 +79,7 @@ export class IntentsFetcher {
                     await sleep(1000)
                 }
 
-                await this._db.updateIntentsMessageOrderClosed(
-                    intentsOrderId,
-                    srcNetwork,
-                    destNetwork,
-                    data.blockNumber,
-                    data.blockTimestamp,
-                    data.txHash
-                )
+                await this._db.updateIntentsMessageOrderClosed(intentsOrderId, srcNetwork, data.blockNumber, data.blockTimestamp, data.txHash)
             }
 
             // OrderCancelled
