@@ -9,8 +9,6 @@ import { SubscriberFactory } from './modules/subscriber/SubscriberFactory'
 import { Analyzer } from './modules/analyzer/Analyzer'
 import logger from './modules/logger/logger'
 import { Db } from './data/Db'
-import { MessageModel } from './types/DataModels'
-import { IntentsEventLogData } from './types/EventLog'
 import { IntentsFetcher } from './modules/fetcher/IntentsFetcher'
 
 import dotenv from 'dotenv'
@@ -94,8 +92,6 @@ const startWs = () => {
 const startSubscriber = () => {
     logger.info('start subscriber...')
 
-    const db = new Db()
-
     // only subscribe networks in .env
     const subscribers = SUBSCRIBER_NETWORKS.map((network) => SubscriberFactory.createSubscriber(network))
 
@@ -113,7 +109,7 @@ const startSubscriber = () => {
         if (subscriber) {
             // xcall
             if (CONTRACT[subscriber.network].xcall.length > 0) {
-                subscriber.subscribe(CONTRACT[subscriber.network].xcall, Object.values(EVENT), async (data) => {
+                subscriber.subscribe(CONTRACT[subscriber.network].xcall, Object.values(EVENT), [], async (data) => {
                     subscriber.logger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
 
                     try {
@@ -153,7 +149,7 @@ const startSubscriber = () => {
 
             // intents
             if (CONTRACT[subscriber.network].intents.length > 0) {
-                subscriber.subscribe(CONTRACT[subscriber.network].intents, Object.values(INTENTS_EVENT), async (data) => {
+                subscriber.subscribe(CONTRACT[subscriber.network].intents, Object.values(INTENTS_EVENT), [], async (data) => {
                     subscriber.logger.info(`${subscriber.network} subscribe data ${JSON.stringify(data)}`)
 
                     await intentsFetcher.storeDb(subscriber.network, data)

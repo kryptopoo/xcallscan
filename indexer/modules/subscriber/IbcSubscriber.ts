@@ -89,58 +89,63 @@ export class IbcSubscriber extends BaseSubscriber {
         }
     }
 
-    subscribe(contractAddresses: string[], eventNames: string[], callback: ISubscriberCallback) {
-        const onmessage = async (event: any) => {
-            const eventJson = JSON.parse(event)
-            if (eventJson && eventJson.result && eventJson.result.data) {
-                this.logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
+    subscribe(contractAddresses: string[], eventNames: string[], txHashes: string[], callback: ISubscriberCallback) {
+        if (txHashes.length > 0) {
+            // TODO
+            // subscribe data by specific transaction hashes
+        } else {
+            const onmessage = async (event: any) => {
+                const eventJson = JSON.parse(event)
+                if (eventJson && eventJson.result && eventJson.result.data) {
+                    this.logger.info(`${this.network} ondata ${JSON.stringify(eventJson.result.data)}`)
 
-                try {
-                    const events = eventJson.result.data.value.TxResult.result.events as any[]
-                    const txRaw = eventJson.result.data.value.TxResult.tx as string
+                    try {
+                        const events = eventJson.result.data.value.TxResult.result.events as any[]
+                        const txRaw = eventJson.result.data.value.TxResult.tx as string
 
-                    const eventName = this.getEventName(events)
-                    const eventLogData = await this.decoder.decodeEventLog(events, eventName)
+                        const eventName = this.getEventName(events)
+                        const eventLogData = await this.decoder.decodeEventLog(events, eventName)
 
-                    if (eventLogData && txRaw) {
-                        const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
+                        if (eventLogData && txRaw) {
+                            const txHash = toHex(sha256(Buffer.from(txRaw, 'base64')))
 
-                        const rpcUrls = RPC_URLS[this.network]
-                        for (let i = 0; i < rpcUrls.length; i++) {
-                            const rpcUrl = rpcUrls[i]
+                            const rpcUrls = RPC_URLS[this.network]
+                            for (let i = 0; i < rpcUrls.length; i++) {
+                                const rpcUrl = rpcUrls[i]
 
-                            const { tx, block } = await retryAsync(
-                                async () => {
-                                    const client = await StargateClient.connect(rpcUrl)
-                                    const getTxRs = await client.getTx(txHash)
-                                    const getBlockRs = await client.getBlock(getTxRs?.height)
-                                    client.disconnect()
-                                    return { tx: getTxRs, block: getBlockRs }
-                                },
-                                { delay: 1000, maxTry: 3 }
-                            )
+                                const { tx, block } = await retryAsync(
+                                    async () => {
+                                        const client = await StargateClient.connect(rpcUrl)
+                                        const getTxRs = await client.getTx(txHash)
+                                        const getBlockRs = await client.getBlock(getTxRs?.height)
+                                        client.disconnect()
+                                        return { tx: getTxRs, block: getBlockRs }
+                                    },
+                                    { delay: 1000, maxTry: 3 }
+                                )
 
-                            if (!tx || !block) {
-                                // try changing to next rpc
-                                if (i < rpcUrls.length - 1) this.logger.error(`${this.network} changing rpc to ${rpcUrls[i + 1]}`)
-                                if (i == rpcUrls.length - 1) this.logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
-                            } else {
-                                const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
-                                callback(eventLog)
-                                break
+                                if (!tx || !block) {
+                                    // try changing to next rpc
+                                    if (i < rpcUrls.length - 1) this.logger.error(`${this.network} changing rpc to ${rpcUrls[i + 1]}`)
+                                    if (i == rpcUrls.length - 1) this.logger.info(`${this.network} ondata ${eventName} could not find tx ${txHash}`)
+                                } else {
+                                    const eventLog = this.buildEventLog(block, tx, eventName, eventLogData)
+                                    callback(eventLog)
+                                    break
+                                }
                             }
+                        } else {
+                            this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
                         }
-                    } else {
-                        this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
+                    } catch (error) {
+                        this.logger.info(`${this.network} error ${JSON.stringify(error)}`)
+                        this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
                     }
-                } catch (error) {
-                    this.logger.info(`${this.network} error ${JSON.stringify(error)}`)
-                    this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
                 }
             }
-        }
 
-        this.connect(contractAddresses, onmessage)
+            this.connect(contractAddresses, onmessage)
+        }
     }
 
     private disconnect() {

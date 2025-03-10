@@ -118,6 +118,7 @@
         "arbitrum": {
             "api": "https://api.arbiscan.io/api",
             "rpcs": [
+                "https://light-convincing-sunset.arbitrum-mainnet.quiknode.pro",
                 "https://arb-mainnet.g.alchemy.com/v2",
                 "https://rpc.ankr.com/arbitrum",
                 "https://arbitrum-one.publicnode.com",
@@ -158,7 +159,7 @@
             "block_timestamp": 0
         },
         "polygon": {
-            "api": "https://api-amoy.polygonscan.com/api",
+            "api": "https://api.polygonscan.com/api",
             "rpcs": [
                 "https://polygon-mainnet.g.alchemy.com/v2",
                 "https://rpc.ankr.com/polygon",
@@ -256,7 +257,10 @@
         },
         "sui": {
             "xcall": ["0xe9ae3e2d32cdf659ad5db4219b1086cc0b375da5c4f8859c872148895a2eace2"],
-            "intents": ["0xbf8044a8f498b43e48ad9ad8a7d23027a45255903e8b4765dda38da2d1b89600"]
+            "intents": [
+                "0xbf8044a8f498b43e48ad9ad8a7d23027a45255903e8b4765dda38da2d1b89600",
+                "0x60e1374475a5ed016e264c1c3a59ee9c1a42726f93b100ee22cad053f293b6f5"
+            ]
         },
         "polygon": {
             "xcall": ["0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b"],

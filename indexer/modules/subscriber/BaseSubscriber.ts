@@ -68,5 +68,5 @@ export abstract class BaseSubscriber {
         }
     }
 
-    abstract subscribe(contractAddresses: string[], eventNames: string[], callback: ISubscriberCallback): void
+    abstract subscribe(contractAddresses: string[], eventNames: string[], txHashes: string[], callback: ISubscriberCallback): void
 }

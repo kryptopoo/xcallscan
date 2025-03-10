@@ -8,7 +8,7 @@ import { EvmDecoder } from '../decoder/EvmDecoder'
 import { BaseSubscriber } from './BaseSubscriber'
 
 export class EvmSubscriber extends BaseSubscriber {
-    private provider: ethers.providers.StaticJsonRpcProvider
+    private provider: ethers.providers.BaseProvider
 
     ETHERS_EVENT_ID: { [eventName: string]: string } = {
         [EVENT.CallMessageSent]: ethers.utils.id('CallMessageSent(address,string,uint256)'),
@@ -25,9 +25,12 @@ export class EvmSubscriber extends BaseSubscriber {
     }
 
     constructor(network: string) {
-        super(network, RPC_URLS[network], new EvmDecoder(network))
+        const urls = RPC_URLS[network].slice(0, 3)
 
-        this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
+        super(network, urls, new EvmDecoder(network))
+
+        // this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
+        this.provider = new ethers.providers.FallbackProvider(urls.map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
         // // pollingInterval default is 4000 ms
         this.provider.pollingInterval = this.interval
     }
@@ -62,7 +65,6 @@ export class EvmSubscriber extends BaseSubscriber {
 
         try {
             const eventName = this.getEventName(log.topics)
-            console.log('eventName', eventName)
             const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
 
             if (decodeEventLog) {
@@ -98,22 +100,42 @@ export class EvmSubscriber extends BaseSubscriber {
         return undefined
     }
 
-    subscribe(contracts: string[], eventNames: string[], callback: ISubscriberCallback) {
-        this.logger.info(`${this.network} connect ${this.url}`)
+    async subscribe(contracts: string[], eventNames: string[], txHashes: string[], callback: ISubscriberCallback) {
+        this.logger.info(`${this.network} connect ${JSON.stringify(this.url)}`)
         this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contracts)}`)
 
-        const filter = {
-            address: contracts[0],
-            topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
+        if (txHashes.length > 0) {
+            // subscribe data by specific transaction hashes
+            for (let i = 0; i < txHashes.length; i++) {
+                const txHash = txHashes[i]
+
+                const tx = await retryAsync(() => this.provider.getTransactionReceipt(txHash), {
+                    delay: 1000,
+                    maxTry: 3,
+                    onError: (err, currentTry) => {
+                        this.logger.error(`${this.network} retry ${currentTry} getTransactionReceipt ${err}`)
+                    }
+                })
+
+                for (let j = 0; j < tx.logs.length; j++) {
+                    const eventLog = await this.fetchEventLog(tx.logs[j])
+                    if (eventLog && eventNames.includes(eventLog.eventName)) callback(eventLog)
+                }
+            }
+        } else {
+            const filter = {
+                address: contracts[0],
+                topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
+            }
+
+            this.provider.on(filter, async (log: any, event: any) => {
+                const eventLog = await this.fetchEventLog(log)
+                if (eventLog) callback(eventLog)
+            })
+
+            this.provider.on('poll', () => {
+                this.logLatestPolling()
+            })
         }
-
-        this.provider.on(filter, async (log: any, event: any) => {
-            const eventLog = await this.fetchEventLog(log)
-            if (eventLog) callback(eventLog)
-        })
-
-        this.provider.on('poll', () => {
-            this.logLatestPolling()
-        })
     }
 }

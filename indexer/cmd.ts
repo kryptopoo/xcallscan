@@ -148,13 +148,25 @@ const runCmd = async () => {
                 const msg = msgs[index]
 
                 if (msg.src_tx_hash && msg.dest_tx_hash) {
-                    console.log(`id:${msg.id} sn:${msg.sn} ${msg.src_network} ${msg.src_tx_hash} -> ${msg.dest_network} ${msg.dest_tx_hash}`)
+                    console.log(
+                        `id:${msg.id} sn:${msg.sn} intents_order_id:${msg.intents_order_id} ${msg.src_network} ${msg.src_tx_hash} -> ${msg.dest_network} ${msg.dest_tx_hash}`
+                    )
 
                     const act = await actionParser.parseMgsAction(msg.src_network, msg.src_tx_hash, msg.dest_network, msg.dest_tx_hash)
-                    console.log(`id:${msg.id} sn:${msg.sn} msg_action`, act)
+                    console.log(`id:${msg.id} sn:${msg.sn} intents_order_id:${msg.intents_order_id} msg_action`, act)
 
                     if (act && storedb) {
-                        await db.updateMessageAction(msg.sn, msg.src_network, msg.dest_network, act.type, JSON.stringify(act.detail), act.amount_usd)
+                        if (msg.sn > 0) {
+                            await db.updateMessageAction(
+                                msg.sn,
+                                msg.intents_order_id,
+                                msg.src_network,
+                                msg.dest_network,
+                                act.type,
+                                JSON.stringify(act.detail),
+                                act.amount_usd
+                            )
+                        }
                     }
                 }
             }
