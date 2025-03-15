@@ -209,7 +209,7 @@
     "contracts": {
         "icon": {
             "xcall": ["cxa07f426062a1384bdd762afa6a87d123fbc81c75"],
-            "intents": []
+            "intents": ["cx55f6ac86d82a14022c338c8c0033eeceeeab382d"]
         },
         "bsc": {
             "xcall": ["0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b"],

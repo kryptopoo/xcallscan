@@ -2,9 +2,9 @@ import { IconService, HttpProvider, EventMonitorSpec, EventNotification, EventFi
 import { retryAsync } from 'ts-retry'
 
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { CONTRACT, EVENT, NETWORK, WSS_URLS } from '../../common/constants'
+import { CONTRACT, EVENT, INTENTS_EVENT, NETWORK, WSS_URLS } from '../../common/constants'
 import { IconDecoder } from '../decoder/IconDecoder'
-import { EventLog, EventLogData } from '../../types/EventLog'
+import { EventLog, EventLogData, IntentsEventLogData } from '../../types/EventLog'
 import { BaseSubscriber } from './BaseSubscriber'
 
 export class IconSubscriber extends BaseSubscriber {
@@ -19,12 +19,13 @@ export class IconSubscriber extends BaseSubscriber {
         [EVENT.CallExecuted]: 'CallExecuted(int,int,str)',
         [EVENT.ResponseMessage]: 'ResponseMessage(int,int)',
         [EVENT.RollbackMessage]: 'RollbackMessage(int)',
-        [EVENT.RollbackExecuted]: 'RollbackExecuted(int)'
-        // [INTENTS_EVENT.SwapIntent]: ethers.utils.id('SwapIntent(uint256,string,string,string,string,string,string,uint256,string,uint256,bytes)'),
-        // [INTENTS_EVENT.OrderFilled]: ethers.utils.id('OrderFilled(uint256,string)'),
-        // [INTENTS_EVENT.OrderClosed]: ethers.utils.id('OrderClosed(uint256)'),
-        // [INTENTS_EVENT.OrderCancelled]: ethers.utils.id('OrderCancelled(uint256,string)'),
-        // [INTENTS_EVENT.Message]: ethers.utils.id('Message(string,uint256,bytes)')
+        [EVENT.RollbackExecuted]: 'RollbackExecuted(int)',
+
+        [INTENTS_EVENT.SwapIntent]: 'SwapIntent(int,str,str,str,str,str,str,int,str,int,bytes)',
+        [INTENTS_EVENT.OrderFilled]: 'OrderFilled(int,str)',
+        [INTENTS_EVENT.OrderClosed]: 'OrderClosed(int)',
+        [INTENTS_EVENT.OrderCancelled]: 'OrderCancelled(int,str)',
+        [INTENTS_EVENT.Message]: 'Message(str,int,bytes)'
     }
 
     constructor(network: string) {
@@ -36,7 +37,7 @@ export class IconSubscriber extends BaseSubscriber {
         this.interval = Math.round(this.interval / 1000)
     }
 
-    private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData) {
+    private buildEventLog(block: any, tx: any, eventName: string, eventData: EventLogData | IntentsEventLogData) {
         return {
             // txRaw: JSON.stringify(tx),
             blockNumber: block.height,
@@ -103,13 +104,93 @@ export class IconSubscriber extends BaseSubscriber {
         return []
     }
 
-    async subscribe(contractAddresses: string[], eventNames: string[], txHashes: string[], calbback: ISubscriberCallback) {
+    async fetchEventLog(log: any) {
+        try {
+            const eventName = this.getEventName(JSON.stringify(log))
+            this.logger.info(`log ${JSON.stringify(log)}`)
+            const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
+            this.logger.info(`eventName ${eventName} decodeEventLog ${JSON.stringify(log)}`)
+
+            if (decodeEventLog) {
+                // init another iconService to avoid conflict
+                const iconService = new IconService(new HttpProvider(this.url))
+
+                if (log.height && log.hash) {
+                    // const eventLogData = decodeEventLog as EventLogData
+
+                    let blockHash = log.hash
+                    let blockNumber = log.height
+                    let prevBlockNumber = new BigNumber(Number(log.height) - 1)
+                    let txsInBlock = await this.findTxsInBlock(iconService, prevBlockNumber, eventName)
+                    if (txsInBlock.length === 0) {
+                        // try current block from notification
+                        txsInBlock = await this.findTxsInBlock(iconService, blockNumber, eventName)
+                    }
+
+                    if (txsInBlock.length > 0) {
+                        // fix duplicated txs
+                        const _sn = (decodeEventLog as EventLogData)._sn
+                        const _reqId = (decodeEventLog as EventLogData)._reqId
+                        if (_sn) {
+                            for (let i = 0; i < txsInBlock.length; i++) {
+                                const txInBlock = txsInBlock[i]
+                                if (_sn === txInBlock.decodeEventLog._sn) {
+                                    const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
+                                    return eventLog
+                                }
+                            }
+                            // fix multiple CallExecuted txs
+                        } else if (_reqId) {
+                            for (let i = 0; i < txsInBlock.length; i++) {
+                                const txInBlock = txsInBlock[i]
+                                if (_reqId === txInBlock.decodeEventLog._reqId) {
+                                    const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
+                                    return eventLog
+                                }
+                            }
+                        } else {
+                            const eventLog = this.buildEventLog(txsInBlock[0].block, txsInBlock[0].tx, eventName, decodeEventLog)
+                            return eventLog
+                        }
+                    } else {
+                        this.logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
+        }
+
+        return undefined
+    }
+
+    async subscribe(contractAddresses: string[], eventNames: string[], txHashes: string[], callback: ISubscriberCallback) {
         this.logger.info(`${this.network} connect ${this.url}`)
         this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contractAddresses)}`)
 
         if (txHashes.length > 0) {
-            // TODO
             // subscribe data by specific transaction hashes
+
+            for (let i = 0; i < txHashes.length - 1; i++) {
+                const hash = txHashes[i]
+                const confirmedTxDetail = await retryAsync(() => this.iconService.getTransactionResult(hash).execute(), {
+                    delay: 1000,
+                    maxTry: 3
+                })
+
+                // console.log('confirmedTxDetail.eventLogs', confirmedTxDetail.eventLogs)
+
+                if (confirmedTxDetail.eventLogs && (confirmedTxDetail.eventLogs as []).length > 0) {
+                    for (let j = 0; j < (confirmedTxDetail.eventLogs as []).length; j++) {
+                        let log = (confirmedTxDetail.eventLogs as [])[j] as any
+                        log.hash = confirmedTxDetail.blockHash
+                        log.height = confirmedTxDetail.blockHeight
+                        const eventLog = await this.fetchEventLog(log)
+                        // console.log('eventLog', eventLog)
+                        if (eventLog) callback(eventLog)
+                    }
+                }
+            }
         } else {
             // checking rpc/ws
             try {
@@ -137,55 +218,8 @@ export class IconSubscriber extends BaseSubscriber {
             const ondata = async (notification: EventNotification) => {
                 this.logger.info(`${this.network} ondata ${JSON.stringify(notification)}`)
 
-                try {
-                    const eventName = this.getEventName(JSON.stringify(notification.logs[0]))
-                    const decodeEventLog = (await this.decoder.decodeEventLog(notification.logs[0], eventName)) as EventLogData
-
-                    if (decodeEventLog) {
-                        // init another iconService to avoid conflict
-                        const iconService = new IconService(new HttpProvider(this.url))
-
-                        let blockHash = notification.hash
-                        let blockNumber = notification.height
-                        let prevBlockNumber = new BigNumber(Number(notification.height) - 1)
-                        let txsInBlock = await this.findTxsInBlock(iconService, prevBlockNumber, eventName)
-                        if (txsInBlock.length === 0) {
-                            // try current block from notification
-                            txsInBlock = await this.findTxsInBlock(iconService, blockNumber, eventName)
-                        }
-
-                        if (txsInBlock.length > 0) {
-                            // fix duplicated txs
-                            if (decodeEventLog._sn) {
-                                for (let i = 0; i < txsInBlock.length; i++) {
-                                    const txInBlock = txsInBlock[i]
-                                    if (decodeEventLog._sn === txInBlock.decodeEventLog._sn) {
-                                        const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
-                                        calbback(eventLog)
-                                    }
-                                }
-                                // fix multiple CallExecuted txs
-                            } else if (decodeEventLog._reqId) {
-                                for (let i = 0; i < txsInBlock.length; i++) {
-                                    const txInBlock = txsInBlock[i]
-                                    if (decodeEventLog._reqId === txInBlock.decodeEventLog._reqId) {
-                                        const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
-                                        calbback(eventLog)
-                                    }
-                                }
-                            } else {
-                                const eventLog = this.buildEventLog(txsInBlock[0].block, txsInBlock[0].tx, eventName, decodeEventLog)
-                                calbback(eventLog)
-                            }
-                        } else {
-                            this.logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
-                        }
-                    } else {
-                        this.logger.info(`${this.network} ondata ${eventName} could not decodeEventLog`)
-                    }
-                } catch (error) {
-                    this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
-                }
+                const eventLog = await this.fetchEventLog(notification.logs[0])
+                if (eventLog) return callback(eventLog)
             }
 
             const monitorEvent = async () => {

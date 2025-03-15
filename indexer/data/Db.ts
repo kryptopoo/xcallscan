@@ -300,23 +300,20 @@ class Db {
         dest_tx_hash: string
     ) {
         try {
-            const rs = await this.pool.query(
+            const updateDestRs = await this.pool.query(
                 `UPDATE messages   
-                SET dest_block_number = $4, dest_block_timestamp = $5, dest_tx_hash = $6, status = $7, updated_at = $8 
+                SET dest_block_number = $4, dest_block_timestamp = $5, dest_tx_hash = $6, updated_at = $7 
+                WHERE intents_order_id = $1 AND src_network = $2 AND dest_network = $3`,
+                [intents_order_id, src_network, dest_network, dest_block_number, dest_block_timestamp, dest_tx_hash, nowTimestamp()]
+            )
+            const updateStatusRs = await this.pool.query(
+                `UPDATE messages   
+                SET status = $4, updated_at = $5 
                 WHERE intents_order_id = $1 AND src_network = $2 AND dest_network = $3 AND status != '${MSG_STATUS.Rollbacked}' AND status != '${MSG_STATUS.Executed}'`,
-                [
-                    intents_order_id,
-                    src_network,
-                    dest_network,
-                    dest_block_number,
-                    dest_block_timestamp,
-                    dest_tx_hash,
-                    MSG_STATUS.Delivered,
-                    nowTimestamp()
-                ]
+                [intents_order_id, src_network, dest_network, MSG_STATUS.Delivered, nowTimestamp()]
             )
 
-            return rs.rowCount ?? 0
+            return updateDestRs.rowCount && updateStatusRs.rowCount ? updateDestRs.rowCount + updateStatusRs.rowCount : 0
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }
