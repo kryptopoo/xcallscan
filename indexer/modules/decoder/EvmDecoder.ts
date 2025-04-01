@@ -9,6 +9,7 @@ import oracleProxyAbi from '../../abi/OracleProxy.abi.json'
 import balancedDollarAbi from '../../abi/BalancedDollar.abi.json'
 import stackedIcxAbi from '../../abi/StackedICX.abi.json'
 import logger from '../logger/logger'
+import { retryAsync } from 'ts-retry'
 const xcallInterface = new ethers.utils.Interface(xcallAbi)
 const intentsInterface = new ethers.utils.Interface(intentsAbi)
 
@@ -61,7 +62,7 @@ export class EvmDecoder implements IDecoder {
                 // try decode toBtp
                 rs._decodedFrom = rs._from // _from is always address
 
-                const tx = await this.provider.getTransaction(eventLog.transactionHash)
+                const tx = await this.getTransaction(eventLog.transactionHash)
                 try {
                     if (!rs._decodedTo) {
                         const sendCallMessageInterface = new ethers.utils.Interface(['sendCallMessage(string _to,bytes _data,bytes _rollback)'])
@@ -236,7 +237,7 @@ export class EvmDecoder implements IDecoder {
                     srcNID: decodeEventLog.srcNID
                 }
 
-                const intentsTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const intentsTx = await this.getTransaction(eventLog.transactionHash)
                 const decodedFill = this.decodeFunction(intentsAbi, 'fill', intentsTx.data)
                 if (decodedFill) {
                     rs = {
@@ -260,7 +261,7 @@ export class EvmDecoder implements IDecoder {
                     id: Number(decodeEventLog.id)
                 }
 
-                const orderClosedTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const orderClosedTx = await this.getTransaction(eventLog.transactionHash)
                 const decodedOrderClosed = this.decodeFunction(intentsAbi, 'recvMessage', orderClosedTx.data)
                 if (decodedOrderClosed) {
                     rs = {
@@ -286,7 +287,7 @@ export class EvmDecoder implements IDecoder {
                     msg: decodeEventLog._msg.toString()
                 }
 
-                const orderCancelledTx = await this.provider.getTransaction(eventLog.transactionHash)
+                const orderCancelledTx = await this.getTransaction(eventLog.transactionHash)
                 const decodedOrderCancelled = this.decodeFunction(intentsAbi, 'cancel', orderCancelledTx.data)
                 if (decodedOrderCancelled) {
                     rs.id = Number(decodedOrderCancelled.id)
@@ -297,5 +298,17 @@ export class EvmDecoder implements IDecoder {
         }
 
         return rs
+    }
+
+    private async getTransaction(transactionHash: string) {
+        const tx = await retryAsync(() => this.provider.getTransaction(transactionHash), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                logger.error(`EvmDecoder retry ${currentTry} getTransaction ${transactionHash} ${err}`)
+            }
+        })
+
+        return tx
     }
 }
