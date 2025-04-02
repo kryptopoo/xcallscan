@@ -78,8 +78,9 @@ export class SuiSubscriber extends BaseSubscriber {
         return { data: [], nextCursor: undefined }
     }
 
-    async fetchEventLog(tx: any) {
+    async fetchEventLogs(tx: any) {
         // this.logger.info(`${this.network} ondata ${JSON.stringify(tx)}`)
+        const eventLogs = []
 
         try {
             const eventsOfTxDetail: any[] = tx.events ?? []
@@ -104,14 +105,14 @@ export class SuiSubscriber extends BaseSubscriber {
                         eventData: decodeEventLog
                     }
 
-                    return log
+                    eventLogs.push(log)
                 }
             }
         } catch (error) {
             this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
         }
 
-        return undefined
+        return eventLogs
     }
 
     async subscribe(contractAddresses: string[], eventNames: string[], txHashes: string[], callback: ISubscriberCallback): Promise<void> {
@@ -131,8 +132,10 @@ export class SuiSubscriber extends BaseSubscriber {
                     }
                 })
 
-                const eventLog = await this.fetchEventLog(tx)
-                if (eventLog && eventNames.includes(eventLog.eventName)) callback(eventLog)
+                const eventLogs = await this.fetchEventLogs(tx)
+                eventLogs.forEach((eventLog) => {
+                    if (eventLogs && eventNames.includes(eventLog.eventName)) callback(eventLog)
+                })
             }
         } else {
             const task = async (contractAddress: string) => {
@@ -164,8 +167,10 @@ export class SuiSubscriber extends BaseSubscriber {
                         if (txs.length > 0) this.logger.info(`${this.network} ondata ${JSON.stringify(txs)}`)
 
                         for (let j = 0; j < txs.length; j++) {
-                            const eventLog = await this.fetchEventLog(txs[j])
-                            if (eventLog && eventNames.includes(eventLog.eventName)) callback(eventLog)
+                            const eventLogs = await this.fetchEventLogs(txs[j])
+                            eventLogs.forEach((eventLog) => {
+                                if (eventLogs && eventNames.includes(eventLog.eventName)) callback(eventLog)
+                            })
                         }
                     } catch (error) {
                         this.logger.error(`${this.network} task ${intervalId} error ${JSON.stringify(error)}`)
