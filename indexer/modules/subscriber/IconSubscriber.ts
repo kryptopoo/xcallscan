@@ -72,8 +72,8 @@ export class IconSubscriber extends BaseSubscriber {
             const txs = []
             const confirmedTxs = block.confirmedTransactionList.filter((t: any) => t.from && t.to)
 
-            // TODO: remove log
-            this.logger.info(`${this.network} confirmedTxs ${confirmedTxs.length} ${confirmedTxs.map((c) => c.txHash)}`)
+            // // TODO: remove log
+            // this.logger.info(`${this.network} confirmedTxs ${confirmedTxs.length} ${confirmedTxs.map((c) => c.txHash)}`)
 
             for (let i = 0; i < confirmedTxs.length; i++) {
                 const confirmedTx = confirmedTxs[i]
@@ -91,12 +91,12 @@ export class IconSubscriber extends BaseSubscriber {
                 }
             }
 
-            // TODO: remove log
-            this.logger.info(
-                `${this.network} findTxsInBlock ${txs.length} ${JSON.stringify(txs.map((t) => t.tx.txHash))}  ${JSON.stringify(
-                    txs.map((t) => t.decodeEventLog)
-                )}`
-            )
+            // // TODO: remove log
+            // this.logger.info(
+            //     `${this.network} findTxsInBlock ${txs.length} ${JSON.stringify(txs.map((t) => t.tx.txHash))}  ${JSON.stringify(
+            //         txs.map((t) => t.decodeEventLog)
+            //     )}`
+            // )
 
             return txs
         }
@@ -107,53 +107,56 @@ export class IconSubscriber extends BaseSubscriber {
     async fetchEventLog(log: any) {
         try {
             const eventName = this.getEventName(JSON.stringify(log))
-            this.logger.info(`log ${JSON.stringify(log)}`)
-            const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
-            this.logger.info(`eventName ${eventName} decodeEventLog ${JSON.stringify(log)}`)
 
-            if (decodeEventLog) {
-                // init another iconService to avoid conflict
-                const iconService = new IconService(new HttpProvider(this.url))
+            if (eventName) {
+                // this.logger.info(`log ${JSON.stringify(log)}`)
+                const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
+                this.logger.info(`eventName:${eventName} decodeEventLog:${JSON.stringify(log)}`)
 
-                if (log.height && log.hash) {
-                    // const eventLogData = decodeEventLog as EventLogData
+                if (decodeEventLog) {
+                    // init another iconService to avoid conflict
+                    const iconService = new IconService(new HttpProvider(this.url))
 
-                    let blockHash = log.hash
-                    let blockNumber = log.height
-                    let prevBlockNumber = new BigNumber(Number(log.height) - 1)
-                    let txsInBlock = await this.findTxsInBlock(iconService, prevBlockNumber, eventName)
-                    if (txsInBlock.length === 0) {
-                        // try current block from notification
-                        txsInBlock = await this.findTxsInBlock(iconService, blockNumber, eventName)
-                    }
+                    if (log.height && log.hash) {
+                        // const eventLogData = decodeEventLog as EventLogData
 
-                    if (txsInBlock.length > 0) {
-                        // fix duplicated txs
-                        const _sn = (decodeEventLog as EventLogData)._sn
-                        const _reqId = (decodeEventLog as EventLogData)._reqId
-                        if (_sn) {
-                            for (let i = 0; i < txsInBlock.length; i++) {
-                                const txInBlock = txsInBlock[i]
-                                if (_sn === txInBlock.decodeEventLog._sn) {
-                                    const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
-                                    return eventLog
+                        let blockHash = log.hash
+                        let blockNumber = log.height
+                        let prevBlockNumber = new BigNumber(Number(log.height) - 1)
+                        let txsInBlock = await this.findTxsInBlock(iconService, prevBlockNumber, eventName)
+                        if (txsInBlock.length === 0) {
+                            // try current block from notification
+                            txsInBlock = await this.findTxsInBlock(iconService, blockNumber, eventName)
+                        }
+
+                        if (txsInBlock.length > 0) {
+                            // fix duplicated txs
+                            const _sn = (decodeEventLog as EventLogData)._sn
+                            const _reqId = (decodeEventLog as EventLogData)._reqId
+                            if (_sn) {
+                                for (let i = 0; i < txsInBlock.length; i++) {
+                                    const txInBlock = txsInBlock[i]
+                                    if (_sn === txInBlock.decodeEventLog._sn) {
+                                        const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
+                                        return eventLog
+                                    }
                                 }
-                            }
-                            // fix multiple CallExecuted txs
-                        } else if (_reqId) {
-                            for (let i = 0; i < txsInBlock.length; i++) {
-                                const txInBlock = txsInBlock[i]
-                                if (_reqId === txInBlock.decodeEventLog._reqId) {
-                                    const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
-                                    return eventLog
+                                // fix multiple CallExecuted txs
+                            } else if (_reqId) {
+                                for (let i = 0; i < txsInBlock.length; i++) {
+                                    const txInBlock = txsInBlock[i]
+                                    if (_reqId === txInBlock.decodeEventLog._reqId) {
+                                        const eventLog = this.buildEventLog(txInBlock.block, txInBlock.tx, eventName, decodeEventLog)
+                                        return eventLog
+                                    }
                                 }
+                            } else {
+                                const eventLog = this.buildEventLog(txsInBlock[0].block, txsInBlock[0].tx, eventName, decodeEventLog)
+                                return eventLog
                             }
                         } else {
-                            const eventLog = this.buildEventLog(txsInBlock[0].block, txsInBlock[0].tx, eventName, decodeEventLog)
-                            return eventLog
+                            this.logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                         }
-                    } else {
-                        this.logger.info(`${this.network} ondata ${eventName} could not find tx in block ${blockNumber.toString()} ${blockHash}`)
                     }
                 }
             }
