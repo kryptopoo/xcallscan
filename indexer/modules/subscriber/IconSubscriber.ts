@@ -109,11 +109,10 @@ export class IconSubscriber extends BaseSubscriber {
             const eventName = this.getEventName(JSON.stringify(log))
 
             if (eventName) {
-                // this.logger.info(`log ${JSON.stringify(log)}`)
                 const decodeEventLog = await this.decoder.decodeEventLog(log, eventName)
-                this.logger.info(`eventName:${eventName} decodeEventLog:${JSON.stringify(log)}`)
-
                 if (decodeEventLog) {
+                    // this.logger.info(`eventName:${eventName} decodeEventLog:${JSON.stringify(decodeEventLog)}`)
+
                     // init another iconService to avoid conflict
                     const iconService = new IconService(new HttpProvider(this.url))
 
@@ -189,7 +188,6 @@ export class IconSubscriber extends BaseSubscriber {
                         log.hash = confirmedTxDetail.blockHash
                         log.height = confirmedTxDetail.blockHeight
                         const eventLog = await this.fetchEventLog(log)
-                        // console.log('eventLog', eventLog)
                         if (eventLog) callback(eventLog)
                     }
                 }
@@ -221,7 +219,10 @@ export class IconSubscriber extends BaseSubscriber {
             const ondata = async (notification: EventNotification) => {
                 this.logger.info(`${this.network} ondata ${JSON.stringify(notification)}`)
 
-                const eventLog = await this.fetchEventLog(notification.logs[0])
+                let notificationLog: any = notification.logs[0]
+                notificationLog.hash = notification.hash
+                notificationLog.height = notification.height
+                const eventLog = await this.fetchEventLog(notificationLog)
                 if (eventLog) return callback(eventLog)
             }
 
