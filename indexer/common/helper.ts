@@ -1,4 +1,5 @@
-import { BTP_NETWORK_ID, NETWORK } from './constants'
+import { ASSET_MAP, BTP_NETWORK_ID, NETWORK } from './constants'
+import { BigNumber, ethers } from 'ethers'
 
 const nowTimestamp = () => {
     return Math.floor(Date.now() / 1000)
@@ -60,6 +61,15 @@ const getNetwork = (btpAddress: string) => {
     return undefined
 }
 
+const convertAssetAmount = (symbol: string, amount: string) => {
+    let decimals = 18
+    if (ASSET_MAP[symbol] && ASSET_MAP[symbol].decimals > 0) {
+        decimals = ASSET_MAP[symbol].decimals
+    }
+
+    return ethers.utils.formatUnits(amount, decimals)
+}
+
 export {
     nowTimestamp,
     lastWeekTimestamp,
@@ -70,5 +80,6 @@ export {
     sleep,
     shortAddress,
     cosmosHash,
-    getNetwork
+    getNetwork,
+    convertAssetAmount
 }
