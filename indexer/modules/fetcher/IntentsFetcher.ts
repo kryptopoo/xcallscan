@@ -63,7 +63,9 @@ export class IntentsFetcher {
 
                 // handle if the dest tx came first
                 if (updatedCount == 0) {
-                    logger.error(`IntentsFetcher: updateIntentsMessageOrderFilled failed`)
+                    logger.error(
+                        `IntentsFetcher: updateIntentsMessageOrderFilled failed orderId:${intentsOrderId} srcNetwork:${srcNetwork} destNetwork:${destNetwork}`
+                    )
                     const maxRetryCount = 5
                     let retryCount = 0
                     const retryUpdateId = setInterval(async () => {
@@ -76,7 +78,9 @@ export class IntentsFetcher {
                             data.blockTimestamp,
                             data.txHash
                         )
-                        logger.error(`IntentsFetcher: retry ${retryCount} updatedCount ${updatedCount}`)
+                        logger.error(
+                            `IntentsFetcher: updateIntentsMessageOrderFilled retry:${retryCount} updatedCount:${updatedCount} orderId:${intentsOrderId} srcNetwork:${srcNetwork} destNetwork:${destNetwork}`
+                        )
                         if (updatedCount > 0 || retryCount >= maxRetryCount) clearInterval(retryUpdateId)
                     }, 1000)
                 }
