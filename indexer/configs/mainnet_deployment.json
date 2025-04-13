@@ -266,11 +266,11 @@
         },
         "stellar": {
             "xcall": ["CB6IJRLOWGQXUDSYGFOAAZYVOESQ6TVSTU3242I7PG3LH7F43PPX2HE6"],
-            "intents": []
+            "intents": ["CDZPLSD426ZCR5XB2D7HDYEDEAS5KYZFX6JEPLFY7QOQ3QHE6DHMECW7"]
         },
         "solana": {
             "xcall": ["3LWnGCRFuS4TJ5WeDKeWdoSRptB2tzeEFhSBFFu4ogMo"],
-            "intents": []
+            "intents": ["FgPgECEpBRdV9gV18jR7icvpPabEvgVJof3A6aPn1UjY"]
         }
     }
 }
