@@ -1,0 +1,423 @@
+{
+    "address": "FgPgECEpBRdV9gV18jR7icvpPabEvgVJof3A6aPn1UjY",
+    "metadata": { "name": "intent", "version": "0.1.0", "spec": "0.1.0", "description": "Created with Anchor" },
+    "instructions": [
+        {
+            "name": "cancel",
+            "discriminator": [232, 219, 223, 41, 219, 236, 220, 190],
+            "accounts": [
+                { "name": "signer", "writable": true, "signer": true },
+                { "name": "system_program" },
+                { "name": "config", "writable": true },
+                { "name": "order_account", "writable": true },
+                { "name": "order_finished", "writable": true, "optional": true }
+            ],
+            "args": [{ "name": "order", "type": { "defined": { "name": "SwapOrder" } } }]
+        },
+        {
+            "name": "fill",
+            "discriminator": [168, 96, 183, 163, 92, 10, 40, 160],
+            "accounts": [
+                { "name": "signer", "writable": true, "signer": true },
+                { "name": "system_program" },
+                { "name": "config", "writable": true },
+                { "name": "fee_handler", "docs": ["This account is validated against `config.fee_handler`."], "writable": true },
+                { "name": "destination_address", "docs": ["order. This account is validated in instruction."], "writable": true },
+                { "name": "order_finished", "writable": true },
+                {
+                    "name": "fee_handler_token_account",
+                    "docs": ["The associated token account of fee handler of the intent program"],
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "destination_token_account",
+                    "docs": ["The assocaited token account derived from `destination_address`."],
+                    "writable": true,
+                    "optional": true
+                },
+                { "name": "signer_token_account", "docs": ["The token account of the signer"], "writable": true, "optional": true },
+                { "name": "mint", "optional": true },
+                { "name": "token_program" },
+                { "name": "associated_token_program" }
+            ],
+            "args": [
+                { "name": "order", "type": { "defined": { "name": "SwapOrder" } } },
+                { "name": "solver_address", "type": "string" }
+            ]
+        },
+        {
+            "name": "initialize",
+            "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+            "accounts": [
+                {
+                    "name": "config",
+                    "docs": [
+                        "The configuration account, which stores important settings for the program.",
+                        "This account is initialized only once during the lifetime of program and it will",
+                        "throw error if tries to initialize twice"
+                    ],
+                    "writable": true
+                },
+                { "name": "native_vault_account", "docs": ["The vault account that holds native SOL token"], "writable": true },
+                {
+                    "name": "signer",
+                    "docs": [
+                        "The account that signs and pays for the transaction. This account is mutable",
+                        "because it will be debited for any fees or rent required during the transaction."
+                    ],
+                    "writable": true,
+                    "signer": true
+                },
+                { "name": "system_program", "docs": ["The solana system program account, used for creating and managing accounts."] }
+            ],
+            "args": [
+                { "name": "network_id", "type": "string" },
+                { "name": "fee_handler", "type": "pubkey" }
+            ]
+        },
+        {
+            "name": "query_recv_message_accounts",
+            "discriminator": [36, 243, 79, 158, 41, 247, 134, 15],
+            "accounts": [{ "name": "config" }],
+            "args": [
+                { "name": "src_network", "type": "string" },
+                { "name": "conn_sn", "type": "u128" },
+                { "name": "msg", "type": "bytes" }
+            ],
+            "returns": { "defined": { "name": "QueryAccountsResponse" } }
+        },
+        {
+            "name": "recv_message",
+            "discriminator": [49, 210, 56, 132, 17, 157, 18, 123],
+            "accounts": [
+                { "name": "signer", "writable": true, "signer": true },
+                { "name": "system_program" },
+                { "name": "config" },
+                { "name": "receipt", "writable": true }
+            ],
+            "args": [
+                { "name": "src_network", "type": "string" },
+                { "name": "conn_sn", "type": "u128" },
+                { "name": "msg", "type": "bytes" }
+            ]
+        },
+        {
+            "name": "resolve_cancel",
+            "discriminator": [178, 242, 210, 48, 160, 189, 196, 179],
+            "accounts": [
+                { "name": "signer", "writable": true, "signer": true },
+                { "name": "system_program" },
+                { "name": "intent", "signer": true },
+                { "name": "config", "writable": true },
+                { "name": "order_finished", "writable": true }
+            ],
+            "args": [
+                { "name": "src_network", "type": "string" },
+                { "name": "cancel", "type": { "defined": { "name": "Cancel" } } },
+                { "name": "order", "type": { "defined": { "name": "SwapOrder" } } }
+            ]
+        },
+        {
+            "name": "resolve_fill",
+            "discriminator": [50, 122, 29, 204, 49, 146, 117, 93],
+            "accounts": [
+                { "name": "signer", "writable": true, "signer": true },
+                { "name": "system_program" },
+                { "name": "intent", "signer": true },
+                { "name": "config", "writable": true },
+                { "name": "order_account", "writable": true },
+                { "name": "order_creator", "writable": true },
+                { "name": "solver", "docs": ["This account is validated against `fill.solver`."], "writable": true },
+                { "name": "solver_token_account", "docs": ["The solver token account"], "writable": true, "optional": true },
+                { "name": "native_vault_account", "docs": ["Vault native account"], "writable": true, "optional": true },
+                { "name": "token_vault_account", "docs": ["Vault token account"], "writable": true, "optional": true },
+                { "name": "mint", "optional": true },
+                { "name": "token_program" },
+                { "name": "associated_token_program" }
+            ],
+            "args": [
+                { "name": "src_network", "type": "string" },
+                { "name": "fill", "type": { "defined": { "name": "OrderFill" } } },
+                { "name": "order", "type": { "defined": { "name": "SwapOrder" } } }
+            ]
+        },
+        {
+            "name": "set_admin",
+            "discriminator": [251, 163, 0, 52, 91, 194, 187, 92],
+            "accounts": [
+                {
+                    "name": "config",
+                    "docs": [
+                        "The configuration account, which stores important settings for the program.",
+                        "This account is mutable because the admin of the program will be updated."
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "admin",
+                    "docs": [
+                        "The account that signs and pays for the transaction. This account is checked",
+                        "against the `config.admin` to ensure it is valid."
+                    ],
+                    "writable": true,
+                    "signer": true
+                }
+            ],
+            "args": [{ "name": "account", "type": "pubkey" }]
+        },
+        {
+            "name": "set_fee_handler",
+            "discriminator": [123, 6, 251, 240, 251, 240, 116, 120],
+            "accounts": [
+                {
+                    "name": "config",
+                    "docs": [
+                        "The configuration account, which stores important settings for the program.",
+                        "This account is mutable because the fee handler of the protocol will be updated."
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "admin",
+                    "docs": [
+                        "The account that signs and pays for the transaction. This account is checked",
+                        "against the `config.admin` to ensure it is valid."
+                    ],
+                    "writable": true,
+                    "signer": true
+                }
+            ],
+            "args": [{ "name": "fee_handler", "type": "pubkey" }]
+        },
+        {
+            "name": "set_protocol_fee",
+            "discriminator": [173, 239, 83, 242, 136, 43, 144, 217],
+            "accounts": [
+                {
+                    "name": "config",
+                    "docs": [
+                        "The configuration account, which stores important settings for the program.",
+                        "This account is mutable because the fee handler of the protocol will be updated."
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "admin",
+                    "docs": [
+                        "The account that signs and pays for the transaction. This account is checked",
+                        "against the `config.admin` to ensure it is valid."
+                    ],
+                    "writable": true,
+                    "signer": true
+                }
+            ],
+            "args": [{ "name": "fee", "type": "u64" }]
+        },
+        {
+            "name": "swap",
+            "discriminator": [248, 198, 158, 145, 225, 117, 135, 200],
+            "accounts": [
+                { "name": "signer", "writable": true, "signer": true },
+                { "name": "system_program" },
+                { "name": "config", "writable": true },
+                { "name": "order_account", "writable": true },
+                { "name": "native_vault_account", "writable": true, "optional": true },
+                { "name": "token_vault_account", "writable": true, "optional": true },
+                { "name": "signer_token_account", "writable": true, "optional": true },
+                { "name": "mint", "optional": true },
+                { "name": "token_program" }
+            ],
+            "args": [{ "name": "order", "type": { "defined": { "name": "SwapOrder" } } }]
+        }
+    ],
+    "accounts": [
+        { "name": "Config", "discriminator": [155, 12, 170, 224, 30, 250, 204, 130] },
+        { "name": "OrderAccount", "discriminator": [79, 67, 112, 155, 214, 14, 32, 55] },
+        { "name": "OrderFinished", "discriminator": [55, 120, 197, 105, 224, 34, 211, 115] },
+        { "name": "Receipt", "discriminator": [39, 154, 73, 106, 80, 102, 145, 153] },
+        { "name": "VaultNative", "discriminator": [30, 156, 76, 163, 253, 211, 113, 26] }
+    ],
+    "events": [
+        { "name": "OrderCancelled", "discriminator": [108, 56, 128, 68, 168, 113, 168, 239] },
+        { "name": "OrderClosed", "discriminator": [237, 77, 101, 123, 72, 43, 149, 123] },
+        { "name": "OrderFilled", "discriminator": [120, 124, 109, 66, 249, 116, 174, 30] },
+        { "name": "SendMessage", "discriminator": [146, 38, 13, 221, 87, 214, 247, 12] },
+        { "name": "SwapIntent", "discriminator": [32, 20, 26, 90, 1, 142, 0, 13] }
+    ],
+    "errors": [
+        { "code": 6000, "name": "OnlyAdmin", "msg": "Only Admin" },
+        { "code": 6001, "name": "OnlyRelayer", "msg": "Only Relayer" },
+        { "code": 6002, "name": "OnlyFeeHandler", "msg": "Only fee handler" },
+        { "code": 6003, "name": "InvalidNetwork", "msg": "Invalid network" },
+        { "code": 6004, "name": "OrderMismatched", "msg": "Order mismatched" },
+        { "code": 6005, "name": "DecodeFailed", "msg": "Rlp decode failed" },
+        { "code": 6006, "name": "InvalidDestinationAccount", "msg": "Destination account is not valid" },
+        { "code": 6007, "name": "InvalidSolverAccount", "msg": "Solver account is not valid" },
+        { "code": 6008, "name": "InvalidFeeHandler", "msg": "Fee handler account is not valid" },
+        { "code": 6009, "name": "InvalidPubkey", "msg": "Invalid pubkey" },
+        { "code": 6010, "name": "CreatorMustBeSigner", "msg": "Signer must be a swap creator" },
+        { "code": 6011, "name": "OrderAlreadyFilled", "msg": "Order has been already filled" },
+        { "code": 6012, "name": "DuplicateMessage", "msg": "Duplicate message" },
+        { "code": 6013, "name": "ConfigAccountIsMissing", "msg": "Config account is missing" },
+        { "code": 6014, "name": "MintAccountMismatch", "msg": "Mint account mismatch" },
+        { "code": 6015, "name": "OrderFinishedAccountIsMissing", "msg": "Order finished account is missing" },
+        { "code": 6016, "name": "OrderAccountIsMissing", "msg": "Order account is missing" },
+        { "code": 6017, "name": "NativeVaultAccountIsMissing", "msg": "Native vault account is missing" },
+        { "code": 6018, "name": "TokenVaultAccountIsMissing", "msg": "Token vault account is missing" },
+        { "code": 6019, "name": "SignerTokenAccountIsMissing", "msg": "Signer token account is missing" },
+        { "code": 6020, "name": "SolverTokenAccountIsMissing", "msg": "Solver token account is missing" },
+        { "code": 6021, "name": "CreatorTokenAccountIsMissing", "msg": "Creator token account is missing" },
+        { "code": 6022, "name": "FeeHandlerTokenAccountIsMissing", "msg": "Fee handler token account is missing" },
+        { "code": 6023, "name": "OrderFinishedAccountMustNotBeSpecified", "msg": "Order finished account must not be specified" },
+        { "code": 6024, "name": "VaultTokenAccountMustNotBeSpecified", "msg": "Vault token account must not be specified" },
+        { "code": 6025, "name": "ConfigAccountMustNotBeSpecified", "msg": "Config account must not be specified" }
+    ],
+    "types": [
+        {
+            "name": "AccountMetadata",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "pubkey", "type": "pubkey" },
+                    { "name": "is_writable", "type": "bool" },
+                    { "name": "is_signer", "type": "bool" }
+                ]
+            }
+        },
+        { "name": "Cancel", "type": { "kind": "struct", "fields": [{ "name": "order_bytes", "docs": ["Encoded order data"], "type": "bytes" }] } },
+        {
+            "name": "Config",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "admin", "type": "pubkey" },
+                    { "name": "fee_handler", "type": "pubkey" },
+                    { "name": "network_id", "type": "string" },
+                    { "name": "protocol_fee", "type": "u64" },
+                    { "name": "deposit_id", "type": "u128" },
+                    { "name": "conn_sn", "type": "u128" },
+                    { "name": "bump", "type": "u8" }
+                ]
+            }
+        },
+        {
+            "name": "OrderAccount",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "order", "type": { "defined": { "name": "SwapOrder" } } },
+                    { "name": "bump", "type": "u8" }
+                ]
+            }
+        },
+        {
+            "name": "OrderCancelled",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "id", "type": "u128" },
+                    { "name": "srcNID", "type": "string" }
+                ]
+            }
+        },
+        { "name": "OrderClosed", "type": { "kind": "struct", "fields": [{ "name": "id", "type": "u128" }] } },
+        {
+            "name": "OrderFill",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "id", "docs": ["ID of the order being filled"], "type": "u128" },
+                    { "name": "order_bytes", "docs": ["Encoded order data"], "type": "bytes" },
+                    { "name": "solver", "docs": ["Address of the solver filling the order"], "type": "string" }
+                ]
+            }
+        },
+        {
+            "name": "OrderFilled",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "id", "type": "u128" },
+                    { "name": "srcNID", "type": "string" }
+                ]
+            }
+        },
+        {
+            "name": "OrderFinished",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "finished", "type": "bool" },
+                    { "name": "bump", "type": "u8" }
+                ]
+            }
+        },
+        {
+            "name": "QueryAccountsResponse",
+            "type": { "kind": "struct", "fields": [{ "name": "accounts", "type": { "vec": { "defined": { "name": "AccountMetadata" } } } }] }
+        },
+        {
+            "name": "Receipt",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "received", "type": "bool" },
+                    { "name": "bump", "type": "u8" }
+                ]
+            }
+        },
+        {
+            "name": "SendMessage",
+            "docs": ["Emitted when a cross-chain message is sent"],
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "targetNetwork", "type": "string" },
+                    { "name": "sn", "type": "u128" },
+                    { "name": "msg", "type": "bytes" }
+                ]
+            }
+        },
+        {
+            "name": "SwapIntent",
+            "docs": ["Emitted when a new swap intent is created"],
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "id", "type": "u128" },
+                    { "name": "emitter", "type": "string" },
+                    { "name": "srcNID", "type": "string" },
+                    { "name": "dstNID", "type": "string" },
+                    { "name": "creator", "type": "string" },
+                    { "name": "destinationAddress", "type": "string" },
+                    { "name": "token", "type": "string" },
+                    { "name": "amount", "type": "u128" },
+                    { "name": "toToken", "type": "string" },
+                    { "name": "toAmount", "type": "u128" },
+                    { "name": "data", "type": "bytes" }
+                ]
+            }
+        },
+        {
+            "name": "SwapOrder",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "id", "docs": ["Unique identifier for each order"], "type": "u128" },
+                    { "name": "emitter", "docs": ["Address of emitter contract"], "type": "string" },
+                    { "name": "src_nid", "docs": ["Network ID of the source chain"], "type": "string" },
+                    { "name": "dst_nid", "docs": ["Netword ID of the destination chain"], "type": "string" },
+                    { "name": "creator", "docs": ["Address of the user who created the swap order"], "type": "string" },
+                    { "name": "destination_address", "docs": ["Address where the swapped token should be sent"], "type": "string" },
+                    { "name": "token", "docs": ["Address of the token to be swapped"], "type": "string" },
+                    { "name": "amount", "docs": ["Amount of the token to be swapped"], "type": "u128" },
+                    { "name": "to_token", "docs": ["Address of the token to receive on the destination chain"], "type": "string" },
+                    { "name": "to_amount", "docs": ["Amount of `to_token` expected to be received"], "type": "u128" },
+                    { "name": "data", "docs": ["Additional data for the swap"], "type": "bytes" }
+                ]
+            }
+        },
+        { "name": "VaultNative", "type": { "kind": "struct", "fields": [{ "name": "bump", "type": "u8" }] } }
+    ]
+}

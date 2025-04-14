@@ -173,14 +173,12 @@ export class IconSubscriber extends BaseSubscriber {
         if (txHashes.length > 0) {
             // subscribe data by specific transaction hashes
 
-            for (let i = 0; i < txHashes.length - 1; i++) {
+            for (let i = 0; i < txHashes.length; i++) {
                 const hash = txHashes[i]
                 const confirmedTxDetail = await retryAsync(() => this.iconService.getTransactionResult(hash).execute(), {
                     delay: 1000,
                     maxTry: 3
                 })
-
-                // console.log('confirmedTxDetail.eventLogs', confirmedTxDetail.eventLogs)
 
                 if (confirmedTxDetail.eventLogs && (confirmedTxDetail.eventLogs as []).length > 0) {
                     for (let j = 0; j < (confirmedTxDetail.eventLogs as []).length; j++) {

@@ -52,7 +52,7 @@ export class IntentsFetcher {
 
             // OrderFilled
             if (data.eventName == INTENTS_EVENT.OrderFilled) {
-                await this._db.updateIntentsMessageOrderFilled(
+                let updatedCount = await this._db.updateIntentsMessageOrderFilled(
                     intentsOrderId,
                     srcNetwork,
                     destNetwork,
@@ -60,6 +60,30 @@ export class IntentsFetcher {
                     data.blockTimestamp,
                     data.txHash
                 )
+
+                // handle if the dest tx came first
+                if (updatedCount == 0) {
+                    logger.error(
+                        `IntentsFetcher: updateIntentsMessageOrderFilled failed orderId:${intentsOrderId} srcNetwork:${srcNetwork} destNetwork:${destNetwork}`
+                    )
+                    const maxRetryCount = 5
+                    let retryCount = 0
+                    const retryUpdateId = setInterval(async () => {
+                        retryCount++
+                        updatedCount = await this._db.updateIntentsMessageOrderFilled(
+                            intentsOrderId,
+                            srcNetwork,
+                            destNetwork,
+                            data.blockNumber,
+                            data.blockTimestamp,
+                            data.txHash
+                        )
+                        logger.error(
+                            `IntentsFetcher: updateIntentsMessageOrderFilled retry:${retryCount} updatedCount:${updatedCount} orderId:${intentsOrderId} srcNetwork:${srcNetwork} destNetwork:${destNetwork}`
+                        )
+                        if (updatedCount > 0 || retryCount >= maxRetryCount) clearInterval(retryUpdateId)
+                    }, 1000)
+                }
             }
 
             // OrderClosed
@@ -75,7 +99,7 @@ export class IntentsFetcher {
                         data.blockTimestamp,
                         data.txHash
                     )
-                    
+
                     await sleep(1000)
                 }
 
