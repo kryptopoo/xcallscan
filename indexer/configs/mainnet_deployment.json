@@ -156,11 +156,7 @@
         },
         "polygon": {
             "api": "https://api.polygonscan.com/api",
-            "rpcs": [
-                "https://polygon-mainnet.g.alchemy.com/v2",
-                "https://rpc.ankr.com/polygon",
-                "https://rpc-mainnet.matic.quiknode.pro"
-            ],
+            "rpcs": ["https://polygon-mainnet.g.alchemy.com/v2", "https://rpc.ankr.com/polygon", "https://rpc-mainnet.matic.quiknode.pro"],
             "wss": [],
             "btp_network_id": "0x89.polygon",
             "block_height": 0,

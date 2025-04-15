@@ -15,7 +15,7 @@ export class SolanaSubscriber extends BaseSubscriber {
         this.solanaConnection = new solanaWeb3.Connection(this.url)
     }
 
-    async fetchEventLogs(contractAddresses: string[], eventNames: string[], txSignatures: string[]) {
+    async fetchEventLogs(contractAddress: string, eventNames: string[], txSignatures: string[]) {
         try {
             const eventLogs: EventLog[] = []
 
@@ -40,7 +40,7 @@ export class SolanaSubscriber extends BaseSubscriber {
                                 blockTimestamp: Number(txDetail.blockTime),
                                 txHash: txHash,
                                 txFrom: txDetail.transaction.message.accountKeys.find((k) => k.signer)?.pubkey.toString() ?? '',
-                                txTo: contractAddresses[0],
+                                txTo: contractAddress,
                                 txFee: txDetail.meta?.fee.toString(),
                                 // // txValue: tx.value.toString(),
                                 eventName: decodedEventName,
@@ -67,29 +67,29 @@ export class SolanaSubscriber extends BaseSubscriber {
 
         if (txHashes.length > 0) {
             // subscribe data by specific transaction hashes
-            const eventLogs = await this.fetchEventLogs(contractAddresses, eventNames, txHashes)
+            const eventLogs = await this.fetchEventLogs(contractAddresses[0], eventNames, txHashes)
             if (eventLogs.length > 0) {
                 eventLogs.forEach((eventLog) => {
                     callback(eventLog)
                 })
             }
         } else {
-            const addressPubkey = new solanaWeb3.PublicKey(contractAddresses[0])
-            const latestTxs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 1 }), {
-                delay: 1000,
-                maxTry: 3,
-                onError: (err, currentTry) => {
-                    this.logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
-                }
-            })
+            const task = async (contractAddress: string) => {
+                const addressPubkey = new solanaWeb3.PublicKey(contractAddress)
+                const latestTxs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 1 }), {
+                    delay: 1000,
+                    maxTry: 3,
+                    onError: (err, currentTry) => {
+                        this.logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
+                    }
+                })
 
-            let latestSignature = latestTxs[0].signature
-            this.logger.info(`${this.network} latestSignature ${latestSignature}`)
+                let latestSignature = latestTxs[0].signature
+                this.logger.info(`${this.network} contract ${contractAddress} latestSignature ${latestSignature}`)
 
-            const task = () => {
                 const intervalId = setInterval(async () => {
                     try {
-                        this.logLatestPolling()
+                        this.logLatestPolling(`${this.network}_${contractAddress}`)
 
                         let txs = await retryAsync(
                             () => this.solanaConnection.getSignaturesForAddress(addressPubkey, { limit: 20, until: latestSignature }),
@@ -115,7 +115,7 @@ export class SolanaSubscriber extends BaseSubscriber {
                                 latestSignature = txs[txs.length - 1].signature
                             }
 
-                            const eventLogs = await this.fetchEventLogs(contractAddresses, eventNames, txSignatures)
+                            const eventLogs = await this.fetchEventLogs(contractAddress, eventNames, txSignatures)
                             if (eventLogs.length > 0) {
                                 eventLogs.forEach((eventLog) => {
                                     callback(eventLog)
@@ -163,7 +163,10 @@ export class SolanaSubscriber extends BaseSubscriber {
             }
 
             // run task
-            task()
+            for (let i = 0; i < contractAddresses.length; i++) {
+                const contractAddress = contractAddresses[i]
+                task(contractAddress)
+            }
         }
     }
 }

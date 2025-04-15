@@ -313,7 +313,7 @@ class Db {
                 [intents_order_id, src_network, dest_network, MSG_STATUS.Delivered, nowTimestamp()]
             )
 
-            return updateDestRs.rowCount && updateStatusRs.rowCount ? updateDestRs.rowCount + updateStatusRs.rowCount : 0
+            return (updateDestRs.rowCount ?? 0) + (updateStatusRs.rowCount ?? 0)
         } catch (error: any) {
             logger.error(`db: error ${error.message}`)
         }

@@ -1,0 +1,38 @@
+{
+    "assets": [
+        {
+            "contract": "cx3975b43d260fb8ec802cef6e60c2f4d07486f11d",
+            "symbol": "wICX",
+            "decimals": 18,
+            "name": "Wrapped ICX",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        { "contract": "cx22319ac7f412f53eabe3c9827acf5e27e9c6a95f", "symbol": "USDC", "decimals": 6, "name": "USDC", "image": "", "coinGeckoId": "" },
+        {
+            "contract": "cx88fd7df7ddff82f7cc735c871dc519838cb235bb",
+            "symbol": "bnUSD",
+            "decimals": 18,
+            "name": "Balanced Dollar",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "cx2609b924e33ef00b648a409245c7ea394c467824",
+            "symbol": "sICX",
+            "decimals": 18,
+            "name": "Staked ICX",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "cx288d13e1b63563459a2ac6179f237711f6851cb5",
+            "symbol": "ETH",
+            "decimals": 18,
+            "name": "Ethereum",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        { "contract": "cx508002ec116fbf3ab406329c0df28e70d7e75fb3", "symbol": "SUI", "decimals": 9, "name": "Sui", "image": "", "coinGeckoId": "" }
+    ]
+}

@@ -123,19 +123,22 @@ export class EvmSubscriber extends BaseSubscriber {
                 }
             }
         } else {
-            const filter = {
-                address: contracts[0],
-                topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
+            for (let i = 0; i < contracts.length; i++) {
+                const contractAddress = contracts[i]
+                const filter = {
+                    address: contractAddress,
+                    topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
+                }
+
+                this.provider.on(filter, async (log: any, event: any) => {
+                    const eventLog = await this.fetchEventLog(log)
+                    if (eventLog) callback(eventLog)
+                })
+
+                this.provider.on('poll', () => {
+                    this.logLatestPolling(`${this.network}_${contractAddress}`)
+                })
             }
-
-            this.provider.on(filter, async (log: any, event: any) => {
-                const eventLog = await this.fetchEventLog(log)
-                if (eventLog) callback(eventLog)
-            })
-
-            this.provider.on('poll', () => {
-                this.logLatestPolling()
-            })
         }
     }
 }

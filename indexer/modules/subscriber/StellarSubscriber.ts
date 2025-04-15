@@ -177,7 +177,7 @@ export class StellarSubscriber extends BaseSubscriber {
             const task = (contractAddresses: string[]) => {
                 let intervalId = setInterval(async () => {
                     try {
-                        this.logLatestPolling()
+                        this.logLatestPolling(`${this.network}_${contractAddresses.join('_')}`)
 
                         if (latestLedger) {
                             // get events given contract
