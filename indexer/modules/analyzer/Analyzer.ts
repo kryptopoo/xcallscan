@@ -72,18 +72,15 @@ export class Analyzer {
                         const src_asset_symbol =
                             srcToken == '0x0000000000000000000000000000000000000000'
                                 ? NATIVE_ASSETS[src_network]
-                                : srcToken.startsWith('0x')
-                                ? getAsset(src_network, srcToken)?.symbol ?? srcToken
-                                : srcToken
+                                : getAsset(src_network, srcToken)?.symbol ?? srcToken
                         const src_amount = convertAssetAmount(src_asset_symbol, intentsOrderDetail.amount)
 
                         const dest_network = data.dest_network
                         const dest_asset_symbol =
                             destToken == '0x0000000000000000000000000000000000000000'
                                 ? NATIVE_ASSETS[dest_network]
-                                : destToken.startsWith('0x')
-                                ? getAsset(dest_network, destToken)?.symbol ?? destToken
-                                : destToken
+                                : getAsset(dest_network, destToken)?.symbol ?? destToken
+
                         const dest_amount = convertAssetAmount(dest_asset_symbol, intentsOrderDetail.toAmount)
 
                         const act = {
