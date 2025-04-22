@@ -352,7 +352,7 @@ const ASSET_MAP: { [symbol: string]: { symbols: string[]; decimals: number; pric
     },
     bnUSD: {
         symbols: ['bnUSD'],
-        decimals: 6,
+        decimals: 18,
         priceUsd: '1'
     },
     USDC: {

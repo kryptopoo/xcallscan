@@ -61,10 +61,15 @@ const getNetwork = (btpAddress: string) => {
     return undefined
 }
 
-const convertAssetAmount = (symbol: string, amount: string) => {
-    let decimals = 18
-    if (ASSET_MAP[symbol] && ASSET_MAP[symbol].decimals > 0) {
+const convertAssetAmount = (symbol: string, amount: string, decimals: number | undefined = undefined) => {
+    // get decimal info
+    if (decimals == undefined && ASSET_MAP[symbol] && ASSET_MAP[symbol].decimals > 0) {
         decimals = ASSET_MAP[symbol].decimals
+    }
+
+    // default decimals
+    if (decimals == undefined) {
+        decimals = 18
     }
 
     return ethers.utils.formatUnits(BigInt(Number(amount)), decimals)

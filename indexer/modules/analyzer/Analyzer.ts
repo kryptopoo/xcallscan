@@ -69,19 +69,17 @@ export class Analyzer {
                         )
 
                         const src_network = data.src_network
+                        const src_asset = getAsset(src_network, srcToken)
                         const src_asset_symbol =
-                            srcToken == '0x0000000000000000000000000000000000000000'
-                                ? NATIVE_ASSETS[src_network]
-                                : getAsset(src_network, srcToken)?.symbol ?? srcToken
-                        const src_amount = convertAssetAmount(src_asset_symbol, intentsOrderDetail.amount)
+                            srcToken == '0x0000000000000000000000000000000000000000' ? NATIVE_ASSETS[src_network] : src_asset?.symbol ?? srcToken
+                        const src_amount = convertAssetAmount(src_asset_symbol, intentsOrderDetail.amount, src_asset?.decimals)
 
                         const dest_network = data.dest_network
+                        const dest_asset = getAsset(dest_network, destToken)
                         const dest_asset_symbol =
-                            destToken == '0x0000000000000000000000000000000000000000'
-                                ? NATIVE_ASSETS[dest_network]
-                                : getAsset(dest_network, destToken)?.symbol ?? destToken
+                            destToken == '0x0000000000000000000000000000000000000000' ? NATIVE_ASSETS[dest_network] : dest_asset?.symbol ?? destToken
 
-                        const dest_amount = convertAssetAmount(dest_asset_symbol, intentsOrderDetail.toAmount)
+                        const dest_amount = convertAssetAmount(dest_asset_symbol, intentsOrderDetail.toAmount, dest_asset?.decimals)
 
                         const act = {
                             type: 'SwapIntent',
