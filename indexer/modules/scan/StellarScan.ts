@@ -12,15 +12,14 @@ export class StellarScan implements IScan {
 
     constructor(public network: string) {}
 
-    async callApi(postData: any): Promise<any> {
-        const sorobanUrl = RPC_URLS[this.network][0]
+    async callApi(postData: any, url: string = RPC_URLS[this.network][0]): Promise<any> {
         try {
             const axiosInstance = AxiosCustomInstance.getInstance()
 
-            const res = await axiosInstance.post(sorobanUrl, postData)
+            const res = await axiosInstance.post(url, postData)
             return res.data.result
         } catch (error: any) {
-            logger.error(`${this.network} called api failed ${sorobanUrl} ${JSON.stringify(postData)} ${error.code}`)
+            logger.error(`${this.network} called api failed ${url} ${JSON.stringify(postData)} ${error.code}`)
         }
 
         return undefined
@@ -65,7 +64,13 @@ export class StellarScan implements IScan {
                 hash: txHash
             }
         }
-        return this.callApi(postData)
+        let rs = await this.callApi(postData, RPC_URLS[this.network][0])
+
+        // retry with public url
+        if (rs === undefined) {
+            rs = await this.callApi(postData, RPC_URLS[this.network][1])
+        }
+        return rs
     }
 
     async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {

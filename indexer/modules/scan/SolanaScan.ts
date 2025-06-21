@@ -1,8 +1,10 @@
+import { retryAsync } from 'ts-retry'
 import { EVENT, RPC_URLS } from '../../common/constants'
 import { IScan } from '../../interfaces/IScan'
 import { EventLog } from '../../types/EventLog'
 import { SolanaDecoder } from '../decoder/SolanaDecoder'
 import solanaWeb3, { Connection, ParsedInnerInstruction, SignaturesForAddressOptions } from '@solana/web3.js'
+import logger from '../logger/logger'
 
 export class SolanaScan implements IScan {
     countName: string = 'Signature'
@@ -31,7 +33,14 @@ export class SolanaScan implements IScan {
             options.limit = 20
         }
 
-        let txs = await this.solanaConnection.getSignaturesForAddress(addressPubkey, options)
+        let txs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, options), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
+            }
+        })
+
         if (txs) {
             // skip error txs
             txs = txs.filter((tx) => !tx.err)
@@ -40,7 +49,16 @@ export class SolanaScan implements IScan {
             txs = txs.sort((a, b) => a.slot - b.slot)
             const txSignatures = txs.map((t) => t.signature)
             for (let i = 0; i < txSignatures.length; i++) {
-                const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
+                const txDetail = await retryAsync(
+                    () => this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 }),
+                    {
+                        delay: 1000,
+                        maxTry: 3,
+                        onError: (err, currentTry) => {
+                            logger.error(`${this.network} retry ${currentTry} getParsedTransaction ${err}`)
+                        }
+                    }
+                )
 
                 if (txDetail) {
                     const txHash = txDetail.transaction.signatures[0]
