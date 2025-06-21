@@ -166,9 +166,8 @@
             "api": "",
             "rpcs": [
                 "https://light-convincing-sunset.stellar-mainnet.quiknode.pro",
-                "https://rpc.ankr.com/stellar_soroban",
-                "https://mainnet.stellar.validationcloud.io/v1",
-                "https://soroban-rpc.mainnet.stellar.gateway.fm"
+                "https://mainnet.sorobanrpc.com",
+                "https://rpc.ankr.com/stellar_soroban"
             ],
             "wss": [],
             "btp_network_id": "stellar",

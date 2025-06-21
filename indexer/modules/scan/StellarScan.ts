@@ -4,6 +4,7 @@ import { EventLog } from '../../types/EventLog'
 import logger from '../logger/logger'
 import AxiosCustomInstance from './AxiosCustomInstance'
 import { StellarDecoder } from '../decoder/StellarDecoder'
+import { retryAsync } from 'ts-retry'
 const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
 export class StellarScan implements IScan {
@@ -12,17 +13,31 @@ export class StellarScan implements IScan {
 
     constructor(public network: string) {}
 
-    async callApi(postData: any, url: string = RPC_URLS[this.network][0]): Promise<any> {
-        try {
-            const axiosInstance = AxiosCustomInstance.getInstance()
+    async callApi(postData: any): Promise<any> {
+        // retry all rpc
+        let rs = undefined
+        for (let i = 0; i < RPC_URLS[this.network].length; i++) {
+            const url = RPC_URLS[this.network][i]
 
-            const res = await axiosInstance.post(url, postData)
-            return res.data.result
-        } catch (error: any) {
-            logger.error(`${this.network} called api failed ${url} ${JSON.stringify(postData)} ${error.code}`)
+            rs = await retryAsync(
+                async () => {
+                    const axiosInstance = AxiosCustomInstance.getInstance()
+                    const res = await axiosInstance.post(url, postData)
+                    return res?.data?.result
+                },
+                {
+                    delay: 1000,
+                    maxTry: 3,
+                    onError: (err, currentTry) => {
+                        logger.error(`${this.network} callApi ${err} retry ${currentTry} ${url} ${postData}`)
+                    }
+                }
+            )
+
+            if (rs) break
         }
 
-        return undefined
+        return rs
     }
 
     async getEvents(startLedger: number, contractAddress: string): Promise<any> {
@@ -64,13 +79,7 @@ export class StellarScan implements IScan {
                 hash: txHash
             }
         }
-        let rs = await this.callApi(postData, RPC_URLS[this.network][0])
-
-        // retry with public url
-        if (rs === undefined) {
-            rs = await this.callApi(postData, RPC_URLS[this.network][1])
-        }
-        return rs
+        return this.callApi(postData)
     }
 
     async getEventLogs(flag: string, eventName: string, xcallAddress: string): Promise<{ lastFlag: string; eventLogs: EventLog[] }> {
@@ -94,7 +103,9 @@ export class StellarScan implements IScan {
                 const txHash = event.txHash
                 const tx = await this.getTx(txHash)
 
-                if (tx) {
+                if (!tx) {
+                    logger.error(`${this.network} cannot found txHash ${txHash}`)
+                } else {
                     // parse xrd
                     const res = parseTxOperationsMeta({
                         network: USE_MAINNET ? 'Public Global Stellar Network ; September 2015' : '',
