@@ -124,8 +124,8 @@ export class EvmSubscriber extends BaseSubscriber {
         // const quorum = 1
         // this.provider = new ethers.providers.FallbackProvider(fallbackProviderConfigs, quorum)
 
-        // this.provider = new ethers.providers.StaticJsonRpcProvider(urls[0])
-        this.provider = new RetriableStaticJsonRpcProvider(urls, this.interval)
+        this.provider = new ethers.providers.StaticJsonRpcProvider(urls[0])
+        // this.provider = new RetriableStaticJsonRpcProvider(urls, this.interval)
         // // pollingInterval default is 4000 ms
         this.provider.pollingInterval = this.interval
     }
