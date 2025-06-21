@@ -19,9 +19,9 @@ export class StellarSubscriber extends BaseSubscriber {
 
         const res = await retryAsync(() => axiosInstance.post(this.url, postData), {
             delay: 1000,
-            maxTry: 3,
+            maxTry: 5,
             onError: (err, currentTry) => {
-                this.logger.error(`${this.network} retry ${currentTry} callRpc ${err}`)
+                this.logger.error(`${this.network} retry ${currentTry} callRpc ${this.url} ${JSON.stringify(postData)} ${err}`)
             }
         })
 
@@ -74,14 +74,13 @@ export class StellarSubscriber extends BaseSubscriber {
     }
 
     async getTxByExpectApi(txHash: string) {
-        console.log('getTxByExpectApi')
         const axiosInstance = AxiosCustomInstance.getInstance()
 
         const res = await retryAsync(() => axiosInstance.get(`https://api.stellar.expert/explorer/public/tx/${txHash}`), {
             delay: 1000,
             maxTry: 3,
             onError: (err, currentTry) => {
-                this.logger.error(`${this.network} retry ${currentTry} getTxByExpectApi ${err}`)
+                this.logger.error(`${this.network} retry ${currentTry} getTxByExpectApi ${txHash} ${err}`)
             }
         })
 
