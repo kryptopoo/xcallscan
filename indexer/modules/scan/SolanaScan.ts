@@ -33,14 +33,14 @@ export class SolanaScan implements IScan {
             options.limit = 20
         }
 
-        // let txs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, options), {
-        //     delay: 1000,
-        //     maxTry: 3,
-        //     onError: (err, currentTry) => {
-        //         logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
-        //     }
-        // })
-        let txs = await this.solanaConnection.getSignaturesForAddress(addressPubkey, options)
+        let txs = await retryAsync(() => this.solanaConnection.getSignaturesForAddress(addressPubkey, options), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                logger.error(`${this.network} retry ${currentTry} getSignaturesForAddress ${err}`)
+            }
+        })
+        // let txs = await this.solanaConnection.getSignaturesForAddress(addressPubkey, options)
 
         if (txs) {
             // skip error txs
@@ -50,18 +50,17 @@ export class SolanaScan implements IScan {
             txs = txs.sort((a, b) => a.slot - b.slot)
             const txSignatures = txs.map((t) => t.signature)
             for (let i = 0; i < txSignatures.length; i++) {
-                // const txDetail = await retryAsync(
-                //     () => this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 }),
-                //     {
-                //         delay: 1000,
-                //         maxTry: 3,
-                //         onError: (err, currentTry) => {
-                //             logger.error(`${this.network} retry ${currentTry} getParsedTransaction ${err}`)
-                //         }
-                //     }
-                // )
-
-                const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
+                const txDetail = await retryAsync(
+                    () => this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 }),
+                    {
+                        delay: 1000,
+                        maxTry: 3,
+                        onError: (err, currentTry) => {
+                            logger.error(`${this.network} retry ${currentTry} getParsedTransaction ${err}`)
+                        }
+                    }
+                )
+                // const txDetail = await this.solanaConnection.getParsedTransaction(txSignatures[i], { maxSupportedTransactionVersion: 0 })
 
                 if (txDetail) {
                     const txHash = txDetail.transaction.signatures[0]
