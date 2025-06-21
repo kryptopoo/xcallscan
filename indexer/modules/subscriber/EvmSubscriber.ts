@@ -29,8 +29,23 @@ export class EvmSubscriber extends BaseSubscriber {
 
         super(network, urls, new EvmDecoder(network))
 
-        // this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
-        this.provider = new ethers.providers.FallbackProvider(urls.map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
+        const fallbackProviderConfigs: {
+            provider: ethers.providers.StaticJsonRpcProvider
+            priority?: number
+            weight?: number
+            stallTimeout?: number
+        }[] = []
+        for (let i = 0; i < urls.length; i++) {
+            const url = urls[i]
+            fallbackProviderConfigs.push({
+                provider: new ethers.providers.StaticJsonRpcProvider(url),
+                priority: urls.length - i,
+                weight: urls.length - i,
+                stallTimeout: 1000
+            })
+        }
+        const quorum = 1
+        this.provider = new ethers.providers.FallbackProvider(fallbackProviderConfigs, quorum)
         // // pollingInterval default is 4000 ms
         this.provider.pollingInterval = this.interval
     }
