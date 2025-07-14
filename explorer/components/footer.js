@@ -1,5 +1,5 @@
 export default function Footer() {
-    const year = new Date().getFullYear()
+    const year = (new Date()).getFullYear()
     return (
         <footer className="bottom-0">
             <div className="px-4 py-5 xl:px-24 2xl:px-48 flex justify-between items-center border-t-[1px] ">
@@ -11,7 +11,22 @@ export default function Footer() {
                             </svg>
                         </a>
                     </div>
-                    <div className="">© {year} SODAX Scan</div>
+                    <div className="">© {year} xcallscan.xyz</div>
+                </div>
+
+                <div className="flex flex-row h-6 items-center">
+                    <div className="text-xs lg:text-sm text-gray-400">
+                        <p>Connected</p>
+                        <p>Protocols</p>
+                    </div>
+                    <a href="https://docs.icon.community/cross-chain-communication/general-message-passing-xcall" target="_blank">
+                        <div className="relative flex items-center h-12 px-2 lg:px-4 py-1 ml-2 lg:ml-4 space-x-2 font-medium border-l-2 border-dark/60 dark:border-light/60">
+                            <img alt="IBC" loading="lazy" className="w-6 h-6 lg:w-10 lg:h-10"   decoding="async" data-nimg="1" src="/images/connected-protocols/ibc.svg" />
+                            <img alt="BTP" loading="lazy" className="w-6 h-6 lg:w-10 lg:h-10" decoding="async" data-nimg="1" src="/images/connected-protocols/btp.svg" />
+                            <img alt="Wormhole" loading="lazy" className="w-6 h-6 lg:w-10 lg:h-10" decoding="async" data-nimg="1" src="/images/connected-protocols/wormhole.svg" />
+                            <img alt="Layerzero" loading="lazy"className="w-6 h-6 lg:w-10 lg:h-10" decoding="async" data-nimg="1" src="/images/connected-protocols/layerzero.svg" />
+                        </div>
+                    </a>
                 </div>
             </div>
         </footer>
