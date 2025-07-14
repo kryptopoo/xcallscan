@@ -7,10 +7,10 @@ export default function Header({ showSearchBar, assets }) {
     assets = assets ?? []
 
     return (
-        <header className="px-4 py-4 xl:px-24 2xl:px-48 w-full bg-gray-50 flex justify-between border-b-[1px]">
+        <header className="px-4 py-4 xl:px-24 2xl:px-48 w-full bg-[#F8F3F3] flex justify-between border-b-[1px]">
             <div>
                 <a className="" href="/">
-                    <img className="w-64 min-w-64" src="/images/gmp-logo.svg"></img>
+                    <img className="w-64 min-w-64 h-[32px]" src="/images/sodax-logo.svg"></img>
                 </a>
             </div>
 

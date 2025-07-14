@@ -5,8 +5,8 @@ import Footer from '@/components/footer'
 import fetchData from '@/lib/fetch-data'
 
 export const metadata = {
-    title: `xCallScan - ICON's General Message Passing Explorer`,
-    description: `xCallScan is an explorer that allows users to look up relay messages and transactions being sent through ICON's General Message Passing (xCall).`,
+    title: `SODAXScan · Fast and reliable message tracking`,
+    description: `SODAXScan tracks SODAX transactions across blockchain networks.`,
     icons: [{ rel: 'icon', url: Favicon.src }]
 }
 
@@ -26,7 +26,7 @@ export default async function RootLayout({ children }) {
     return (
         <html lang="en">
             <head></head>
-            <body className="font-mono min-h-screen">
+            <body className="font-mono min-h-screen bg-[#F8F3F3]">
                 <Header showSearchBar={false} assets={assets} />
                 <div className="-z-20 h-72 w-full absolute hero"></div>
                 <main className="px-4 mb-2 xl:px-24 xl:mb-12 2xl:px-48">

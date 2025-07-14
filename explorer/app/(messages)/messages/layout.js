@@ -1,13 +1,12 @@
-
 import '../../globals.css'
-import Favicon from '../../favicon.ico';
+import Favicon from '../../favicon.ico'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 
 export const metadata = {
-    title: `xCallScan - ICON's General Message Passing Explorer`,
-    description: `xCallScan is an explorer that allows users to look up relay messages and transactions being sent through ICON's General Message Passing (xCall).`,
-    icons: [{ rel: 'icon', url: Favicon.src }],
+    title: `SODAXScan · Fast and reliable message tracking`,
+    description: `SODAXScan tracks SODAX transactions across blockchain networks.`,
+    icons: [{ rel: 'icon', url: Favicon.src }]
 }
 
 export default function MessageLayout({ children }) {
