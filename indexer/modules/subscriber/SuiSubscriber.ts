@@ -152,7 +152,7 @@ export class SuiSubscriber extends BaseSubscriber {
 
                 const intervalId = setInterval(async () => {
                     try {
-                        this.logLatestPolling()
+                        this.logLatestPolling(`${this.network}_${contractAddress}`)
 
                         const txsRes = await retryAsync(() => this.queryTxBlocks(contractAddress, nextCursor, false), {
                             delay: 1000,

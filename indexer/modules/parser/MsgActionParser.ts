@@ -260,10 +260,10 @@ export class MsgActionParser {
 
         let provider: ethers.providers.FallbackProvider | ethers.providers.JsonRpcProvider
         try {
-            provider = new ethers.providers.FallbackProvider(RPC_URLS[network].map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
+            provider = new ethers.providers.FallbackProvider(RPC_URLS[network].map((n) => new ethers.providers.StaticJsonRpcProvider(n)).slice(0, 3))
             tx = await retryAsync(() => provider.getTransaction(txHash), defaultRetryOptions)
         } catch (error) {
-            logger.error(`PRC_URLS ${JSON.stringify(RPC_URLS[network])} incorrect`)
+            logger.error(`RPC_URLS ${JSON.stringify(RPC_URLS[network])} incorrect`)
             provider = new ethers.providers.JsonRpcProvider(RPC_URLS[network][0])
             tx = await retryAsync(() => provider.getTransaction(txHash), defaultRetryOptions)
         }

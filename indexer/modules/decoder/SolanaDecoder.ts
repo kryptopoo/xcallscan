@@ -1,10 +1,12 @@
-import { EVENT } from '../../common/constants'
+import { EVENT, INTENTS_EVENT } from '../../common/constants'
 import { IDecoder } from '../../interfaces/IDecoder'
-import { EventLogData } from '../../types/EventLog'
-import { Instruction, BorshCoder, EventParser } from '@coral-xyz/anchor'
+import { EventLogData, IntentsEventLogData } from '../../types/EventLog'
+import { Instruction, BorshCoder, EventParser, BorshInstructionCoder } from '@coral-xyz/anchor'
 import { ethers } from 'ethers'
+import logger from '../logger/logger'
 
 const xcallIdl = require('../../abi/xcall.idl.json')
+const intentsIdl = require('../../abi/intents.idl.json')
 const assetManagerIdl = require('../../abi/asset_manager.idl.json')
 const centralizedConnectionIdl = require('../../abi/centralized_connection.idl.json')
 
@@ -19,8 +21,8 @@ export class SolanaDecoder implements IDecoder {
         }
     }
 
-    async decodeEventLog(parsedTransaction: any, eventName: string): Promise<EventLogData | undefined> {
-        let rs: EventLogData | undefined = undefined
+    async decodeEventLog(parsedTransaction: any, eventName: string): Promise<EventLogData | IntentsEventLogData | undefined> {
+        let rs: EventLogData | IntentsEventLogData | undefined = undefined
         let decodedData: any
 
         // const xcallCoder = new BorshInstructionCoder(xcallIdl)
@@ -29,7 +31,9 @@ export class SolanaDecoder implements IDecoder {
 
         // let decoded: Instruction | null
 
-        const eventParser = new EventParser(xcallIdl.address, new BorshCoder(xcallIdl))
+        const eventParser = Object.values(EVENT).includes(eventName)
+            ? new EventParser(xcallIdl.address, new BorshCoder(xcallIdl))
+            : new EventParser(intentsIdl.address, new BorshCoder(intentsIdl))
         const events = eventParser.parseLogs(parsedTransaction.meta?.logMessages)
         for (let event of events) {
             if (event.name == eventName) {
@@ -56,6 +60,7 @@ export class SolanaDecoder implements IDecoder {
             // }
             // instructions = instructions.filter((i: any) => i.data != undefined && i.data != null)
 
+            // xcall
             switch (eventName) {
                 case EVENT.CallMessageSent:
                     rs = {} as EventLogData
@@ -140,6 +145,88 @@ export class SolanaDecoder implements IDecoder {
                     if (decodedData.msg) rs._msg = decodedData.msg
 
                     // decodedData = this.getDecodedData(instructions, xcallCoder, 'execute_call')
+
+                    break
+                default:
+                    break
+            }
+
+            // intents
+            switch (eventName) {
+                case INTENTS_EVENT.SwapIntent:
+                    rs = {} as IntentsEventLogData
+                    rs = {
+                        id: Number(decodedData.id),
+                        emitter: decodedData.emitter,
+                        srcNID: decodedData.srcNID,
+                        dstNID: decodedData.dstNID,
+                        creator: decodedData.creator,
+                        destinationAddress: decodedData.destinationAddress,
+                        token: decodedData.token,
+                        amount: decodedData.amount.toString(),
+                        toToken: decodedData.toToken,
+                        toAmount: decodedData.toAmount.toString(),
+                        data: decodedData.data
+                    }
+
+                    if (decodedData.data) {
+                        const dataHex = ethers.utils.hexlify(decodedData.data)
+                        rs.data = dataHex
+                    }
+
+                    break
+                case INTENTS_EVENT.OrderFilled:
+                    rs = {} as IntentsEventLogData
+                    rs = {
+                        id: Number(decodedData.id),
+                        srcNID: decodedData.srcNID
+                    }
+
+                    // decode fill method
+                    const instructions =
+                        parsedTransaction.transaction.message?.instructions.map((i: any) => ({
+                            programId: i.programId,
+
+                            data: i.data
+                        })) ?? []
+                    const decodedFill = this.getDecodedData(instructions, new BorshInstructionCoder(intentsIdl), 'fill')
+                    if (decodedFill) {
+                        rs = {
+                            id: Number(decodedData.id),
+                            emitter: decodedFill.order.emitter,
+                            srcNID: decodedFill.order.src_nid,
+                            dstNID: decodedFill.order.dst_nid,
+                            creator: decodedFill.order.creator,
+                            destinationAddress: decodedFill.order.destination_address,
+                            token: decodedFill.order.token,
+                            amount: Number(decodedFill.order.amount).toString(),
+                            toToken: decodedFill.order.to_token,
+                            toAmount: Number(decodedFill.order.to_amount).toString(),
+                            solverAddress: decodedFill.solver_address
+                        }
+                        if (decodedFill.order.data) {
+                            rs.data = ethers.utils.hexlify(decodedFill.order.data)
+                        }
+                    }
+
+                    break
+                case INTENTS_EVENT.OrderClosed:
+                    rs = { id: Number(decodedData.id) } as IntentsEventLogData
+
+                    break
+                case INTENTS_EVENT.OrderCancelled:
+                    // TODO
+                    logger.error(`SolanaDecoder: INTENTS_EVENT.OrderCancelled decodedData ${JSON.stringify(decodedData)}`)
+                    rs = {
+                        id: Number(decodedData.id),
+                        srcNID: decodedData.srcNID
+                    } as IntentsEventLogData
+
+                    break
+                case INTENTS_EVENT.Message:
+                    // TODO
+                    logger.error(`SolanaDecoder: INTENTS_EVENT.Message decodedData ${JSON.stringify(decodedData)}`)
+                    rs = {} as IntentsEventLogData
 
                     break
                 default:

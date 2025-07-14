@@ -1,11 +1,88 @@
 import { ethers } from 'ethers'
 import { retryAsync } from 'ts-retry'
-
 import { ISubscriber, ISubscriberCallback } from '../../interfaces/ISubcriber'
 import { CONTRACT, EVENT, INTENTS_EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { EventLog, EventLogData, IntentsEventLogData } from '../../types/EventLog'
 import { EvmDecoder } from '../decoder/EvmDecoder'
 import { BaseSubscriber } from './BaseSubscriber'
+import logger from '../logger/logger'
+
+class RetriableStaticJsonRpcProvider extends ethers.providers.StaticJsonRpcProvider {
+    providerList: ethers.providers.StaticJsonRpcProvider[]
+    currentIndex = 0
+    error: any
+
+    constructor(rpcs: string[], pollingInterval: number) {
+        super({ url: rpcs[0] })
+        this.pollingInterval = pollingInterval
+
+        this.providerList = rpcs.map((url) => {
+            const provider = new ethers.providers.StaticJsonRpcProvider({ url })
+            provider.pollingInterval = pollingInterval
+            return provider
+        })
+    }
+
+    async send(method: string, params: Array<any>, retries?: number): Promise<any> {
+        let _retries = retries || 0
+
+        /**
+         * validate retries before continue
+         * base case of recursivity (throw if already try all rpcs)
+         */
+        this.validateRetries(_retries)
+
+        try {
+            // select properly provider
+            const provider = this.selectProvider()
+
+            // send rpc call
+            return await provider.send(method, params)
+        } catch (error) {
+            // store error internally
+            this.error = error
+
+            // increase retries
+            _retries = _retries + 1
+
+            logger.error(`RetriableStaticJsonRpcProvider send failed, retried ${_retries}`)
+
+            return this.send(method, params, _retries)
+        }
+    }
+
+    private selectProvider() {
+        // last rpc from the list
+        if (this.currentIndex === this.providerList.length) {
+            // set currentIndex to the seconds element
+            this.currentIndex = 1
+            return this.providerList[0]
+        }
+
+        // select current provider
+        const provider = this.providerList[this.currentIndex]
+        // increase counter
+        this.currentIndex = this.currentIndex + 1
+
+        return provider
+    }
+
+    /**
+     * validate that retries is equal to the length of rpc
+     * to ensure rpc are called at least one time
+     *
+     * if that's the case, and we fail in all the calls
+     * then throw the internal saved error
+     */
+    private validateRetries(retries: number) {
+        if (retries === this.providerList.length) {
+            const error = this.error
+            this.error = undefined
+            // throw new Error(error)
+            logger.error(`RetriableStaticJsonRpcProvider validateRetries error`)
+        }
+    }
+}
 
 export class EvmSubscriber extends BaseSubscriber {
     private provider: ethers.providers.BaseProvider
@@ -29,8 +106,26 @@ export class EvmSubscriber extends BaseSubscriber {
 
         super(network, urls, new EvmDecoder(network))
 
-        // this.provider = new ethers.providers.StaticJsonRpcProvider(this.url)
-        this.provider = new ethers.providers.FallbackProvider(urls.map((n) => new ethers.providers.StaticJsonRpcProvider(n)))
+        // const fallbackProviderConfigs: {
+        //     provider: ethers.providers.StaticJsonRpcProvider
+        //     priority?: number
+        //     weight?: number
+        //     stallTimeout?: number
+        // }[] = []
+        // for (let i = 0; i < urls.length; i++) {
+        //     const url = urls[i]
+        //     fallbackProviderConfigs.push({
+        //         provider: new ethers.providers.StaticJsonRpcProvider(url)
+        //         // priority: urls.length - i,
+        //         // weight: urls.length - i
+        //         // stallTimeout: 1000
+        //     })
+        // }
+        // const quorum = 1
+        // this.provider = new ethers.providers.FallbackProvider(fallbackProviderConfigs, quorum)
+
+        // this.provider = new ethers.providers.StaticJsonRpcProvider(urls[0])
+        this.provider = new RetriableStaticJsonRpcProvider(urls, this.interval)
         // // pollingInterval default is 4000 ms
         this.provider.pollingInterval = this.interval
     }
@@ -123,19 +218,22 @@ export class EvmSubscriber extends BaseSubscriber {
                 }
             }
         } else {
-            const filter = {
-                address: contracts[0],
-                topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
+            for (let i = 0; i < contracts.length; i++) {
+                const contractAddress = contracts[i]
+                const filter = {
+                    address: contractAddress,
+                    topics: [eventNames.map((eventName) => this.ETHERS_EVENT_ID[eventName]).filter((e) => e !== undefined)]
+                }
+
+                this.provider.on(filter, async (log: any, event: any) => {
+                    const eventLog = await this.fetchEventLog(log)
+                    if (eventLog) callback(eventLog)
+                })
+
+                this.provider.on('poll', () => {
+                    this.logLatestPolling(`${this.network}_${contractAddress}`)
+                })
             }
-
-            this.provider.on(filter, async (log: any, event: any) => {
-                const eventLog = await this.fetchEventLog(log)
-                if (eventLog) callback(eventLog)
-            })
-
-            this.provider.on('poll', () => {
-                this.logLatestPolling()
-            })
         }
     }
 }

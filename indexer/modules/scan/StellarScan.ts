@@ -4,6 +4,7 @@ import { EventLog } from '../../types/EventLog'
 import logger from '../logger/logger'
 import AxiosCustomInstance from './AxiosCustomInstance'
 import { StellarDecoder } from '../decoder/StellarDecoder'
+import { retryAsync } from 'ts-retry'
 const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
 export class StellarScan implements IScan {
@@ -13,17 +14,30 @@ export class StellarScan implements IScan {
     constructor(public network: string) {}
 
     async callApi(postData: any): Promise<any> {
-        const sorobanUrl = RPC_URLS[this.network][0]
-        try {
-            const axiosInstance = AxiosCustomInstance.getInstance()
+        // retry all rpc
+        let rs = undefined
+        for (let i = 0; i < RPC_URLS[this.network].length; i++) {
+            const url = RPC_URLS[this.network][i]
 
-            const res = await axiosInstance.post(sorobanUrl, postData)
-            return res.data.result
-        } catch (error: any) {
-            logger.error(`${this.network} called api failed ${sorobanUrl} ${error.code}`)
+            rs = await retryAsync(
+                async () => {
+                    const axiosInstance = AxiosCustomInstance.getInstance()
+                    const res = await axiosInstance.post(url, postData)
+                    return res?.data?.result
+                },
+                {
+                    delay: 1000,
+                    maxTry: 3,
+                    onError: (err, currentTry) => {
+                        logger.error(`${this.network} callApi ${err} retry ${currentTry} ${url} ${postData}`)
+                    }
+                }
+            )
+
+            if (rs) break
         }
 
-        return undefined
+        return rs
     }
 
     async getEvents(startLedger: number, contractAddress: string): Promise<any> {
@@ -89,45 +103,49 @@ export class StellarScan implements IScan {
                 const txHash = event.txHash
                 const tx = await this.getTx(txHash)
 
-                // parse xrd
-                const res = parseTxOperationsMeta({
-                    network: USE_MAINNET ? 'Public Global Stellar Network ; September 2015' : '',
-                    tx: tx.envelopeXdr,
-                    result: tx.resultXdr,
-                    meta: tx.resultMetaXdr,
-                    processSystemEvents: false,
-                    mapSac: false,
-                    processFailedOpEffects: false,
-                    protocol: 21
-                })
+                if (!tx) {
+                    logger.error(`${this.network} cannot found txHash ${txHash}`)
+                } else {
+                    // parse xrd
+                    const res = parseTxOperationsMeta({
+                        network: USE_MAINNET ? 'Public Global Stellar Network ; September 2015' : '',
+                        tx: tx.envelopeXdr,
+                        result: tx.resultXdr,
+                        meta: tx.resultMetaXdr,
+                        processSystemEvents: false,
+                        mapSac: false,
+                        processFailedOpEffects: false,
+                        protocol: 21
+                    })
 
-                const invokeHostFunctionOp = res.operations[0]
-                const contractEvents = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractEvent')
+                    const invokeHostFunctionOp = res.operations[0]
+                    const contractEvents = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractEvent')
 
-                let eventNames = [eventName]
-                if (!eventName) eventNames = Object.values(EVENT)
-                for (let j = 0; j < eventNames.length; j++) {
-                    const eventName = eventNames[j]
-                    const contractEvent = contractEvents.find((obj: any) => obj.topics.includes(eventName))
-                    const decodeEventLog = await this.decoder.decodeEventLog(contractEvent?.data, eventName)
-                    if (decodeEventLog) {
-                        const txTo = contractEvent.contract
-                        const txFee = res.effects.find((e: any) => e.type == 'feeCharged')?.charged
-                        const log: EventLog = {
-                            // txRaw: tx.transaction,
-                            blockNumber: Number(tx.ledger),
-                            blockTimestamp: Number(tx.createdAt),
-                            txHash: txHash,
-                            txFrom: invokeHostFunctionOp.source,
-                            // recipient is contract
-                            txTo: txTo,
-                            txFee: txFee?.toString(),
-                            // txValue: tx.value.toString(),
-                            eventName: eventName,
-                            eventData: decodeEventLog
+                    let eventNames = [eventName]
+                    if (!eventName) eventNames = Object.values(EVENT)
+                    for (let j = 0; j < eventNames.length; j++) {
+                        const eventName = eventNames[j]
+                        const contractEvent = contractEvents.find((obj: any) => obj.topics.includes(eventName))
+                        const decodeEventLog = await this.decoder.decodeEventLog(contractEvent?.data, eventName)
+                        if (decodeEventLog) {
+                            const txTo = contractEvent.contract
+                            const txFee = res.effects.find((e: any) => e.type == 'feeCharged')?.charged
+                            const log: EventLog = {
+                                // txRaw: tx.transaction,
+                                blockNumber: Number(tx.ledger),
+                                blockTimestamp: Number(tx.createdAt),
+                                txHash: txHash,
+                                txFrom: invokeHostFunctionOp.source,
+                                // recipient is contract
+                                txTo: txTo,
+                                txFee: txFee?.toString(),
+                                // txValue: tx.value.toString(),
+                                eventName: eventName,
+                                eventData: decodeEventLog
+                            }
+
+                            results.push(log)
                         }
-
-                        results.push(log)
                     }
                 }
             }

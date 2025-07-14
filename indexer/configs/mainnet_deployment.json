@@ -116,12 +116,11 @@
         "arbitrum": {
             "api": "https://api.arbiscan.io/api",
             "rpcs": [
-                "https://light-convincing-sunset.arbitrum-mainnet.quiknode.pro",
                 "https://arb-mainnet.g.alchemy.com/v2",
+                "https://light-convincing-sunset.arbitrum-mainnet.quiknode.pro",
                 "https://rpc.ankr.com/arbitrum",
                 "https://arbitrum-one.publicnode.com",
-                "https://arbitrum.meowrpc.com",
-                "https://arbitrum.llamarpc.com"
+                "https://arbitrum.meowrpc.com"
             ],
             "wss": [],
             "btp_network_id": "0xa4b1.arbitrum",
@@ -134,7 +133,6 @@
                 "https://opt-mainnet.g.alchemy.com/v2",
                 "https://rpc.ankr.com/optimism",
                 "https://mainnet.optimism.io",
-                "https://optimism.llamarpc.com",
                 "https://optimism.meowrpc.com",
                 "https://optimism.drpc.org"
             ],
@@ -158,12 +156,7 @@
         },
         "polygon": {
             "api": "https://api.polygonscan.com/api",
-            "rpcs": [
-                "https://polygon-mainnet.g.alchemy.com/v2",
-                "https://rpc.ankr.com/polygon",
-                "https://polygon.llamarpc.com",
-                "https://rpc-mainnet.matic.quiknode.pro"
-            ],
+            "rpcs": ["https://polygon-mainnet.g.alchemy.com/v2", "https://rpc.ankr.com/polygon", "https://rpc-mainnet.matic.quiknode.pro"],
             "wss": [],
             "btp_network_id": "0x89.polygon",
             "block_height": 0,
@@ -173,9 +166,8 @@
             "api": "",
             "rpcs": [
                 "https://light-convincing-sunset.stellar-mainnet.quiknode.pro",
-                "https://rpc.ankr.com/stellar_soroban",
-                "https://mainnet.stellar.validationcloud.io/v1",
-                "https://soroban-rpc.mainnet.stellar.gateway.fm"
+                "https://mainnet.sorobanrpc.com",
+                "https://rpc.ankr.com/stellar_soroban"
             ],
             "wss": [],
             "btp_network_id": "stellar",
@@ -266,11 +258,11 @@
         },
         "stellar": {
             "xcall": ["CB6IJRLOWGQXUDSYGFOAAZYVOESQ6TVSTU3242I7PG3LH7F43PPX2HE6"],
-            "intents": []
+            "intents": ["CDZPLSD426ZCR5XB2D7HDYEDEAS5KYZFX6JEPLFY7QOQ3QHE6DHMECW7"]
         },
         "solana": {
             "xcall": ["3LWnGCRFuS4TJ5WeDKeWdoSRptB2tzeEFhSBFFu4ogMo"],
-            "intents": []
+            "intents": ["FgPgECEpBRdV9gV18jR7icvpPabEvgVJof3A6aPn1UjY"]
         }
     }
 }

@@ -47,7 +47,7 @@ export abstract class BaseSubscriber {
         return this.url
     }
 
-    logLatestPolling() {
+    logLatestPolling(id: string = this.network) {
         try {
             const date = new Date().toISOString().substring(0, 10)
             const filePath = `./logs/${date}.subscriber.status.log`
@@ -59,7 +59,7 @@ export abstract class BaseSubscriber {
             // read
             const fileData = fs.readFileSync(filePath, 'utf8')
             let data = JSON.parse(fileData)
-            data[this.network] = new Date().toISOString()
+            data[id] = new Date().toISOString()
 
             // write
             fs.writeFileSync(filePath, JSON.stringify(data, undefined, 4))

@@ -1,10 +1,11 @@
 import { retryAsync } from 'ts-retry'
 import { ISubscriberCallback } from '../../interfaces/ISubcriber'
-import { EVENT, NETWORK, RPC_URLS } from '../../common/constants'
+import { EVENT, INTENTS_EVENT, NETWORK, RPC_URLS } from '../../common/constants'
 import { EventLog, EventLogData } from '../../types/EventLog'
 import AxiosCustomInstance from '../scan/AxiosCustomInstance'
 import { StellarDecoder } from '../decoder/StellarDecoder'
 import { BaseSubscriber } from './BaseSubscriber'
+import logger from '../logger/logger'
 
 const { parseTxOperationsMeta } = require('@stellar-expert/tx-meta-effects-parser')
 
@@ -18,9 +19,9 @@ export class StellarSubscriber extends BaseSubscriber {
 
         const res = await retryAsync(() => axiosInstance.post(this.url, postData), {
             delay: 1000,
-            maxTry: 3,
+            maxTry: 5,
             onError: (err, currentTry) => {
-                this.logger.error(`${this.network} retry ${currentTry} callRpc ${err}`)
+                this.logger.error(`${this.network} retry ${currentTry} callRpc ${this.url} ${JSON.stringify(postData)} ${err}`)
             }
         })
 
@@ -72,13 +73,101 @@ export class StellarSubscriber extends BaseSubscriber {
         return this.callRpc(postData)
     }
 
+    async getTxByExpectApi(txHash: string) {
+        const axiosInstance = AxiosCustomInstance.getInstance()
+
+        const res = await retryAsync(() => axiosInstance.get(`https://api.stellar.expert/explorer/public/tx/${txHash}`), {
+            delay: 1000,
+            maxTry: 3,
+            onError: (err, currentTry) => {
+                this.logger.error(`${this.network} retry ${currentTry} getTxByExpectApi ${txHash} ${err}`)
+            }
+        })
+
+        return res?.data
+    }
+
+    async fetchEventLogs(txHash: string, eventNames: string[]) {
+        try {
+            const eventLogs: EventLog[] = []
+
+            // get transaction
+            let tx = await this.getTx(txHash)
+            if (!tx || tx.status != 'SUCCESS') {
+                // try getting data from api.stellar.expert
+                tx = await this.getTxByExpectApi(txHash)
+                tx.envelopeXdr = tx.body
+                tx.resultXdr = tx.result
+                tx.resultMetaXdr = tx.meta
+                tx.createdAt = tx.ts
+            }
+
+            // parse xrd
+            const res = parseTxOperationsMeta({
+                network: 'Public Global Stellar Network ; September 2015',
+                tx: tx.envelopeXdr ?? tx.body, // trasnaction envelope XDR
+                result: tx.resultXdr ?? tx.result, // trasnaction result XDR
+                meta: tx.resultMetaXdr ?? tx.meta, // trasnaction meta XDR
+                processSystemEvents: false, // whether to analyze system Soroban diagnostic events
+                mapSac: false, // whether to map Classic assets to Soroban contracts automatically
+                processFailedOpEffects: false, // whether to analyze effects in failed transactions
+                protocol: 21 // different versions of Stelalr protocol may yield uninform effects
+            })
+
+            // invokeHostFunctionOp
+            const invokeHostFunctionOp = res.operations[0]
+            const contractEvents = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractEvent')
+            const decodedFunctions = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractInvoked') ?? []
+
+            for (let j = 0; j < eventNames.length; j++) {
+                const eventName = eventNames[j]
+                const contractEvent = contractEvents.find((obj: any) => obj.topics.includes(eventName))
+                if (!contractEvent) continue
+
+                const data = contractEvent.data
+                data.decodedFunctions = decodedFunctions
+                const decodeEventLog = await this.decoder.decodeEventLog(data, eventName)
+                if (decodeEventLog) {
+                    const txTo = contractEvent.contract
+                    const txFee = res.effects.find((e: any) => e.type == 'feeCharged')?.charged
+                    const log: EventLog = {
+                        // txRaw: tx.transaction,
+                        blockNumber: Number(tx.ledger),
+                        blockTimestamp: Number(tx.createdAt),
+                        txHash: txHash,
+                        txFrom: invokeHostFunctionOp.source,
+                        // recipient is contract
+                        txTo: txTo,
+                        txFee: txFee?.toString(),
+                        // txValue: tx.value.toString(),
+                        eventName: eventName,
+                        eventData: decodeEventLog
+                    }
+
+                    eventLogs.push(log)
+                }
+            }
+
+            return eventLogs
+        } catch (error) {
+            this.logger.error(`${this.network} error ${JSON.stringify(error)}`)
+        }
+
+        return []
+    }
+
     async subscribe(contractAddresses: string[], eventNames: string[], txHashes: string[], callback: ISubscriberCallback): Promise<void> {
         this.logger.info(`${this.network} connect ${this.url}`)
         this.logger.info(`${this.network} listen events ${JSON.stringify(eventNames)} on ${JSON.stringify(contractAddresses)}`)
 
         if (txHashes.length > 0) {
-            // TODO
             // subscribe data by specific transaction hashes
+            for (let i = 0; i < txHashes.length; i++) {
+                const eventLogs = await this.fetchEventLogs(txHashes[i], eventNames)
+                eventLogs.forEach((eventLog) => {
+                    callback(eventLog)
+                })
+            }
         } else {
             const latestLedgerRes = await this.getLatestLedger()
             let latestLedger = latestLedgerRes?.sequence
@@ -87,7 +176,7 @@ export class StellarSubscriber extends BaseSubscriber {
             const task = (contractAddresses: string[]) => {
                 let intervalId = setInterval(async () => {
                     try {
-                        this.logLatestPolling()
+                        this.logLatestPolling(`${this.network}_${contractAddresses.join('_')}`)
 
                         if (latestLedger) {
                             // get events given contract
@@ -104,51 +193,64 @@ export class StellarSubscriber extends BaseSubscriber {
                                     .filter((value: string, index: number, array: string[]) => array.indexOf(value) === index)
 
                                 for (let i = 0; i < txHashes.length; i++) {
-                                    // get transaction
-                                    const txHash = txHashes[i]
-                                    const tx = await this.getTx(txHash)
-
-                                    // parse xrd
-                                    const res = parseTxOperationsMeta({
-                                        network: 'Public Global Stellar Network ; September 2015',
-                                        tx: tx.envelopeXdr, // trasnaction envelope XDR
-                                        result: tx.resultXdr, // trasnaction result XDR
-                                        meta: tx.resultMetaXdr, // trasnaction meta XDR
-                                        processSystemEvents: false, // whether to analyze system Soroban diagnostic events
-                                        mapSac: false, // whether to map Classic assets to Soroban contracts automatically
-                                        processFailedOpEffects: false, // whether to analyze effects in failed transactions
-                                        protocol: 21 // different versions of Stelalr protocol may yield uninform effects
+                                    const eventLogs = await this.fetchEventLogs(txHashes[i], eventNames)
+                                    eventLogs.forEach((eventLog) => {
+                                        callback(eventLog)
                                     })
-
-                                    // invokeHostFunctionOp
-                                    const invokeHostFunctionOp = res.operations[0]
-                                    const contractEvents = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractEvent')
-
-                                    for (let j = 0; j < eventNames.length; j++) {
-                                        const eventName = eventNames[j]
-                                        const contractEvent = contractEvents.find((obj: any) => obj.topics.includes(eventName))
-                                        const decodeEventLog = await this.decoder.decodeEventLog(contractEvent?.data, eventName)
-                                        if (decodeEventLog) {
-                                            const txTo = contractEvent.contract
-                                            const txFee = res.effects.find((e: any) => e.type == 'feeCharged')?.charged
-                                            const log: EventLog = {
-                                                // txRaw: tx.transaction,
-                                                blockNumber: Number(tx.ledger),
-                                                blockTimestamp: Number(tx.createdAt),
-                                                txHash: txHash,
-                                                txFrom: invokeHostFunctionOp.source,
-                                                // recipient is contract
-                                                txTo: txTo,
-                                                txFee: txFee?.toString(),
-                                                // txValue: tx.value.toString(),
-                                                eventName: eventName,
-                                                eventData: decodeEventLog
-                                            }
-
-                                            callback(log)
-                                        }
-                                    }
                                 }
+
+                                // for (let i = 0; i < txHashes.length; i++) {
+
+                                //     const eventLogs = await this.fetchEventLogs(txHashes[i])
+                                //     eventLogs.forEach((eventLog) => {
+                                //         callback(eventLog)
+                                //     })
+
+                                //     // // get transaction
+                                //     // const txHash = txHashes[i]
+                                //     // const tx = await this.getTx(txHash)
+
+                                //     // // parse xrd
+                                //     // const res = parseTxOperationsMeta({
+                                //     //     network: 'Public Global Stellar Network ; September 2015',
+                                //     //     tx: tx.envelopeXdr, // trasnaction envelope XDR
+                                //     //     result: tx.resultXdr, // trasnaction result XDR
+                                //     //     meta: tx.resultMetaXdr, // trasnaction meta XDR
+                                //     //     processSystemEvents: false, // whether to analyze system Soroban diagnostic events
+                                //     //     mapSac: false, // whether to map Classic assets to Soroban contracts automatically
+                                //     //     processFailedOpEffects: false, // whether to analyze effects in failed transactions
+                                //     //     protocol: 21 // different versions of Stelalr protocol may yield uninform effects
+                                //     // })
+
+                                //     // // invokeHostFunctionOp
+                                //     // const invokeHostFunctionOp = res.operations[0]
+                                //     // const contractEvents = invokeHostFunctionOp.effects.filter((e: any) => e.type == 'contractEvent')
+
+                                //     // for (let j = 0; j < eventNames.length; j++) {
+                                //     //     const eventName = eventNames[j]
+                                //     //     const contractEvent = contractEvents.find((obj: any) => obj.topics.includes(eventName))
+                                //     //     const decodeEventLog = await this.decoder.decodeEventLog(contractEvent?.data, eventName)
+                                //     //     if (decodeEventLog) {
+                                //     //         const txTo = contractEvent.contract
+                                //     //         const txFee = res.effects.find((e: any) => e.type == 'feeCharged')?.charged
+                                //     //         const log: EventLog = {
+                                //     //             // txRaw: tx.transaction,
+                                //     //             blockNumber: Number(tx.ledger),
+                                //     //             blockTimestamp: Number(tx.createdAt),
+                                //     //             txHash: txHash,
+                                //     //             txFrom: invokeHostFunctionOp.source,
+                                //     //             // recipient is contract
+                                //     //             txTo: txTo,
+                                //     //             txFee: txFee?.toString(),
+                                //     //             // txValue: tx.value.toString(),
+                                //     //             eventName: eventName,
+                                //     //             eventData: decodeEventLog
+                                //     //         }
+
+                                //     //         callback(log)
+                                //     //     }
+                                //     // }
+                                // }
                             }
                         }
                     } catch (error) {

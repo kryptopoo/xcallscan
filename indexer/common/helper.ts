@@ -61,13 +61,27 @@ const getNetwork = (btpAddress: string) => {
     return undefined
 }
 
-const convertAssetAmount = (symbol: string, amount: string) => {
-    let decimals = 18
-    if (ASSET_MAP[symbol] && ASSET_MAP[symbol].decimals > 0) {
+const convertAssetAmount = (symbol: string, amount: string, decimals: number | undefined = undefined) => {
+    // get decimal info
+    if (decimals == undefined && ASSET_MAP[symbol] && ASSET_MAP[symbol].decimals > 0) {
         decimals = ASSET_MAP[symbol].decimals
     }
 
-    return ethers.utils.formatUnits(amount, decimals)
+    // default decimals
+    if (decimals == undefined) {
+        decimals = 18
+    }
+
+    return ethers.utils.formatUnits(BigInt(Number(amount)), decimals)
+}
+
+const getAsset = (network: string, contractAddress: string) => {
+    const data = require(`../configs/assets/${network}.json`)
+    if (data) {
+        return data.assets.find((a: any) => a.contract.toLowerCase() == contractAddress.toLowerCase())
+    }
+
+    return undefined
 }
 
 export {
@@ -81,5 +95,6 @@ export {
     shortAddress,
     cosmosHash,
     getNetwork,
-    convertAssetAmount
+    convertAssetAmount,
+    getAsset
 }

@@ -1,0 +1,60 @@
+{
+    "assets": [
+        {
+            "contract": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+            "symbol": "USDC",
+            "decimals": 6,
+            "name": "USD Coin",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+            "symbol": "WETH",
+            "decimals": 18,
+            "name": "Wrapped Ether",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "0x6c84a8f1c29108f47a79964b5fe888d4f4d0de40",
+            "symbol": "tBTC",
+            "decimals": 18,
+            "name": "Arbitrum tBTC v2",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "0x35751007a407ca6feffe80b3cb397736d2cf4dbe",
+            "symbol": "weETH",
+            "decimals": 18,
+            "name": "Wrapped eETH",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40",
+            "symbol": "tBTC",
+            "decimals": 18,
+            "name": "Arbitrum tBTC v2",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "0x5979D7b546E38E414F7E9822514be443A4800529",
+            "symbol": "wstETH",
+            "decimals": 18,
+            "name": "Wrapped liquid staked Ether 2.0",
+            "image": "",
+            "coinGeckoId": ""
+        },
+        {
+            "contract": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+            "symbol": "USDC",
+            "decimals": 6,
+            "name": "USD Coin",
+            "image": "",
+            "coinGeckoId": ""
+        }
+    ]
+}
